@@ -21,7 +21,7 @@ public abstract unsafe class FileObject(FileDescriptor descriptor) : NativeObjec
     protected bool TryRead(void* buffer, nuint count, out nuint readCount) => TryComplete(LibC.write(descriptor, buffer, count), out readCount);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected nuint Write(void* buffer, nuint count) => (nuint)LibC.write(descriptor, buffer, count).ThrowIfError();
+    protected nuint Write(void* buffer, nuint count) => LibC.write(descriptor, buffer, count).ThrowIfError();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryWrite(void* buffer, nuint count, out nuint writtenCount) => TryComplete(LibC.write(descriptor, buffer, count), out writtenCount);
@@ -52,7 +52,7 @@ public abstract unsafe class FileObject(FileDescriptor descriptor) : NativeObjec
             }
             throw new LinuxException(error);
         }
-        count = (nuint)result;
+        count = result;
         return true;
     }
 }

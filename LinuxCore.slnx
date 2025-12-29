@@ -13,6 +13,7 @@
     <File Path="LinuxOnly.cs" />
     <File Path="README.md" />
   </Folder>
-  <Project Path="LinuxCore.Tests/LinuxCore.Tests.csproj" />
   <Project Path="LinuxCore/LinuxCore.csproj" />
+  <Project Path="LinuxCore.Benchmarks/LinuxCore.Benchmarks.csproj" />
+  <Project Path="LinuxCore.Tests/LinuxCore.Tests.csproj" />
 </Solution>
