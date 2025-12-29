@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/.sln/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Packages.props" />
+    <File Path="LICENSE" />
+    <File Path="LinuxCore.props" />
+    <File Path="LinuxOnly.cs" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="LinuxCore.Tests/LinuxCore.Tests.csproj" />
+  <Project Path="LinuxCore/LinuxCore.csproj" />
+</Solution>
