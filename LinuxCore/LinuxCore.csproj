@@ -1,3 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../LinuxCore.props" />
+  <PropertyGroup>
+    <IsAotCompatible>true</IsAotCompatible>
+    <Version>0.1.0</Version>
+    <PackageVersion>$(Version)</PackageVersion>
+    <Authors>Vasyl Novikov</Authors>
+    <Description>Some Linux LibC API wrappers and base types</Description>
+    <Copyright>Vasyl Novikov</Copyright>
+    <PackageProjectUrl>https://github.com/VasiliyNovikov/LinuxCore</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/VasiliyNovikov/LinuxCore</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <PackageTags>linux;primitives</PackageTags>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
 </Project>

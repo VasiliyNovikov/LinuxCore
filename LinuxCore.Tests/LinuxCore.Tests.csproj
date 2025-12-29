@@ -3,4 +3,7 @@
   <ItemGroup>
     <PackageReference Include="MSTest" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LinuxCore\LinuxCore.csproj" />
+  </ItemGroup>
 </Project>
