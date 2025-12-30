@@ -32,7 +32,7 @@ public abstract unsafe class LinuxSocketBase(LinuxAddressFamily domain, LinuxSoc
     public int Send(ReadOnlySpan<byte> buffer, LinuxSocketMessageFlags flags = default)
     {
         fixed (byte* bufferPtr = buffer)
-            return (int)LibC.recv(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags).ThrowIfError();
+            return (int)LibC.send(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags).ThrowIfError();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
