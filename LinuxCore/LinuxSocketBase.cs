@@ -1,5 +1,6 @@
 using System;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 
 using LinuxCore.Interop;
 
@@ -12,6 +13,33 @@ public abstract unsafe class LinuxSocketBase(LinuxAddressFamily domain, LinuxSoc
     {
         fixed (TAddress* addressPtr = &address)
             LibC.bind(Descriptor, (LibC.sockaddr*)addressPtr, (uint)sizeof(TAddress)).ThrowIfError();
+    }
+
+    protected void GetAddress<TAddress>(out TAddress address) where TAddress : unmanaged
+    {
+        var addressLength = (uint)sizeof(TAddress);
+        fixed (TAddress* addressPtr = &address)
+            LibC.getsockname(Descriptor, (LibC.sockaddr*)addressPtr, ref addressLength).ThrowIfError();
+    }
+
+    protected void Connect<TAddress>(in TAddress address) where TAddress : unmanaged
+    {
+        fixed (TAddress* addressPtr = &address)
+            LibC.connect(Descriptor, (LibC.sockaddr*)addressPtr, (uint)sizeof(TAddress)).ThrowIfError();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int Send(ReadOnlySpan<byte> buffer, LinuxSocketMessageFlags flags = default)
+    {
+        fixed (byte* bufferPtr = buffer)
+            return (int)LibC.recv(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags).ThrowIfError();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int Receive(Span<byte> buffer, LinuxSocketMessageFlags flags = default)
+    {
+        fixed (byte* bufferPtr = buffer)
+            return (int)LibC.recv(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags).ThrowIfError();
     }
 
     protected T GetOption<T>(LinuxSocketOptionLevel level, int option) where T : unmanaged
