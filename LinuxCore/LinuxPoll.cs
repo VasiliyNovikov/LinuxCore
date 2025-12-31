@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using LinuxCore.Interop;
+using static LinuxCore.Interop.Poll;
 
 namespace LinuxCore;
 
@@ -14,7 +14,7 @@ public static unsafe class LinuxPoll
     {
         fixed (Query* queriesPtr = queries)
         {
-            var result = LibC.poll((LibC.pollfd*)queriesPtr, (uint)queries.Length, timeoutMilliseconds);
+            var result = poll((pollfd*)queriesPtr, (uint)queries.Length, timeoutMilliseconds);
             if (!result.IsError)
                 return result > 0;
 
@@ -41,7 +41,6 @@ public static unsafe class LinuxPoll
     public static Event? Wait(FileDescriptor descriptor, Event @event, TimeSpan timeout) => Wait(descriptor, @event, (int)timeout.TotalMilliseconds);
 
     [StructLayout(LayoutKind.Sequential)]
-    [SuppressMessage("Style", "IDE0032: Use auto property", Justification = "Struct layout")]
     [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly struct Query(FileDescriptor descriptor, Event events)
     {
@@ -55,11 +54,11 @@ public static unsafe class LinuxPoll
     public enum Event : short
     {
         None = 0,
-        Readable = LibC.POLLIN,
-        Urgent   = LibC.POLLPRI,
-        Writable = LibC.POLLOUT,
-        Error    = LibC.POLLERR,
-        HangUp   = LibC.POLLHUP,
-        Invalid  = LibC.POLLNVAL
+        Readable = POLLIN,
+        Urgent   = POLLPRI,
+        Writable = POLLOUT,
+        Error    = POLLERR,
+        HangUp   = POLLHUP,
+        Invalid  = POLLNVAL
     }
 }

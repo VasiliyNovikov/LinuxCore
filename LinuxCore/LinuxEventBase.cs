@@ -1,11 +1,11 @@
 using System.Runtime.CompilerServices;
 
-using LinuxCore.Interop;
+using static LinuxCore.Interop.EventFd;
 
 namespace LinuxCore;
 
 public abstract unsafe class LinuxEventBase(uint initialValue, int flags)
-    : FileObject(LibC.eventfd(initialValue, flags | LibC.EFD_CLOEXEC).ThrowIfError())
+    : FileObject(eventfd(initialValue, flags | EFD_CLOEXEC).ThrowIfError())
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void WriteOne()

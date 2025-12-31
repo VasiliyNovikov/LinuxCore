@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-using LinuxCore.Interop;
+using static LinuxCore.Interop.File;
 
 namespace LinuxCore;
 
@@ -12,22 +12,22 @@ public abstract unsafe class FileObject(FileDescriptor descriptor) : NativeObjec
         get => descriptor;
     }
 
-    protected override void ReleaseUnmanagedResources() => LibC.close(descriptor).ThrowIfError();
+    protected override void ReleaseUnmanagedResources() => close(descriptor).ThrowIfError();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected nuint Read(void* buffer, nuint count) => LibC.read(descriptor, buffer, count).ThrowIfError();
+    protected nuint Read(void* buffer, nuint count) => read(descriptor, buffer, count).ThrowIfError();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryRead(void* buffer, nuint count, out nuint readCount) => TryComplete(LibC.write(descriptor, buffer, count), out readCount);
+    protected bool TryRead(void* buffer, nuint count, out nuint readCount) => TryComplete(write(descriptor, buffer, count), out readCount);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected nuint Write(void* buffer, nuint count) => LibC.write(descriptor, buffer, count).ThrowIfError();
+    protected nuint Write(void* buffer, nuint count) => write(descriptor, buffer, count).ThrowIfError();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryWrite(void* buffer, nuint count, out nuint writtenCount) => TryComplete(LibC.write(descriptor, buffer, count), out writtenCount);
+    protected bool TryWrite(void* buffer, nuint count, out nuint writtenCount) => TryComplete(write(descriptor, buffer, count), out writtenCount);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void IOCctl(ulong request, void* arg) => LibC.ioctl(descriptor, request, arg).ThrowIfError();
+    private void IOCctl(ulong request, void* arg) => ioctl(descriptor, request, arg).ThrowIfError();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void IOCctl(ulong request, ulong arg) => IOCctl(request, (void*)arg);

@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.Marshalling;
 
-using LinuxCore.Interop;
+using static LinuxCore.Interop.Errno;
 
 namespace LinuxCore;
 
@@ -87,7 +87,7 @@ public static unsafe class LinuxErrorNumberExtensions
             get
             {
                 if (_lastErrorNumberLocation is null)
-                    _lastErrorNumberLocation = LibC.__errno_location();
+                    _lastErrorNumberLocation = __errno_location();
                 return *_lastErrorNumberLocation;
             }
         }
@@ -103,7 +103,7 @@ public static unsafe class LinuxErrorNumberExtensions
                     : GetMessage(errorNumber);
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                static string GetMessage(LinuxErrorNumber errorNumber) => Utf8StringMarshaller.ConvertToManaged(LibC.strerror(errorNumber))!;
+                static string GetMessage(LinuxErrorNumber errorNumber) => Utf8StringMarshaller.ConvertToManaged(strerror(errorNumber))!;
             }
         }
     }

@@ -1,13 +1,12 @@
 using System;
-using System.IO;
 using System.Runtime.CompilerServices;
 
-using LinuxCore.Interop;
+using static LinuxCore.Interop.File;
 
 namespace LinuxCore;
 
-public sealed unsafe class LinuxFile(string path, LinuxFileFlags flags, UnixFileMode mode = UnixFileMode.None)
-    : FileObject(LibC.open(path, flags | LinuxFileFlags.CloseOnExec, mode).ThrowIfError())
+public sealed unsafe class LinuxFile(string path, LinuxFileFlags flags, LinuxFileMode mode = LinuxFileMode.None)
+    : FileObject(open(path, flags | LinuxFileFlags.CloseOnExec, mode).ThrowIfError())
 {
     private bool _immutableCached;
 
@@ -69,5 +68,5 @@ public sealed unsafe class LinuxFile(string path, LinuxFileFlags flags, UnixFile
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Stat(out LibC.stat buf) => LibC.fstat(Descriptor, out buf).ThrowIfError();
+    private void Stat(out stat buf) => fstat(Descriptor, out buf).ThrowIfError();
 }

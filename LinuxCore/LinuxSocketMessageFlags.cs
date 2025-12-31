@@ -8,8 +8,8 @@ namespace LinuxCore;
 public enum LinuxSocketMessageFlags
 {
     None = 0,
-    OutOfBand = LibC.MSG_OOB,
-    Peek = LibC.MSG_PEEK,
-    DontWait = LibC.MSG_DONTWAIT,
-    WaitAll = LibC.MSG_WAITALL
+    OutOfBand = Socket.MSG_OOB,
+    Peek = Socket.MSG_PEEK,
+    DontWait = Socket.MSG_DONTWAIT,
+    WaitAll = Socket.MSG_WAITALL
 }
