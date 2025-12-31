@@ -7,7 +7,7 @@ internal static unsafe partial class Poll
 {
     public const short POLLIN   = 0b000001; // There is data to read
     public const short POLLPRI  = 0b000010; // There is urgent data to read
-    public const short POLLOUT  = 0b000100; // Writing now not block
+    public const short POLLOUT  = 0b000100; // Writing now will not block
     public const short POLLERR  = 0b001000; // Error condition
     public const short POLLHUP  = 0b010000; // Hung up
     public const short POLLNVAL = 0b100000; // Invalid request: fd not open

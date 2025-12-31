@@ -10,7 +10,7 @@ internal static unsafe partial class Socket
     public const int MSG_PEEK      = 0x0002; // Peek at incoming message
     public const int MSG_DONTROUTE = 0x0004; // Don't route
     public const int MSG_CTRUNC    = 0x0008; // Control data lost
-    public const int MSG_PROXY     = 0x0010; // Supply originate a proxy
+    public const int MSG_PROXY     = 0x0010; // Supply or originate a proxy
     public const int MSG_TRUNC     = 0x0020; // Packet was truncated
     public const int MSG_DONTWAIT  = 0x0040; // Nonblocking IO
     public const int MSG_EOR       = 0x0080; // End of record
