@@ -7,7 +7,7 @@ using LinuxCore.Interop;
 namespace LinuxCore;
 
 public sealed class LinuxSemaphoreSlim(uint initialValue = 0)
-    : LinuxEventBase(initialValue == 0 ? 0u : 1u, LibC.EFD_SEMAPHORE)
+    : LinuxEventBase(initialValue == 0 ? 0u : 1u, EventFd.EFD_SEMAPHORE)
 {
     private ulong _count = initialValue;
 

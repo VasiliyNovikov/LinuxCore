@@ -3,8 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinuxCore;
 
-[Flags]
 [SuppressMessage("Microsoft.Formatting", "IDE0055: Fix formatting", Justification = "Intentional enum value alignment")]
+[Flags]
 public enum LinuxFileFlags
 {
     ReadOnly     = 0x000000, // O_RDONLY: Open for reading only

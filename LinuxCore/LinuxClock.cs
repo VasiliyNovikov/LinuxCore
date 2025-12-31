@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-using LinuxCore.Interop;
+using static LinuxCore.Interop.Time;
 
 namespace LinuxCore;
 
@@ -28,5 +28,5 @@ public static class LinuxClock
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void GetMonotonic(out LibC.timespec time) => LibC.clock_gettime(LibC.CLOCK_MONOTONIC, out time);
+    private static void GetMonotonic(out timespec time) => clock_gettime(CLOCK_MONOTONIC, out time);
 }

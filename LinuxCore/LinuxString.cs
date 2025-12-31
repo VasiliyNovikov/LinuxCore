@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.Marshalling;
 
-using LinuxCore.Interop;
+using static LinuxCore.Interop.StdIO;
 
 namespace LinuxCore;
 
@@ -13,7 +13,7 @@ public static class LinuxString
     {
         Span<byte> buffer = stackalloc byte[bufferSize];
         var bufferPtr = (byte*)Unsafe.AsPointer(ref buffer[0]);
-        var written = LibC.vsnprintf(bufferPtr, (UIntPtr)(bufferSize - 1), format, ap);
+        var written = vsnprintf(bufferPtr, (UIntPtr)(bufferSize - 1), format, ap);
         if (written >= bufferSize - 1)
         {
             buffer[bufferSize - 4] = (byte)'.';

@@ -5,7 +5,7 @@ using LinuxCore.Interop;
 namespace LinuxCore;
 
 public sealed class LinuxSemaphore(uint initialValue = 0)
-    : LinuxEventBase(initialValue, LibC.EFD_SEMAPHORE)
+    : LinuxEventBase(initialValue, EventFd.EFD_SEMAPHORE)
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Increment() => WriteOne();
