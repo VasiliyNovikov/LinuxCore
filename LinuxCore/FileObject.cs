@@ -18,7 +18,7 @@ public abstract unsafe class FileObject(FileDescriptor descriptor) : NativeObjec
     protected nuint Read(void* buffer, nuint count) => read(descriptor, buffer, count).ThrowIfError();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryRead(void* buffer, nuint count, out nuint readCount) => TryComplete(write(descriptor, buffer, count), out readCount);
+    protected bool TryRead(void* buffer, nuint count, out nuint readCount) => TryComplete(read(descriptor, buffer, count), out readCount);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected nuint Write(void* buffer, nuint count) => write(descriptor, buffer, count).ThrowIfError();
