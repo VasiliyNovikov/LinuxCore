@@ -6,9 +6,13 @@ using static LinuxCore.Interop.Socket;
 
 namespace LinuxCore;
 
-public abstract unsafe class LinuxSocketBase(LinuxAddressFamily domain, LinuxSocketType type, ProtocolType protocol)
-    : FileObject(socket(domain, type | LinuxSocketType.CloseOnExec, protocol).ThrowIfError())
+public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor) : FileObject(descriptor)
 {
+    protected LinuxSocketBase(LinuxAddressFamily domain, LinuxSocketType type, ProtocolType protocol)
+        : this(socket(domain, type | LinuxSocketType.CloseOnExec, protocol).ThrowIfError())
+    {
+    }
+
     protected void Bind<TAddress>(in TAddress address) where TAddress : unmanaged
     {
         fixed (TAddress* addressPtr = &address)
@@ -36,10 +40,29 @@ public abstract unsafe class LinuxSocketBase(LinuxAddressFamily domain, LinuxSoc
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int SendTo<TAddress>(in TAddress address, ReadOnlySpan<byte> buffer, LinuxSocketMessageFlags flags = default)
+        where TAddress : unmanaged
+    {
+        fixed (TAddress* addressPtr = &address)
+        fixed (byte* bufferPtr = buffer)
+            return (int)sendto(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags, (sockaddr*)addressPtr, (uint)sizeof(TAddress)).ThrowIfError();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Receive(Span<byte> buffer, LinuxSocketMessageFlags flags = default)
     {
         fixed (byte* bufferPtr = buffer)
             return (int)recv(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags).ThrowIfError();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int ReceiveFrom<TAddress>(out TAddress address, Span<byte> buffer, LinuxSocketMessageFlags flags = default)
+        where TAddress : unmanaged
+    {
+        var addressLength = (uint)sizeof(TAddress);
+        fixed (TAddress* addressPtr = &address)
+        fixed (byte* bufferPtr = buffer)
+            return (int)recvfrom(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags, (sockaddr*)addressPtr, ref addressLength).ThrowIfError();
     }
 
     protected T GetOption<T>(LinuxSocketOptionLevel level, int option) where T : unmanaged

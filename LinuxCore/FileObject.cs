@@ -12,7 +12,7 @@ public abstract unsafe class FileObject(FileDescriptor descriptor) : NativeObjec
         get => descriptor;
     }
 
-    protected override void ReleaseUnmanagedResources() => close(descriptor).ThrowIfError();
+    protected override void ReleaseUnmanagedResources() => descriptor.Dispose();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected nuint Read(void* buffer, nuint count) => read(descriptor, buffer, count).ThrowIfError();

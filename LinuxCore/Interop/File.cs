@@ -41,6 +41,12 @@ internal static unsafe partial class File
     [SuppressGCTransition]
     public static partial LinuxResult<FileDescriptor> open(string path, LinuxFileFlags flags, LinuxFileMode mode);
 
+    // int dup(int oldfd);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "dup")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial LinuxResult<FileDescriptor> dup(FileDescriptor oldfd);
+
     // ssize_t read(int fd, void* buf, size_t count);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "read")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
