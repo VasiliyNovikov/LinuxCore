@@ -6,7 +6,7 @@ using static LinuxCore.Interop.Socket;
 
 namespace LinuxCore;
 
-public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor) : FileObject(descriptor)
+public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool ownsDescriptor = true) : FileObject(descriptor, ownsDescriptor)
 {
     protected LinuxSocketBase(LinuxAddressFamily domain, LinuxSocketType type, ProtocolType protocol)
         : this(socket(domain, type | LinuxSocketType.CloseOnExec, protocol).ThrowIfError())

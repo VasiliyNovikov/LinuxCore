@@ -4,7 +4,7 @@ using static LinuxCore.Interop.File;
 
 namespace LinuxCore;
 
-public abstract unsafe class FileObject(FileDescriptor descriptor) : NativeObject, IFileObject
+public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDescriptor = true) : NativeObject, IFileObject
 {
     public FileDescriptor Descriptor
     {
@@ -12,7 +12,11 @@ public abstract unsafe class FileObject(FileDescriptor descriptor) : NativeObjec
         get => descriptor;
     }
 
-    protected override void ReleaseUnmanagedResources() => descriptor.Dispose();
+    protected override void ReleaseUnmanagedResources()
+    {
+        if (ownsDescriptor)
+            descriptor.Dispose();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected nuint Read(void* buffer, nuint count) => read(descriptor, buffer, count).ThrowIfError();

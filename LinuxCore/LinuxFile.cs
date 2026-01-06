@@ -5,10 +5,15 @@ using static LinuxCore.Interop.File;
 
 namespace LinuxCore;
 
-public sealed unsafe class LinuxFile(string path, LinuxFileFlags flags, LinuxFileMode mode = LinuxFileMode.None)
-    : FileObject(open(path, flags | LinuxFileFlags.CloseOnExec, mode).ThrowIfError())
+public sealed unsafe class LinuxFile(FileDescriptor descriptor, bool ownsDescriptor = true)
+    : FileObject(descriptor, ownsDescriptor)
 {
     private bool _immutableCached;
+
+    public LinuxFile(string path, LinuxFileFlags flags, LinuxFileMode mode = LinuxFileMode.None)
+        : this(open(path, flags | LinuxFileFlags.CloseOnExec, mode).ThrowIfError())
+    {
+    }
 
     public long Size
     {
