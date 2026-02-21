@@ -14,7 +14,7 @@ public static unsafe class LinuxPoll
     {
         fixed (Query* queriesPtr = queries)
         {
-            var result = poll((pollfd*)queriesPtr, (uint)queries.Length, timeoutMilliseconds);
+            var result = poll((pollfd*)queriesPtr, (nuint)queries.Length, timeoutMilliseconds);
             if (!result.IsError)
                 return result > 0;
 

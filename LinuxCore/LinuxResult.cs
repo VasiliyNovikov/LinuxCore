@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -35,7 +36,7 @@ public readonly unsafe struct LinuxResult<T> where T : unmanaged
         {
             4 => Unsafe.BitCast<T, int>(_value) == -1,
             8 => Unsafe.BitCast<T, long>(_value) == -1,
-            _ => false
+            _ => throw new NotSupportedException($"LinuxResult<{typeof(T).Name}> with size {sizeof(T)} is not supported")
         };
     }
 

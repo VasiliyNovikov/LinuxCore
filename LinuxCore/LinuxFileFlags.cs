@@ -24,6 +24,6 @@ public enum LinuxFileFlags
     NoFollow     = 0x020000, // O_NOFOLLOW: Do not follow symlinks
     NoAccessTime = 0x040000, // O_NOATIME: Do not update the file last access time on read
     CloseOnExec  = 0x080000, // O_CLOEXEC: Set close-on-exec flag for the new file descriptor
-    Path         = 0x100000, // O_PATH: Obtain a file descriptor that can be used for two purposes
-    TmpFile      = 0x210000  // O_TMPFILE: Create an unnamed temporary file
+    Path         = 0x200000, // O_PATH: Obtain a file descriptor that can be used for two purposes
+    TmpFile      = 0x410000  // O_TMPFILE: Create an unnamed temporary file
 }
