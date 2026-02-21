@@ -15,7 +15,7 @@ public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDesc
     protected override void ReleaseUnmanagedResources()
     {
         if (ownsDescriptor)
-            descriptor.Dispose();
+            descriptor.Close();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

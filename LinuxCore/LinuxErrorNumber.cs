@@ -51,7 +51,7 @@ public enum LinuxErrorNumber
     InvalidSystemCall          =  38, // ENOSYS - Invalid system call number
     DirectoryNotEmpty          =  39, // ENOTEMPTY - Directory not empty
     TooManySymbolicLinks       =  40, // ELOOP - Too many symbolic links encountered
-    OperationWouldBlock        =  41, // EWOULDBLOCK - Operation would block
+    OperationWouldBlock   = TryAgain, // EWOULDBLOCK == EAGAIN on Linux
     NoMessageOfDesiredType     =  42, // ENOMSG - No message of desired type
     IdentifierRemoved          =  43, // EIDRM - Identifier removed
     ChannelNumberOutOfRange    =  44, // ECHRNG - Channel number out of range

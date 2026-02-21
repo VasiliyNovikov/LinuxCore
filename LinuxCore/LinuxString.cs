@@ -11,10 +11,11 @@ public static class LinuxString
     [SkipLocalsInit]
     public static unsafe string Format(byte* format, void* ap, int bufferSize = 256)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(bufferSize, 1);
         Span<byte> buffer = stackalloc byte[bufferSize];
         var bufferPtr = (byte*)Unsafe.AsPointer(ref buffer[0]);
-        var written = vsnprintf(bufferPtr, (UIntPtr)(bufferSize - 1), format, ap);
-        if (written >= bufferSize - 1)
+        var written = vsnprintf(bufferPtr, (UIntPtr)bufferSize, format, ap);
+        if (written >= bufferSize && bufferSize >= 4)
         {
             buffer[bufferSize - 4] = (byte)'.';
             buffer[bufferSize - 3] = (byte)'.';

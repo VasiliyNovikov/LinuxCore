@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -8,15 +7,15 @@ using LinuxCore.Interop;
 namespace LinuxCore;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct FileDescriptor : IDisposable
+public readonly struct FileDescriptor
 {
     private readonly int _fd;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Dispose()
+    public void Close()
     {
         if (_fd >= 0)
-            File.close(this).ThrowIfError();
+            File.close(this);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

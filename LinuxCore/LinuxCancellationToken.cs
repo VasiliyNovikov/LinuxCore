@@ -7,7 +7,7 @@ namespace LinuxCore;
 public sealed class LinuxCancellationToken : IDisposable
 {
     private const LinuxPoll.Event NativePollEvent = LinuxPoll.Event.Readable;
-    public static LinuxCancellationToken None => new(CancellationToken.None);
+    public static LinuxCancellationToken None { get; } = new(CancellationToken.None);
 
     private readonly CancellationToken _cancellationToken;
     private readonly LinuxEvent? _event;
