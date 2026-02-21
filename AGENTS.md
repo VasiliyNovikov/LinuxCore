@@ -48,6 +48,14 @@ The hierarchy for file-descriptor-owning types is:
 ### Package management
 Central package versions are in `Directory.Packages.props`. Add new dependencies there, not in individual `.csproj` files.
 
+### Namespaces
+- `LinuxCore` for all public API types; `LinuxCore.Interop` for internal P/Invoke.
+- File-scoped namespace declarations (`namespace LinuxCore;`) throughout.
+- Nullable reference types are enabled globally.
+
+### File object ownership
+- `FileObject` constructor accepts `ownsDescriptor` (default `true`). When `false`, the finalizer/Dispose will not close the file descriptor — use this when wrapping externally-managed descriptors.
+
 ### Tests
 - Framework: **MSTest** (`[TestClass]` / `[TestMethod]`).
 - `Global.cs` applies `[assembly: DoNotParallelize]` — tests must not run in parallel.
