@@ -52,10 +52,22 @@ internal static unsafe partial class File
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static partial LinuxResult<nuint> read(FileDescriptor fd, void* buf, nuint count);
 
+    // ssize_t read(int fd, void* buf, size_t count);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "read")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial LinuxResult<nuint> read_noblock(FileDescriptor fd, void* buf, nuint count);
+
     // ssize_t write(int fd, const void* buf, size_t count);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "write")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static partial LinuxResult<nuint> write(FileDescriptor fd, void* buf, nuint count);
+
+    // ssize_t write(int fd, const void* buf, size_t count);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "write")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial LinuxResult<nuint> write_noblock(FileDescriptor fd, void* buf, nuint count);
 
     // int ioctl(int fd, unsigned long operation, ...);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "ioctl")]
