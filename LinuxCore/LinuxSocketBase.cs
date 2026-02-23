@@ -56,17 +56,20 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int ReceiveFrom<TAddress>(out TAddress address, Span<byte> buffer, LinuxSocketMessageFlags flags = default)
+        where TAddress : unmanaged
+    {
+        var addressLength = (uint)sizeof(TAddress);
+        fixed (TAddress* addressPtr = &address)
+        fixed (byte* bufferPtr = buffer)
+            return (int)recvfrom(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags, (sockaddr*)addressPtr, ref addressLength).ThrowIfError();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TrySend(ReadOnlySpan<byte> buffer, out nuint sentCount, LinuxSocketMessageFlags flags = default)
     {
         fixed (byte* bufferPtr = buffer)
             return TryComplete(send_noblock(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags), out sentCount);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryReceive(Span<byte> buffer, out nuint receivedCount, LinuxSocketMessageFlags flags = default)
-    {
-        fixed (byte* bufferPtr = buffer)
-            return TryComplete(recv_noblock(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags), out receivedCount);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -79,6 +82,13 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryReceive(Span<byte> buffer, out nuint receivedCount, LinuxSocketMessageFlags flags = default)
+    {
+        fixed (byte* bufferPtr = buffer)
+            return TryComplete(recv_noblock(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags), out receivedCount);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryReceiveFrom<TAddress>(out TAddress address, Span<byte> buffer, out nuint receivedCount, LinuxSocketMessageFlags flags = default)
         where TAddress : unmanaged
     {
@@ -86,16 +96,6 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
         fixed (TAddress* addressPtr = &address)
         fixed (byte* bufferPtr = buffer)
             return TryComplete(recvfrom_noblock(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags, (sockaddr*)addressPtr, ref addressLength), out receivedCount);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int ReceiveFrom<TAddress>(out TAddress address, Span<byte> buffer, LinuxSocketMessageFlags flags = default)
-        where TAddress : unmanaged
-    {
-        var addressLength = (uint)sizeof(TAddress);
-        fixed (TAddress* addressPtr = &address)
-        fixed (byte* bufferPtr = buffer)
-            return (int)recvfrom(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags, (sockaddr*)addressPtr, ref addressLength).ThrowIfError();
     }
 
     protected T GetOption<T>(LinuxSocketOptionLevel level, int option) where T : unmanaged
