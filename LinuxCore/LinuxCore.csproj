@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="../LinuxCore.props" />
   <PropertyGroup>
     <IsAotCompatible>true</IsAotCompatible>
     <Version>0.1.0</Version>
