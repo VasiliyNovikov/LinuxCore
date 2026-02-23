@@ -59,3 +59,6 @@ Central package versions are in `Directory.Packages.props`. Add new dependencies
 ### Tests
 - Framework: **MSTest** (`[TestClass]` / `[TestMethod]`).
 - `Global.cs` applies `[assembly: DoNotParallelize]` — tests must not run in parallel.
+
+### Git workflow
+- Always ask the user for confirmation before running `git commit` or `git push`.
