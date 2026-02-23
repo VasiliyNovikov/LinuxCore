@@ -66,14 +66,14 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TrySend(ReadOnlySpan<byte> buffer, out nuint sentCount, LinuxSocketMessageFlags flags = default)
+    public bool TrySend(ReadOnlySpan<byte> buffer, out nuint sentCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
     {
         fixed (byte* bufferPtr = buffer)
             return TryComplete(send_noblock(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags), out sentCount);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TrySendTo<TAddress>(in TAddress address, ReadOnlySpan<byte> buffer, out nuint sentCount, LinuxSocketMessageFlags flags = default)
+    public bool TrySendTo<TAddress>(in TAddress address, ReadOnlySpan<byte> buffer, out nuint sentCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
         where TAddress : unmanaged
     {
         fixed (TAddress* addressPtr = &address)
@@ -82,14 +82,14 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryReceive(Span<byte> buffer, out nuint receivedCount, LinuxSocketMessageFlags flags = default)
+    public bool TryReceive(Span<byte> buffer, out nuint receivedCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
     {
         fixed (byte* bufferPtr = buffer)
             return TryComplete(recv_noblock(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags), out receivedCount);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryReceiveFrom<TAddress>(out TAddress address, Span<byte> buffer, out nuint receivedCount, LinuxSocketMessageFlags flags = default)
+    public bool TryReceiveFrom<TAddress>(out TAddress address, Span<byte> buffer, out nuint receivedCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
         where TAddress : unmanaged
     {
         var addressLength = (uint)sizeof(TAddress);

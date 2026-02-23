@@ -60,5 +60,9 @@ Central package versions are in `Directory.Packages.props`. Add new dependencies
 - Framework: **MSTest** (`[TestClass]` / `[TestMethod]`).
 - `Global.cs` applies `[assembly: DoNotParallelize]` — tests must not run in parallel.
 
+### Documentation
+- When adding or changing public API surface (new types, methods, or features), update `README.md` to reflect the changes (e.g. feature list, architecture diagram).
+- When adding conventions or changing architectural patterns, update this file (`AGENTS.md`) to keep agent instructions accurate.
+
 ### Git workflow
 - Always ask the user for confirmation before running `git commit` or `git push`.
