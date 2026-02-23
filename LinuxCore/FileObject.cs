@@ -22,13 +22,13 @@ public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDesc
     protected nuint Read(void* buffer, nuint count) => read(descriptor, buffer, count).ThrowIfError();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryRead(void* buffer, nuint count, out nuint readCount) => TryComplete(read(descriptor, buffer, count), out readCount);
+    protected bool TryRead(void* buffer, nuint count, out nuint readCount) => TryComplete(read_noblock(descriptor, buffer, count), out readCount);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected nuint Write(void* buffer, nuint count) => write(descriptor, buffer, count).ThrowIfError();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryWrite(void* buffer, nuint count, out nuint writtenCount) => TryComplete(write(descriptor, buffer, count), out writtenCount);
+    protected bool TryWrite(void* buffer, nuint count, out nuint writtenCount) => TryComplete(write_noblock(descriptor, buffer, count), out writtenCount);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void IOCctl(ulong request, void* arg) => ioctl(descriptor, request, arg).ThrowIfError();
@@ -44,12 +44,12 @@ public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDesc
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool TryComplete(LinuxResult<nuint> result, out nuint count)
+    protected static bool TryComplete(LinuxResult<nuint> result, out nuint count)
     {
         if (result.IsError)
         {
             var error = LinuxErrorNumber.Last;
-            if (error is LinuxErrorNumber.TryAgain or LinuxErrorNumber.OperationWouldBlock or LinuxErrorNumber.InterruptedSystemCall)
+            if (error is LinuxErrorNumber.TryAgain or LinuxErrorNumber.InterruptedSystemCall)
             {
                 count = 0;
                 return false;

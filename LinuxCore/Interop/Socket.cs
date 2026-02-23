@@ -58,6 +58,12 @@ internal static unsafe partial class Socket
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static partial LinuxResult<nuint> send(FileDescriptor sockfd, void* buf, nuint size, int flags);
 
+    // ssize_t send(size_t size; int sockfd, const void buf[size], size_t size, int flags);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "send")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial LinuxResult<nuint> send_noblock(FileDescriptor sockfd, void* buf, nuint size, int flags);
+
     // ssize_t sendto(int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "sendto")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,8 +75,20 @@ internal static unsafe partial class Socket
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static partial LinuxResult<nuint> recv(FileDescriptor sockfd, void* buf, nuint size, int flags);
 
+    // ssize_t recv(size_t size; int sockfd, void buf[size], size_t size, int flags);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "recv")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial LinuxResult<nuint> recv_noblock(FileDescriptor sockfd, void* buf, nuint size, int flags);
+
     // ssize_t recvfrom(int socket, void *restrict buffer, size_t length, int flags, struct sockaddr *restrict address, socklen_t *restrict address_len);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "recvfrom")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static partial LinuxResult<nuint> recvfrom(FileDescriptor socket, void* buffer, nuint length, int flags, sockaddr* address, ref uint address_len);
+
+    // ssize_t recvfrom(int socket, void *restrict buffer, size_t length, int flags, struct sockaddr *restrict address, socklen_t *restrict address_len);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "recvfrom")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial LinuxResult<nuint> recvfrom_noblock(FileDescriptor socket, void* buffer, nuint length, int flags, sockaddr* address, ref uint address_len);
 }
