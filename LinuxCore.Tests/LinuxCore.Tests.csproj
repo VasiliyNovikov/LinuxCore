@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="../LinuxCore.props" />
   <ItemGroup>
     <PackageReference Include="MSTest" />
   </ItemGroup>
