@@ -75,7 +75,20 @@ internal static unsafe partial class File
     [SuppressGCTransition]
     public static partial LinuxResult ioctl(FileDescriptor fd, ulong operation, void* argp);
 
+    private static readonly bool HasFstat = NativeLibrary.TryGetExport(NativeLibrary.Load(LinuxLibraries.LibC), "fstat", out _);
+
     // int fstat(int fd, struct stat *statbuf);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "fstat")]
-    public static partial LinuxResult fstat(FileDescriptor fd, out stat statbuf);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    private static partial LinuxResult fstat_direct(FileDescriptor fd, out stat statbuf);
+
+    // int __fxstat(int ver, int fd, struct stat *statbuf);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "__fxstat")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    private static partial LinuxResult __fxstat(int ver, FileDescriptor fd, out stat statbuf);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult fstat(FileDescriptor fd, out stat statbuf) => HasFstat ? fstat_direct(fd, out statbuf) : __fxstat(1, fd, out statbuf);
 }
