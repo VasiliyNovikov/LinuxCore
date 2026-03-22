@@ -5,7 +5,7 @@ using static LinuxCore.Interop.File;
 
 namespace LinuxCore;
 
-public sealed unsafe class LinuxFile(FileDescriptor descriptor, bool ownsDescriptor = true)
+public unsafe class LinuxFile(FileDescriptor descriptor, bool ownsDescriptor = true)
     : FileObject(descriptor, ownsDescriptor)
 {
     private bool _immutableCached;

@@ -18,10 +18,10 @@ All projects target **net10.0** and use `LangVersion=preview`. Warnings are trea
 The library is a thin Linux LibC wrapper with two distinct layers:
 
 - **`LinuxCore/Interop/`** — raw P/Invoke declarations only. Each file maps to one libc header/subsystem (e.g. `File.cs`, `Socket.cs`, `Time.cs`). These are `internal static unsafe partial` classes using `[LibraryImport]` (source-generated P/Invoke, AOT-compatible).
-- **`LinuxCore/` (root)** — public API types that wrap the `Interop` layer. These expose ergonomic, safe-ish abstractions (e.g. `LinuxFile`, `LinuxEvent`, `LinuxSemaphore`, `LinuxClock`).
+- **`LinuxCore/` (root)** — public API types that wrap the `Interop` layer. These expose ergonomic, safe-ish abstractions (e.g. `LinuxFile`, `LinuxMemoryFile`, `LinuxEvent`, `LinuxSemaphore`, `LinuxClock`).
 
 The hierarchy for file-descriptor-owning types is:  
-`NativeObject` (finalizer + `IDisposable`) → `FileObject` (holds `FileDescriptor`, exposes `Read`/`Write`/`IOCctl`) → concrete types like `LinuxEventBase`, `LinuxSocketBase`.
+`NativeObject` (finalizer + `IDisposable`) → `FileObject` (holds `FileDescriptor` and provides shared I/O and descriptor-control helpers) → concrete types like `LinuxFile`, `LinuxMemoryFile`, `LinuxEventBase`, `LinuxSocketBase`.
 
 ## Key Conventions
 
@@ -61,4 +61,3 @@ Central package versions are in `Directory.Packages.props`. Add new dependencies
 ### Tests
 - Framework: **MSTest** (`[TestClass]` / `[TestMethod]`).
 - `Global.cs` applies `[assembly: DoNotParallelize]` — tests must not run in parallel.
-

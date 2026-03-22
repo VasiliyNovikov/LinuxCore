@@ -8,6 +8,7 @@ A thin, AOT-compatible .NET wrapper around Linux libc APIs. Provides ergonomic, 
 ## Features
 
 - **File I/O** — `LinuxFile` for `open`/`read`/`write`/`fstat` with `Span<byte>` support
+- **Memory Files** — `LinuxMemoryFile` for `memfd_create` and memfd seals via `fcntl`
 - **Events & Semaphores** — `LinuxEvent` and `LinuxSemaphore` backed by `eventfd`
 - **Polling** — `LinuxPoll` for `poll()`-based readiness notification
 - **Clocks** — `LinuxClock` for nanosecond-precision monotonic timestamps
@@ -32,10 +33,10 @@ File-descriptor-owning types follow this hierarchy:
 
 ```
 NativeObject (IDisposable + Finalizer)
-  └─ FileObject (FileDescriptor, Read/Write/IOCtl)
+  └─ FileObject (FileDescriptor, shared I/O and descriptor-control helpers)
        ├─ LinuxEventBase → LinuxEvent, LinuxSemaphore
        ├─ LinuxSocketBase
-       └─ LinuxFile
+       └─ LinuxFile → LinuxMemoryFile
 ```
 
 ## License

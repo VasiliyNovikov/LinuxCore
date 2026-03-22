@@ -12,6 +12,18 @@ public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDesc
         get => descriptor;
     }
 
+    public LinuxFileFlags Flags
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (LinuxFileFlags)FileControl(F_GETFL);
+    }
+
+    public bool CloseOnExec
+    {
+        get => (FileControl(F_GETFD) & FD_CLOEXEC) != 0;
+        set => FileControl(F_SETFD, value ? FD_CLOEXEC : 0);
+    }
+
     protected override void ReleaseUnmanagedResources()
     {
         if (ownsDescriptor)
@@ -31,17 +43,23 @@ public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDesc
     protected bool TryWrite(void* buffer, nuint count, out nuint writtenCount) => TryComplete(write_noblock(descriptor, buffer, count), out writtenCount);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void IOCctl(ulong request, void* arg) => ioctl(descriptor, request, arg).ThrowIfError();
+    private void IOControl(ulong request, void* arg) => ioctl(descriptor, request, arg).ThrowIfError();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void IOCctl(ulong request, ulong arg) => IOCctl(request, (void*)arg);
+    protected void IOControl(ulong request, ulong arg) => IOControl(request, (void*)arg);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void IOCctl<T>(ulong request, ref T arg) where T : unmanaged
+    protected void IOControl<T>(ulong request, ref T arg) where T : unmanaged
     {
         fixed (T* pArg = &arg)
-            IOCctl(request, pArg);
+            IOControl(request, pArg);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected int FileControl(int cmd) => fcntl(descriptor, cmd).ThrowIfError();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void FileControl(int cmd, int arg) => fcntl(descriptor, cmd, arg).ThrowIfError();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected static bool TryComplete(LinuxResult<nuint> result, out nuint count)
