@@ -7,6 +7,21 @@ namespace LinuxCore.Interop;
 
 internal static unsafe partial class File
 {
+    public const int F_GETFD     = 1; // Get file descriptor flags
+    public const int F_SETFD     = 2; // Set file descriptor flags
+    public const int F_GETFL     = 3; // Get file status flags
+
+    public const int F_ADD_SEALS = 1033; // Add seals to file
+    public const int F_GET_SEALS = 1034; // Get seals for file
+
+    public const int FD_CLOEXEC = 1;
+
+    public const int F_SEAL_SEAL         = 0x0001; // Prevent further seals from being set
+    public const int F_SEAL_SHRINK       = 0x0002; // Prevent file from shrinking
+    public const int F_SEAL_GROW         = 0x0004; // Prevent file from growing
+    public const int F_SEAL_WRITE        = 0x0008; // Prevent writes
+    public const int F_SEAL_FUTURE_WRITE = 0x0010; // Prevent future writes while mapped
+
     [StructLayout(LayoutKind.Sequential)]
     internal readonly struct stat
     {
@@ -74,6 +89,18 @@ internal static unsafe partial class File
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
     public static partial LinuxResult ioctl(FileDescriptor fd, ulong operation, void* argp);
+
+    // int fcntl(int fd, int cmd, ...);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "fcntl")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial LinuxResult<int> fcntl(FileDescriptor fd, int cmd);
+
+    // int fcntl(int fd, int cmd, ...);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "fcntl")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial LinuxResult<int> fcntl(FileDescriptor fd, int cmd, int arg);
 
     private static readonly bool HasFstat = NativeLibrary.TryGetExport(NativeLibrary.Load(LinuxLibraries.LibC), "fstat", out _);
 
