@@ -6,6 +6,9 @@ namespace LinuxCore.Interop;
 
 internal static unsafe partial class Socket
 {
+    public const int SOCKADDR_UN_PATH_LENGTH = 108;
+    public const uint SOCKADDR_UN_PATH_OFFSET = 2;
+
     public const int MSG_OOB       = 0x0001; // Process out-of-band data
     public const int MSG_PEEK      = 0x0002; // Peek at incoming message
     public const int MSG_DONTROUTE = 0x0004; // Don't route
@@ -29,6 +32,13 @@ internal static unsafe partial class Socket
         public readonly ushort sa_family;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal unsafe struct sockaddr_un
+    {
+        public ushort sun_family;
+        public fixed byte sun_path[SOCKADDR_UN_PATH_LENGTH];
+    }
+
     // int socket(int domain, int type, int protocol);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "socket")]
     public static partial LinuxResult<FileDescriptor> socket(LinuxAddressFamily domain, LinuxSocketType type, ProtocolType protocol);
@@ -44,6 +54,14 @@ internal static unsafe partial class Socket
     // int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "bind")]
     public static partial LinuxResult bind(FileDescriptor sockfd, sockaddr* addr, uint addrlen);
+
+    // int listen(int sockfd, int backlog);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "listen")]
+    public static partial LinuxResult listen(FileDescriptor sockfd, int backlog);
+
+    // int accept4(int sockfd, struct sockaddr *_Nullable restrict addr, socklen_t *_Nullable restrict addrlen, int flags);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "accept4")]
+    public static partial LinuxResult<FileDescriptor> accept4(FileDescriptor sockfd, sockaddr* addr, uint* addrlen, LinuxSocketType flags);
 
     // int getsockname(int sockfd, struct sockaddr *restrict addr, socklen_t *restrict addrlen);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "getsockname")]
@@ -67,8 +85,13 @@ internal static unsafe partial class Socket
     // ssize_t sendto(int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "sendto")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SuppressGCTransition]
     public static partial LinuxResult<nuint> sendto(FileDescriptor socket, void* message, nuint length, int flags, sockaddr* dest_addr, uint dest_len);
+
+    // ssize_t sendto(int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "sendto")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial LinuxResult<nuint> sendto_noblock(FileDescriptor socket, void* message, nuint length, int flags, sockaddr* dest_addr, uint dest_len);
 
     // ssize_t recv(size_t size; int sockfd, void buf[size], size_t size, int flags);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "recv")]

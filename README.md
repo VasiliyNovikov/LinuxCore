@@ -15,7 +15,7 @@ A thin, AOT-compatible .NET wrapper around Linux libc APIs. Provides ergonomic, 
 - **Scheduling** — `LinuxScheduler` for `sched_setscheduler` (FIFO, RR, etc.)
 - **Resource Limits** — `LinuxResourceLimit` for `getrlimit`/`setrlimit`
 - **Cancellation** — `LinuxCancellationToken` bridges `CancellationToken` to native poll
-- **Sockets** — `LinuxSocketBase` for raw socket operations
+- **Sockets** — `UnixSocket` for AF_UNIX sockets and `LinuxSocketBase` for shared raw socket operations
 
 ## Requirements
 
@@ -35,7 +35,7 @@ File-descriptor-owning types follow this hierarchy:
 NativeObject (IDisposable + Finalizer)
   └─ FileObject (FileDescriptor, shared I/O and descriptor-control helpers)
        ├─ LinuxEventBase → LinuxEvent, LinuxSemaphore
-       ├─ LinuxSocketBase
+       ├─ LinuxSocketBase → UnixSocket
        └─ LinuxFile → LinuxMemoryFile
 ```
 
