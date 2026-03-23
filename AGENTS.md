@@ -55,6 +55,9 @@ Central package versions are in `Directory.Packages.props`. Add new dependencies
 - File-scoped namespace declarations (`namespace LinuxCore;`) throughout.
 - Nullable reference types are enabled globally.
 
+### Editing conventions
+- Before editing files, check and follow repository formatting/editing rules from configuration files (for example `.editorconfig`) and preserve them in any changes.
+
 ### File object ownership
 - `FileObject` constructor accepts `ownsDescriptor` (default `true`). When `false`, the finalizer/Dispose will not close the file descriptor — use this when wrapping externally-managed descriptors.
 
