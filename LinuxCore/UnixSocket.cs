@@ -77,13 +77,6 @@ public sealed unsafe class UnixSocket : LinuxSocketBase
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Listen(int backlog)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(backlog);
-        listen(Descriptor, backlog).ThrowIfError();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UnixSocket Accept() => new(accept4(Descriptor, null, null, GetAcceptFlags(Flags)).ThrowIfError());
 
     public bool TryAccept([NotNullWhen(true)] out UnixSocket? socket)

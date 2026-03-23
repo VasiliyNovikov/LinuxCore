@@ -44,6 +44,13 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Listen(int backlog)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(backlog);
+        listen(Descriptor, backlog).ThrowIfError();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Send(ReadOnlySpan<byte> buffer, LinuxSocketMessageFlags flags = default)
     {
         fixed (byte* bufferPtr = buffer)
