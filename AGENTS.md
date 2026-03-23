@@ -57,6 +57,7 @@ Central package versions are in `Directory.Packages.props`. Add new dependencies
 
 ### Editing conventions
 - Before editing files, check and follow repository formatting/editing rules from configuration files (for example `.editorconfig`) and preserve them in any changes.
+- Preserve intentional alignment in constants/enums when a file or member indicates formatting suppression (for example `IDE0055` suppressions or interop formatting exemptions), even if automated formatters try to collapse it.
 
 ### File object ownership
 - `FileObject` constructor accepts `ownsDescriptor` (default `true`). When `false`, the finalizer/Dispose will not close the file descriptor — use this when wrapping externally-managed descriptors.

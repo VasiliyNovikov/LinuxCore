@@ -3,8 +3,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 
-using SocketInterop = LinuxCore.Interop.Socket;
 using static LinuxCore.Interop.Socket;
+
+using SocketInterop = LinuxCore.Interop.Socket;
 
 namespace LinuxCore;
 
