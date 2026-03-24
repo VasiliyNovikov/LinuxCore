@@ -138,6 +138,22 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
             return TryComplete(recvfrom_noblock(Descriptor, bufferPtr, (uint)buffer.Length, (int)effectiveFlags, (sockaddr*)addressPtr, ref addressLength), out receivedCount);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected FileDescriptor Accept() => accept4(Descriptor, null, null, GetAcceptFlags(Flags)).ThrowIfError();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryAccept(out FileDescriptor descriptor)
+    {
+        var flags = Flags;
+        if ((flags & LinuxFileFlags.NonBlock) == 0)
+            throw new InvalidOperationException("TryAccept requires a nonblocking listening socket.");
+
+        return TryComplete(accept4(Descriptor, null, null, GetAcceptFlags(flags)), out descriptor);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static LinuxSocketType GetAcceptFlags(LinuxFileFlags flags) => (LinuxSocketType)(flags & LinuxFileFlags.NonBlock) | LinuxSocketType.CloseOnExec;
+
     protected T GetOption<T>(LinuxSocketOptionLevel level, int option) where T : unmanaged
     {
         var valueLength = (uint)sizeof(T);

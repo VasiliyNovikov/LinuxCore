@@ -3,8 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 
-using static LinuxCore.Interop.Socket;
-
 using SocketInterop = LinuxCore.Interop.Socket;
 
 namespace LinuxCore;
@@ -78,33 +76,18 @@ public sealed unsafe class UnixSocket : LinuxSocketBase
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UnixSocket Accept() => new(accept4(Descriptor, null, null, GetAcceptFlags(Flags)).ThrowIfError());
-
-    public bool TryAccept([NotNullWhen(true)] out UnixSocket? socket)
-    {
-        var flags = Flags;
-        if ((flags & LinuxFileFlags.NonBlock) == 0)
-            throw new InvalidOperationException("TryAccept requires a nonblocking listening socket.");
-
-        var result = accept4(Descriptor, null, null, GetAcceptFlags(flags));
-        if (result.IsError)
-        {
-            var error = LinuxErrorNumber.Last;
-            if (error is LinuxErrorNumber.TryAgain or LinuxErrorNumber.InterruptedSystemCall)
-            {
-                socket = null;
-                return false;
-            }
-            throw new LinuxException(error);
-        }
-
-        socket = new UnixSocket(result);
-        return true;
-    }
+    public new UnixSocket Accept() => new(base.Accept());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static LinuxSocketType GetAcceptFlags(LinuxFileFlags flags)
-        => (flags & LinuxFileFlags.NonBlock) != 0
-            ? LinuxSocketType.CloseOnExec | LinuxSocketType.NonBlocking
-            : LinuxSocketType.CloseOnExec;
+    public bool TryAccept([NotNullWhen(true)] out UnixSocket? socket)
+    {
+        if (base.TryAccept(out var descriptor))
+        {
+            socket = new UnixSocket(descriptor);
+            return true;
+        }
+
+        socket = null;
+        return false;
+    }
 }
