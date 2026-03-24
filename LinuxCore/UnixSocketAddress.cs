@@ -132,11 +132,11 @@ public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
 
     internal static UnixSocketAddress FromNative(SocketInterop.sockaddr_un address, uint addressLength)
     {
+        if (addressLength >= SocketInterop.SOCKADDR_UN_PATH_OFFSET && address.sun_family != (ushort)LinuxAddressFamily.Unix)
+            throw new InvalidOperationException($"Expected AF_UNIX but received family {(LinuxAddressFamily)address.sun_family}.");
+
         if (addressLength <= SocketInterop.SOCKADDR_UN_PATH_OFFSET)
             return Unnamed;
-
-        if (address.sun_family != (ushort)LinuxAddressFamily.Unix)
-            throw new InvalidOperationException($"Expected AF_UNIX but received family {(LinuxAddressFamily)address.sun_family}.");
 
         var nativeLength = (int)Math.Min(addressLength - SocketInterop.SOCKADDR_UN_PATH_OFFSET, SocketInterop.SOCKADDR_UN_PATH_LENGTH);
         var nativePath = MemoryMarshal.CreateReadOnlySpan(ref address.sun_path[0], nativeLength);
