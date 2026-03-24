@@ -10,108 +10,89 @@ namespace LinuxCore;
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
 {
-    public const int MaxPayloadLength = SocketInterop.SOCKADDR_UN_PATH_LENGTH - 1;
+    public const byte MaxPathLength = SocketInterop.SOCKADDR_UN_PATH_LENGTH;
+    public const byte MaxAbstractNameLength = MaxPathLength - 1;
 
-    private const int MaxStoredLength = SocketInterop.SOCKADDR_UN_PATH_LENGTH;
-    private const byte PathnameKind = 1;
-    private const byte AbstractKind = 2;
+    public static readonly UnixSocketAddress Unnamed;
 
-    private byte _kind;
-    private byte _length;
-    private fixed byte _payload[MaxStoredLength];
 
-    public static UnixSocketAddress Unnamed
+    private readonly UnixSocketAddressKind _kind;
+    private readonly byte _length;
+    private fixed byte _path[MaxPathLength];
+    
+    public UnixSocketAddressKind Kind => _kind;
+
+    public readonly int Length => _length;
+
+    public readonly ReadOnlySpan<byte> PathBytes => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in _path[0]), _length);
+
+    public readonly string Path => Encoding.UTF8.GetString(PathBytes);
+
+    private UnixSocketAddress(UnixSocketAddressKind kind, ReadOnlySpan<byte> path)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => default;
+        _kind = kind;
+        _length = checked((byte)path.Length);
+        path.CopyTo(MemoryMarshal.CreateSpan(ref _path[0], MaxPathLength));
     }
 
-    public bool IsUnnamed
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _kind == 0;
-    }
-
-    public bool IsPathname
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _kind == PathnameKind;
-    }
-
-    public bool IsAbstract
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _kind == AbstractKind;
-    }
-
-    public int Length
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _length;
-    }
-
+    [SkipLocalsInit]
     public static UnixSocketAddress FromPath(string path)
     {
         ArgumentNullException.ThrowIfNull(path);
-        return FromPath(Encoding.UTF8.GetBytes(path), nameof(path));
+        Span<byte> pathBytes = stackalloc byte[Encoding.UTF8.GetMaxByteCount(path.Length)];
+        pathBytes = pathBytes[..Encoding.UTF8.GetBytes(path, pathBytes)];
+        return FromPath(pathBytes);
     }
 
-    public static UnixSocketAddress FromPath(ReadOnlySpan<byte> path) => FromPath(path, nameof(path));
+    public static UnixSocketAddress FromPath(ReadOnlySpan<byte> path)
+    {
+        if (path.IsEmpty)
+            throw new ArgumentException("Pathname Unix socket addresses cannot be empty.", nameof(path));
+        if (path.Contains((byte)0))
+            throw new ArgumentException("Pathname Unix socket addresses cannot contain embedded NULL bytes.", nameof(path));
+        if (path.Length > MaxPathLength)
+            throw new ArgumentOutOfRangeException(nameof(path), $"Pathname Unix socket path must be at most {MaxPathLength} bytes.");
+        return new(UnixSocketAddressKind.PathName, path);
+    }
 
+    [SkipLocalsInit]
     public static UnixSocketAddress FromAbstractName(string name)
     {
         ArgumentNullException.ThrowIfNull(name);
-        return FromAbstractName(Encoding.UTF8.GetBytes(name), nameof(name));
+        Span<byte> nameBytes = stackalloc byte[Encoding.UTF8.GetMaxByteCount(name.Length)];
+        nameBytes = nameBytes[..Encoding.UTF8.GetBytes(name, nameBytes)];
+        return FromAbstractName(nameBytes);
     }
 
-    public static UnixSocketAddress FromAbstractName(ReadOnlySpan<byte> name) => FromAbstractName(name, nameof(name));
-
-    public int CopyNameTo(Span<byte> destination)
+    public static UnixSocketAddress FromAbstractName(ReadOnlySpan<byte> name)
     {
-        if (destination.Length < _length)
-            throw new ArgumentException("Destination is too short.", nameof(destination));
-
-        GetPayloadSpan().CopyTo(destination);
-        return _length;
-    }
-
-    public byte[] ToArray()
-    {
-        var buffer = new byte[_length];
-        CopyNameTo(buffer);
-        return buffer;
+        if (name.Length > MaxAbstractNameLength)
+            throw new ArgumentOutOfRangeException(nameof(name), $"Abstract Unix socket name must be at most {MaxAbstractNameLength} bytes.");
+        return new(UnixSocketAddressKind.Abstract, name);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string ToUtf8String() => Encoding.UTF8.GetString(ToArray());
+    public readonly bool Equals(UnixSocketAddress other) => _kind == other._kind && _length == other._length && PathBytes.SequenceEqual(other.PathBytes);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(UnixSocketAddress other)
-    {
-        if (_kind != other._kind || _length != other._length)
-            return false;
+    public readonly override bool Equals(object? obj) => obj is UnixSocketAddress other && Equals(other);
 
-        return GetPayloadSpan().SequenceEqual(other.GetPayloadSpan());
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Equals(object? obj) => obj is UnixSocketAddress other && Equals(other);
-
-    public override int GetHashCode()
+    public readonly override int GetHashCode()
     {
         var hash = new HashCode();
         hash.Add(_kind);
         hash.Add(_length);
-
-        foreach (var payloadByte in GetPayloadSpan())
-            hash.Add(payloadByte);
-
+        hash.AddBytes(PathBytes);
         return hash.ToHashCode();
     }
 
-    public override string ToString() => IsUnnamed
-        ? "unnamed"
-        : $"{(IsPathname ? "pathname" : "abstract")}:{Convert.ToHexString(ToArray())}";
+    public readonly override string ToString() =>
+        _kind switch
+        {
+            UnixSocketAddressKind.Unnamed => "(unnamed)",
+            UnixSocketAddressKind.Abstract => $"@{Path}",
+            _ => Path
+        };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator ==(UnixSocketAddress left, UnixSocketAddress right) => left.Equals(right);
@@ -119,38 +100,34 @@ public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator !=(UnixSocketAddress left, UnixSocketAddress right) => !left.Equals(right);
 
-    internal void WriteTo(out SocketInterop.sockaddr_un address, out uint addressLength)
+    internal readonly void WriteTo(out SocketInterop.sockaddr_un address, out uint addressLength)
     {
-        address = default;
         address.sun_family = (ushort)LinuxAddressFamily.Unix;
 
         var nativePath = MemoryMarshal.CreateSpan(ref address.sun_path[0], SocketInterop.SOCKADDR_UN_PATH_LENGTH);
-        nativePath.Clear();
-
-        if (IsUnnamed)
+        uint nativePathLength;
+        switch (_kind)
         {
-            addressLength = SocketInterop.SOCKADDR_UN_PATH_OFFSET;
-            return;
+            case UnixSocketAddressKind.Unnamed:
+                nativePathLength = 0;
+                break;
+            case UnixSocketAddressKind.Abstract:
+                nativePath[0] = 0;
+                PathBytes.CopyTo(nativePath[1..]);
+                nativePathLength = _length + 1u;
+                break;
+            default:
+                PathBytes.CopyTo(nativePath);
+                if (_length < MaxPathLength)
+                {
+                    nativePath[_length] = 0;
+                    nativePathLength = _length + 1u;
+                }
+                else
+                    nativePathLength = MaxPathLength;
+                break;
         }
-
-        var payload = GetPayloadSpan();
-        if (IsPathname)
-        {
-            payload.CopyTo(nativePath);
-            if (_length < MaxStoredLength)
-            {
-                nativePath[_length] = 0;
-                addressLength = SocketInterop.SOCKADDR_UN_PATH_OFFSET + (uint)_length + 1;
-                return;
-            }
-
-            addressLength = SocketInterop.SOCKADDR_UN_PATH_OFFSET + MaxStoredLength;
-            return;
-        }
-
-        nativePath[0] = 0;
-        payload.CopyTo(nativePath[1..]);
-        addressLength = SocketInterop.SOCKADDR_UN_PATH_OFFSET + 1u + (uint)_length;
+        addressLength = SocketInterop.SOCKADDR_UN_PATH_OFFSET + nativePathLength;
     }
 
     internal static UnixSocketAddress FromNative(SocketInterop.sockaddr_un address, uint addressLength)
@@ -161,53 +138,16 @@ public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
         if (address.sun_family != (ushort)LinuxAddressFamily.Unix)
             throw new InvalidOperationException($"Expected AF_UNIX but received family {(LinuxAddressFamily)address.sun_family}.");
 
-        var nativeLength = (int)Math.Min(addressLength - SocketInterop.SOCKADDR_UN_PATH_OFFSET, (uint)SocketInterop.SOCKADDR_UN_PATH_LENGTH);
+        var nativeLength = (int)Math.Min(addressLength - SocketInterop.SOCKADDR_UN_PATH_OFFSET, SocketInterop.SOCKADDR_UN_PATH_LENGTH);
         var nativePath = MemoryMarshal.CreateReadOnlySpan(ref address.sun_path[0], nativeLength);
 
         if (nativePath[0] == 0)
-            return Create(AbstractKind, nativePath[1..]);
+            return new(UnixSocketAddressKind.Abstract, nativePath[1..]);
 
         var terminatorIndex = nativePath.IndexOf((byte)0);
-        var payload = terminatorIndex >= 0 ? nativePath[..terminatorIndex] : nativePath;
-        return payload.IsEmpty
+        var path = terminatorIndex >= 0 ? nativePath[..terminatorIndex] : nativePath;
+        return path.IsEmpty
             ? throw new InvalidOperationException("Pathname Unix socket addresses cannot be empty.")
-            : Create(PathnameKind, payload);
+            : new(UnixSocketAddressKind.PathName, path);
     }
-
-    private static UnixSocketAddress FromPath(ReadOnlySpan<byte> path, string paramName)
-    {
-        if (path.IsEmpty)
-            throw new ArgumentException("Pathname Unix socket addresses cannot be empty.", paramName);
-
-        ValidateLength(path.Length, paramName);
-        if (path.Contains((byte)0))
-            throw new ArgumentException("Pathname Unix socket addresses cannot contain embedded NUL bytes.", paramName);
-
-        return Create(PathnameKind, path);
-    }
-
-    private static UnixSocketAddress FromAbstractName(ReadOnlySpan<byte> name, string paramName)
-    {
-        ValidateLength(name.Length, paramName);
-        return Create(AbstractKind, name);
-    }
-
-    private static void ValidateLength(int length, string paramName)
-    {
-        if (length > MaxPayloadLength)
-            throw new ArgumentOutOfRangeException(paramName, $"Unix socket payload must be at most {MaxPayloadLength} bytes.");
-    }
-
-    private static UnixSocketAddress Create(byte kind, ReadOnlySpan<byte> payload)
-    {
-        UnixSocketAddress address = default;
-        address._kind = kind;
-        address._length = checked((byte)payload.Length);
-
-        payload.CopyTo(MemoryMarshal.CreateSpan(ref address._payload[0], MaxStoredLength));
-
-        return address;
-    }
-
-    private ReadOnlySpan<byte> GetPayloadSpan() => MemoryMarshal.CreateReadOnlySpan(ref _payload[0], _length);
 }

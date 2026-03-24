@@ -6,9 +6,6 @@ namespace LinuxCore.Interop;
 
 internal static unsafe partial class Socket
 {
-    public const int SOCKADDR_UN_PATH_LENGTH = 108;
-    public const uint SOCKADDR_UN_PATH_OFFSET = 2;
-
     public const int MSG_OOB       = 0x0001; // Process out-of-band data
     public const int MSG_PEEK      = 0x0002; // Peek at incoming message
     public const int MSG_DONTROUTE = 0x0004; // Don't route
@@ -26,6 +23,9 @@ internal static unsafe partial class Socket
     public const int MSG_NOSIGNAL  = 0x4000; // Do not generate SIGPIPE
     public const int MSG_MORE      = 0x8000; // Sender will send more
 
+    public const byte SOCKADDR_UN_PATH_OFFSET = 2;
+    public const byte SOCKADDR_UN_PATH_LENGTH = 108;
+
     [StructLayout(LayoutKind.Sequential)]
     internal readonly struct sockaddr
     {
@@ -33,7 +33,7 @@ internal static unsafe partial class Socket
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal unsafe struct sockaddr_un
+    internal struct sockaddr_un
     {
         public ushort sun_family;
         public fixed byte sun_path[SOCKADDR_UN_PATH_LENGTH];

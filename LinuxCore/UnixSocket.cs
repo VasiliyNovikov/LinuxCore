@@ -9,6 +9,16 @@ namespace LinuxCore;
 
 public sealed unsafe class UnixSocket : LinuxSocketBase
 {
+    public UnixSocketAddress LocalAddress
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            GetAddress(out SocketInterop.sockaddr_un nativeAddress, out var addressLength);
+            return UnixSocketAddress.FromNative(nativeAddress, addressLength);
+        }
+    }
+
     public UnixSocket(FileDescriptor descriptor, bool ownsDescriptor = true)
         : base(descriptor, ownsDescriptor)
     {
@@ -19,25 +29,16 @@ public sealed unsafe class UnixSocket : LinuxSocketBase
     {
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Bind(in UnixSocketAddress address)
     {
         address.WriteTo(out SocketInterop.sockaddr_un nativeAddress, out var addressLength);
         Bind(in nativeAddress, addressLength);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Connect(in UnixSocketAddress address)
     {
         address.WriteTo(out SocketInterop.sockaddr_un nativeAddress, out var addressLength);
         Connect(in nativeAddress, addressLength);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UnixSocketAddress GetLocalAddress()
-    {
-        GetAddress(out SocketInterop.sockaddr_un nativeAddress, out var addressLength);
-        return UnixSocketAddress.FromNative(nativeAddress, addressLength);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

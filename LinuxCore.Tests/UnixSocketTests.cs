@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -9,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace LinuxCore.Tests;
 
 [TestClass]
-public partial class UnixSocketTests
+public class UnixSocketTests
 {
     [TestMethod]
     public void UnixSocket_Create_Sets_CloseOnExec()
@@ -122,19 +120,19 @@ public partial class UnixSocketTests
             listener.Bind(address);
             listener.Listen(1);
 
-            Assert.AreEqual(address, listener.GetLocalAddress());
+            Assert.AreEqual(address, listener.LocalAddress);
 
             using var client = new UnixSocket();
             client.Connect(address);
 
             using var accepted = listener.Accept();
 
-            var payload = Encoding.ASCII.GetBytes("Hello, Unix pathname socket!");
+            var payload = "Hello, Unix pathname socket!"u8;
             Assert.AreEqual(payload.Length, client.Send(payload));
 
             Span<byte> buffer = stackalloc byte[payload.Length];
             Assert.AreEqual(payload.Length, accepted.Receive(buffer));
-            CollectionAssert.AreEqual(payload, buffer.ToArray());
+            CollectionAssert.AreEqual(payload.ToArray(), buffer.ToArray());
         }
         finally
         {
@@ -145,40 +143,39 @@ public partial class UnixSocketTests
     [TestMethod]
     public void UnixSocket_Abstract_Stream_RoundTrips_And_GetLocalAddress_IsExact()
     {
-        var address = UnixSocketAddress.FromAbstractName(CreateAbstractPayload());
+        var address = UnixSocketAddress.FromAbstractName(CreateAbstractPath());
 
         using var listener = new UnixSocket();
         listener.Bind(address);
         listener.Listen(1);
 
-        CollectionAssert.AreEqual(address.ToArray(), listener.GetLocalAddress().ToArray());
-        Assert.IsTrue(listener.GetLocalAddress().IsAbstract);
+        Assert.AreEqual(address, listener.LocalAddress);
 
         using var client = new UnixSocket();
         client.Connect(address);
 
         using var accepted = listener.Accept();
 
-        var payload = Encoding.ASCII.GetBytes("Hello, abstract socket!");
+        var payload = "Hello, abstract socket!"u8;
         Assert.AreEqual(payload.Length, client.Send(payload));
 
         Span<byte> buffer = stackalloc byte[payload.Length];
         Assert.AreEqual(payload.Length, accepted.Receive(buffer));
-        CollectionAssert.AreEqual(payload, buffer.ToArray());
+        CollectionAssert.AreEqual(payload.ToArray(), buffer.ToArray());
     }
 
     [TestMethod]
     public void UnixSocket_GetLocalAddress_OnUnboundSocket_IsUnnamed()
     {
         using var socket = new UnixSocket(LinuxSocketType.Datagram);
-        Assert.IsTrue(socket.GetLocalAddress().IsUnnamed);
+        Assert.AreEqual(UnixSocketAddress.Unnamed, socket.LocalAddress);
     }
 
     [TestMethod]
     public void UnixSocket_ReceiveFrom_Decodes_NamedSender_Address()
     {
-        var receiverAddress = UnixSocketAddress.FromAbstractName(CreateAbstractPayload());
-        var senderAddress = UnixSocketAddress.FromAbstractName(CreateAbstractPayload());
+        var receiverAddress = UnixSocketAddress.FromAbstractName(CreateAbstractPath());
+        var senderAddress = UnixSocketAddress.FromAbstractName(CreateAbstractPath());
 
         using var receiver = new UnixSocket(LinuxSocketType.Datagram);
         receiver.Bind(receiverAddress);
@@ -186,71 +183,66 @@ public partial class UnixSocketTests
         using var sender = new UnixSocket(LinuxSocketType.Datagram);
         sender.Bind(senderAddress);
 
-        var payload = Encoding.ASCII.GetBytes("ping");
+        var payload = "ping"u8;
         Assert.AreEqual(payload.Length, sender.SendTo(receiverAddress, payload));
 
         Span<byte> buffer = stackalloc byte[payload.Length];
         Assert.AreEqual(payload.Length, receiver.ReceiveFrom(out var receivedAddress, buffer));
         Assert.AreEqual(senderAddress, receivedAddress);
-        CollectionAssert.AreEqual(payload, buffer.ToArray());
+        CollectionAssert.AreEqual(payload.ToArray(), buffer.ToArray());
 
-        var secondPayload = Encoding.ASCII.GetBytes("pong");
+        var secondPayload = "pong"u8;
         Assert.AreEqual(secondPayload.Length, sender.SendTo(receiverAddress, secondPayload));
 
         Span<byte> secondBuffer = stackalloc byte[secondPayload.Length];
         Assert.IsTrue(receiver.TryReceiveFrom(out var tryReceivedAddress, secondBuffer, out var receivedCount));
         Assert.AreEqual((nuint)secondPayload.Length, receivedCount);
         Assert.AreEqual(senderAddress, tryReceivedAddress);
-        CollectionAssert.AreEqual(secondPayload, secondBuffer.ToArray());
+        CollectionAssert.AreEqual(secondPayload.ToArray(), secondBuffer.ToArray());
     }
 
     [TestMethod]
     public void UnixSocket_ReceiveFrom_Decodes_UnnamedSender_Address()
     {
-        var receiverAddress = UnixSocketAddress.FromAbstractName(CreateAbstractPayload());
+        var receiverAddress = UnixSocketAddress.FromAbstractName(CreateAbstractPath());
 
         using var receiver = new UnixSocket(LinuxSocketType.Datagram);
         receiver.Bind(receiverAddress);
 
         using var sender = new UnixSocket(LinuxSocketType.Datagram);
 
-        var payload = Encoding.ASCII.GetBytes("left");
+        var payload = "left"u8;
         Assert.AreEqual(payload.Length, sender.SendTo(receiverAddress, payload));
 
         Span<byte> buffer = stackalloc byte[payload.Length];
         Assert.AreEqual(payload.Length, receiver.ReceiveFrom(out var receivedAddress, buffer));
-        Assert.IsTrue(receivedAddress.IsUnnamed);
-        CollectionAssert.AreEqual(payload, buffer.ToArray());
+        Assert.AreEqual(UnixSocketAddress.Unnamed, receivedAddress);
+        CollectionAssert.AreEqual(payload.ToArray(), buffer.ToArray());
 
-        var secondPayload = Encoding.ASCII.GetBytes("right");
+        var secondPayload = "right"u8;
         Assert.AreEqual(secondPayload.Length, sender.SendTo(receiverAddress, secondPayload));
 
         Span<byte> secondBuffer = stackalloc byte[secondPayload.Length];
         Assert.IsTrue(receiver.TryReceiveFrom(out var tryReceivedAddress, secondBuffer, out var receivedCount));
         Assert.AreEqual((nuint)secondPayload.Length, receivedCount);
-        Assert.IsTrue(tryReceivedAddress.IsUnnamed);
-        CollectionAssert.AreEqual(secondPayload, secondBuffer.ToArray());
+        Assert.AreEqual(UnixSocketAddress.Unnamed, tryReceivedAddress);
+        CollectionAssert.AreEqual(secondPayload.ToArray(), secondBuffer.ToArray());
     }
 
     [TestMethod]
-    public unsafe void UnixSocket_GetLocalAddress_Decodes_108Byte_RawPathname()
+    public void UnixSocket_GetLocalAddress_Decodes_108Byte_RawPathname()
     {
-        var socketPath = CreateMaxNativeSocketPath();
+        var socketPath = CreateMaxSocketPath();
         try
         {
-            var pathBytes = Encoding.ASCII.GetBytes(socketPath);
-            Assert.AreEqual(RawUnixSocketInterop.PathLength, pathBytes.Length);
+            var address = UnixSocketAddress.FromPath(socketPath);
+            Assert.AreEqual(UnixSocketAddress.MaxPathLength, address.Length);
 
-            using var socket = new UnixSocket(RawUnixSocketInterop.socket(LinuxAddressFamily.Unix, LinuxSocketType.Stream, 0));
-
-            RawUnixSocketInterop.sockaddr_un nativeAddress = default;
-            nativeAddress.sun_family = (ushort)LinuxAddressFamily.Unix;
-            pathBytes.CopyTo(MemoryMarshal.CreateSpan(ref nativeAddress.sun_path[0], RawUnixSocketInterop.PathLength));
-            RawUnixSocketInterop.bind(socket.Descriptor, &nativeAddress, RawUnixSocketInterop.AddressLength);
-
-            var address = socket.GetLocalAddress();
-            Assert.IsTrue(address.IsPathname);
-            CollectionAssert.AreEqual(pathBytes, address.ToArray());
+            using var socket = new UnixSocket();
+            socket.Bind(address);
+            
+            var localAddress = socket.LocalAddress;
+            Assert.AreEqual(address, localAddress);
         }
         finally
         {
@@ -261,22 +253,22 @@ public partial class UnixSocketTests
     [TestMethod]
     public void UnixSocketAddress_FromPath_Accepts_MaximumLength()
     {
-        var path = new string('a', UnixSocketAddress.MaxPayloadLength);
+        var path = new string('a', UnixSocketAddress.MaxPathLength);
         var address = UnixSocketAddress.FromPath(path);
 
-        Assert.IsTrue(address.IsPathname);
-        Assert.AreEqual(path, address.ToUtf8String());
+        Assert.AreEqual(UnixSocketAddressKind.PathName, address.Kind);
+        Assert.AreEqual(path, address.Path);
     }
 
     [TestMethod]
     public void UnixSocketAddress_FromPath_Oversized_ThrowsArgumentOutOfRangeException()
     {
-        var path = new string('a', UnixSocketAddress.MaxPayloadLength + 1);
+        var path = new string('a', UnixSocketAddress.MaxPathLength + 1);
         _ = Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => UnixSocketAddress.FromPath(path));
     }
 
     [TestMethod]
-    public void UnixSocketAddress_FromPath_EmbeddedNul_ThrowsArgumentException()
+    public void UnixSocketAddress_FromPath_EmbeddedNull_ThrowsArgumentException()
     {
         _ = Assert.ThrowsExactly<ArgumentException>(() => UnixSocketAddress.FromPath("abc\0def"));
     }
@@ -284,78 +276,34 @@ public partial class UnixSocketTests
     [TestMethod]
     public void UnixSocketAddress_FromAbstractName_Accepts_MaximumLength()
     {
-        var payload = EnumerableRepeat((byte)0xA5, UnixSocketAddress.MaxPayloadLength);
-        var address = UnixSocketAddress.FromAbstractName(payload);
+        var name = new string('a', UnixSocketAddress.MaxAbstractNameLength);
+        var address = UnixSocketAddress.FromAbstractName(name);
 
-        Assert.IsTrue(address.IsAbstract);
-        CollectionAssert.AreEqual(payload, address.ToArray());
+        Assert.AreEqual(UnixSocketAddressKind.Abstract, address.Kind);
+        Assert.AreEqual(name, address.Path);
     }
 
     [TestMethod]
     public void UnixSocketAddress_FromAbstractName_Oversized_ThrowsArgumentOutOfRangeException()
     {
-        var payload = EnumerableRepeat((byte)0x5A, UnixSocketAddress.MaxPayloadLength + 1);
-        _ = Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => UnixSocketAddress.FromAbstractName(payload));
+        var name = new string('a', UnixSocketAddress.MaxAbstractNameLength + 1);
+        _ = Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => UnixSocketAddress.FromAbstractName(name));
     }
 
-    private static byte[] CreateAbstractPayload()
-    {
-        var guidBytes = Guid.NewGuid().ToByteArray();
-        return [0x80, 0xFF, 0x00, .. guidBytes];
-    }
+    private static string CreateAbstractPath() => Encoding.ASCII.GetString([0x80, 0xFF, 0x00, .. Guid.NewGuid().ToByteArray()]);
 
     private static string CreateSocketPath() => $"/tmp/linuxcore-{Guid.NewGuid():N}.sock";
 
-    private static string CreateMaxNativeSocketPath()
+    private static string CreateMaxSocketPath()
     {
         const string prefix = "/tmp/";
         var suffix = Guid.NewGuid().ToString("N")[..8];
-        return prefix + new string('p', RawUnixSocketInterop.PathLength - prefix.Length - suffix.Length) + suffix;
+        return prefix + new string('p', UnixSocketAddress.MaxPathLength - prefix.Length - suffix.Length) + suffix;
     }
 
     private static void DeleteSocketPath(string path)
     {
         if (File.Exists(path))
             File.Delete(path);
-    }
-
-    private static byte[] EnumerableRepeat(byte value, int count)
-    {
-        var buffer = new byte[count];
-        Array.Fill(buffer, value);
-        return buffer;
-    }
-
-    private static unsafe partial class RawUnixSocketInterop
-    {
-        public const int PathLength = 108;
-        public const uint AddressLength = 110;
-
-        [StructLayout(LayoutKind.Sequential)]
-        public unsafe struct sockaddr_un
-        {
-            public ushort sun_family;
-            public fixed byte sun_path[PathLength];
-        }
-
-        [LibraryImport("libc", EntryPoint = "socket")]
-        private static partial int socket_raw(int domain, int type, int protocol);
-
-        [LibraryImport("libc", EntryPoint = "bind")]
-        private static partial int bind_raw(int sockfd, sockaddr_un* addr, uint addrlen);
-
-        public static FileDescriptor socket(LinuxAddressFamily domain, LinuxSocketType type, int protocol)
-        {
-            var descriptor = socket_raw((int)domain, (int)type, protocol);
-            return descriptor == -1
-                ? throw LinuxException.FromLastError()
-                : Unsafe.BitCast<int, FileDescriptor>(descriptor);
-        }
-
-        public static void bind(FileDescriptor sockfd, sockaddr_un* addr, uint addrlen)
-        {
-            if (bind_raw(Unsafe.BitCast<FileDescriptor, int>(sockfd), addr, addrlen) == -1)
-                throw LinuxException.FromLastError();
-        }
     }
 }
