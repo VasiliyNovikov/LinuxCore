@@ -13,32 +13,27 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
     {
     }
 
-    protected void Bind<TAddress>(in TAddress address) where TAddress : unmanaged
-        => Bind(in address, (uint)sizeof(TAddress));
+    protected void Bind<TAddress>(in TAddress address) where TAddress : unmanaged => Bind(in address, (uint)sizeof(TAddress));
 
-    private protected void Bind<TAddress>(in TAddress address, uint addressLength) where TAddress : unmanaged
+    protected void Bind<TAddress>(in TAddress address, uint addressLength) where TAddress : unmanaged
     {
-        ValidateAddressLength<TAddress>(addressLength);
         fixed (TAddress* addressPtr = &address)
             bind(Descriptor, (sockaddr*)addressPtr, addressLength).ThrowIfError();
     }
 
-    protected void GetAddress<TAddress>(out TAddress address) where TAddress : unmanaged
-        => GetAddress(out address, out _);
+    protected void GetAddress<TAddress>(out TAddress address) where TAddress : unmanaged => GetAddress(out address, out _);
 
-    private protected void GetAddress<TAddress>(out TAddress address, out uint addressLength) where TAddress : unmanaged
+    protected void GetAddress<TAddress>(out TAddress address, out uint addressLength) where TAddress : unmanaged
     {
         addressLength = (uint)sizeof(TAddress);
         fixed (TAddress* addressPtr = &address)
             getsockname(Descriptor, (sockaddr*)addressPtr, ref addressLength).ThrowIfError();
     }
 
-    protected void Connect<TAddress>(in TAddress address) where TAddress : unmanaged
-        => Connect(in address, (uint)sizeof(TAddress));
+    protected void Connect<TAddress>(in TAddress address) where TAddress : unmanaged => Connect(in address, (uint)sizeof(TAddress));
 
-    private protected void Connect<TAddress>(in TAddress address, uint addressLength) where TAddress : unmanaged
+    protected void Connect<TAddress>(in TAddress address, uint addressLength) where TAddress : unmanaged
     {
-        ValidateAddressLength<TAddress>(addressLength);
         fixed (TAddress* addressPtr = &address)
             connect(Descriptor, (sockaddr*)addressPtr, addressLength).ThrowIfError();
     }
@@ -57,15 +52,15 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
             return (int)send(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags).ThrowIfError();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int SendTo<TAddress>(in TAddress address, ReadOnlySpan<byte> buffer, LinuxSocketMessageFlags flags = default)
-        where TAddress : unmanaged
-        => SendTo(in address, (uint)sizeof(TAddress), buffer, flags);
-
-    private protected int SendTo<TAddress>(in TAddress address, uint addressLength, ReadOnlySpan<byte> buffer, LinuxSocketMessageFlags flags = default)
+    protected int SendTo<TAddress>(in TAddress address, ReadOnlySpan<byte> buffer, LinuxSocketMessageFlags flags = default)
         where TAddress : unmanaged
     {
-        ValidateAddressLength<TAddress>(addressLength);
+        return SendTo(in address, (uint)sizeof(TAddress), buffer, flags);
+    }
+
+    protected int SendTo<TAddress>(in TAddress address, uint addressLength, ReadOnlySpan<byte> buffer, LinuxSocketMessageFlags flags = default)
+        where TAddress : unmanaged
+    {
         fixed (TAddress* addressPtr = &address)
         fixed (byte* bufferPtr = buffer)
             return (int)sendto(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags, (sockaddr*)addressPtr, addressLength).ThrowIfError();
@@ -78,12 +73,13 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
             return (int)recv(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags).ThrowIfError();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int ReceiveFrom<TAddress>(out TAddress address, Span<byte> buffer, LinuxSocketMessageFlags flags = default)
+    protected int ReceiveFrom<TAddress>(out TAddress address, Span<byte> buffer, LinuxSocketMessageFlags flags = default)
         where TAddress : unmanaged
-        => ReceiveFrom(out address, out _, buffer, flags);
+    {
+        return ReceiveFrom(out address, out _, buffer, flags);
+    }
 
-    private protected int ReceiveFrom<TAddress>(out TAddress address, out uint addressLength, Span<byte> buffer, LinuxSocketMessageFlags flags = default)
+    protected int ReceiveFrom<TAddress>(out TAddress address, out uint addressLength, Span<byte> buffer, LinuxSocketMessageFlags flags = default)
         where TAddress : unmanaged
     {
         addressLength = (uint)sizeof(TAddress);
@@ -100,15 +96,15 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
             return TryComplete(send_noblock(Descriptor, bufferPtr, (uint)buffer.Length, (int)effectiveFlags), out sentCount);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TrySendTo<TAddress>(in TAddress address, ReadOnlySpan<byte> buffer, out nuint sentCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
-        where TAddress : unmanaged
-        => TrySendTo(in address, (uint)sizeof(TAddress), buffer, out sentCount, flags);
-
-    private protected bool TrySendTo<TAddress>(in TAddress address, uint addressLength, ReadOnlySpan<byte> buffer, out nuint sentCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
+    protected bool TrySendTo<TAddress>(in TAddress address, ReadOnlySpan<byte> buffer, out nuint sentCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
         where TAddress : unmanaged
     {
-        ValidateAddressLength<TAddress>(addressLength);
+        return TrySendTo(in address, (uint)sizeof(TAddress), buffer, out sentCount, flags);
+    }
+
+    protected bool TrySendTo<TAddress>(in TAddress address, uint addressLength, ReadOnlySpan<byte> buffer, out nuint sentCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
+        where TAddress : unmanaged
+    {
         var effectiveFlags = flags | LinuxSocketMessageFlags.DontWait;
         fixed (TAddress* addressPtr = &address)
         fixed (byte* bufferPtr = buffer)
@@ -123,12 +119,13 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
             return TryComplete(recv_noblock(Descriptor, bufferPtr, (uint)buffer.Length, (int)effectiveFlags), out receivedCount);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryReceiveFrom<TAddress>(out TAddress address, Span<byte> buffer, out nuint receivedCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
+    protected bool TryReceiveFrom<TAddress>(out TAddress address, Span<byte> buffer, out nuint receivedCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
         where TAddress : unmanaged
-        => TryReceiveFrom(out address, out _, buffer, out receivedCount, flags);
+    {
+        return TryReceiveFrom(out address, out _, buffer, out receivedCount, flags);
+    }
 
-    private protected bool TryReceiveFrom<TAddress>(out TAddress address, out uint addressLength, Span<byte> buffer, out nuint receivedCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
+    protected bool TryReceiveFrom<TAddress>(out TAddress address, out uint addressLength, Span<byte> buffer, out nuint receivedCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
         where TAddress : unmanaged
     {
         addressLength = (uint)sizeof(TAddress);
@@ -179,11 +176,5 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
     {
         fixed (byte* valuePtr = value)
             setsockopt(Descriptor, level, option, valuePtr, (uint)value.Length).ThrowIfError();
-    }
-
-    private static void ValidateAddressLength<TAddress>(uint addressLength) where TAddress : unmanaged
-    {
-        if (addressLength > (uint)sizeof(TAddress))
-            throw new ArgumentOutOfRangeException(nameof(addressLength), $"Address length cannot exceed {sizeof(TAddress)} bytes.");
     }
 }
