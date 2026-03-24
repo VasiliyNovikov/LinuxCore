@@ -39,7 +39,11 @@ public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
     public static UnixSocketAddress FromPath(string path)
     {
         ArgumentNullException.ThrowIfNull(path);
-        Span<byte> pathBytes = stackalloc byte[Encoding.UTF8.GetMaxByteCount(path.Length)];
+        var maxByteCount = Encoding.UTF8.GetMaxByteCount(path.Length);
+        if (maxByteCount > MaxPathLength)
+            throw new ArgumentOutOfRangeException(nameof(path), $"Pathname Unix socket path must be at most {MaxPathLength} bytes.");
+
+        Span<byte> pathBytes = stackalloc byte[maxByteCount];
         pathBytes = pathBytes[..Encoding.UTF8.GetBytes(path, pathBytes)];
         return FromPath(pathBytes);
     }
@@ -52,6 +56,7 @@ public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
             throw new ArgumentException("Pathname Unix socket addresses cannot contain embedded NULL bytes.", nameof(path));
         if (path.Length > MaxPathLength)
             throw new ArgumentOutOfRangeException(nameof(path), $"Pathname Unix socket path must be at most {MaxPathLength} bytes.");
+
         return new(UnixSocketAddressKind.PathName, path);
     }
 
@@ -59,6 +64,10 @@ public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
     public static UnixSocketAddress FromAbstractName(string name)
     {
         ArgumentNullException.ThrowIfNull(name);
+        var maxByteCount = Encoding.UTF8.GetMaxByteCount(name.Length);
+        if (maxByteCount > MaxAbstractNameLength)
+            throw new ArgumentOutOfRangeException(nameof(name), $"Abstract Unix socket name must be at most {MaxAbstractNameLength} bytes.");
+
         Span<byte> nameBytes = stackalloc byte[Encoding.UTF8.GetMaxByteCount(name.Length)];
         nameBytes = nameBytes[..Encoding.UTF8.GetBytes(name, nameBytes)];
         return FromAbstractName(nameBytes);
@@ -68,6 +77,7 @@ public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
     {
         if (name.Length > MaxAbstractNameLength)
             throw new ArgumentOutOfRangeException(nameof(name), $"Abstract Unix socket name must be at most {MaxAbstractNameLength} bytes.");
+
         return new(UnixSocketAddressKind.Abstract, name);
     }
 
