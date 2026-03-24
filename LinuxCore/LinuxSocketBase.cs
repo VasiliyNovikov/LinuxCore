@@ -38,12 +38,24 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
             connect(Descriptor, (sockaddr*)addressPtr, addressLength).ThrowIfError();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Listen(int backlog)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(backlog);
         listen(Descriptor, backlog).ThrowIfError();
     }
+
+    protected FileDescriptor Accept() => accept4(Descriptor, null, null, GetAcceptFlags(Flags)).ThrowIfError();
+
+    protected bool TryAccept(out FileDescriptor descriptor)
+    {
+        var flags = Flags;
+        if ((flags & LinuxFileFlags.NonBlock) == 0)
+            throw new InvalidOperationException("TryAccept requires a nonblocking listening socket.");
+
+        return TryComplete(accept4(Descriptor, null, null, GetAcceptFlags(flags)), out descriptor);
+    }
+
+    private static LinuxSocketType GetAcceptFlags(LinuxFileFlags flags) => (LinuxSocketType)(flags & LinuxFileFlags.NonBlock) | LinuxSocketType.CloseOnExec;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Send(ReadOnlySpan<byte> buffer, LinuxSocketMessageFlags flags = default)
@@ -52,12 +64,14 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
             return (int)send(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags).ThrowIfError();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected int SendTo<TAddress>(in TAddress address, ReadOnlySpan<byte> buffer, LinuxSocketMessageFlags flags = default)
         where TAddress : unmanaged
     {
         return SendTo(in address, (uint)sizeof(TAddress), buffer, flags);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected int SendTo<TAddress>(in TAddress address, uint addressLength, ReadOnlySpan<byte> buffer, LinuxSocketMessageFlags flags = default)
         where TAddress : unmanaged
     {
@@ -73,12 +87,14 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
             return (int)recv(Descriptor, bufferPtr, (uint)buffer.Length, (int)flags).ThrowIfError();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected int ReceiveFrom<TAddress>(out TAddress address, Span<byte> buffer, LinuxSocketMessageFlags flags = default)
         where TAddress : unmanaged
     {
         return ReceiveFrom(out address, out _, buffer, flags);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected int ReceiveFrom<TAddress>(out TAddress address, out uint addressLength, Span<byte> buffer, LinuxSocketMessageFlags flags = default)
         where TAddress : unmanaged
     {
@@ -96,12 +112,14 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
             return TryComplete(send_noblock(Descriptor, bufferPtr, (uint)buffer.Length, (int)effectiveFlags), out sentCount);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TrySendTo<TAddress>(in TAddress address, ReadOnlySpan<byte> buffer, out nuint sentCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
         where TAddress : unmanaged
     {
         return TrySendTo(in address, (uint)sizeof(TAddress), buffer, out sentCount, flags);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TrySendTo<TAddress>(in TAddress address, uint addressLength, ReadOnlySpan<byte> buffer, out nuint sentCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
         where TAddress : unmanaged
     {
@@ -119,12 +137,14 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
             return TryComplete(recv_noblock(Descriptor, bufferPtr, (uint)buffer.Length, (int)effectiveFlags), out receivedCount);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryReceiveFrom<TAddress>(out TAddress address, Span<byte> buffer, out nuint receivedCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
         where TAddress : unmanaged
     {
         return TryReceiveFrom(out address, out _, buffer, out receivedCount, flags);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryReceiveFrom<TAddress>(out TAddress address, out uint addressLength, Span<byte> buffer, out nuint receivedCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
         where TAddress : unmanaged
     {
@@ -134,22 +154,6 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
         fixed (byte* bufferPtr = buffer)
             return TryComplete(recvfrom_noblock(Descriptor, bufferPtr, (uint)buffer.Length, (int)effectiveFlags, (sockaddr*)addressPtr, ref addressLength), out receivedCount);
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected FileDescriptor Accept() => accept4(Descriptor, null, null, GetAcceptFlags(Flags)).ThrowIfError();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryAccept(out FileDescriptor descriptor)
-    {
-        var flags = Flags;
-        if ((flags & LinuxFileFlags.NonBlock) == 0)
-            throw new InvalidOperationException("TryAccept requires a nonblocking listening socket.");
-
-        return TryComplete(accept4(Descriptor, null, null, GetAcceptFlags(flags)), out descriptor);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static LinuxSocketType GetAcceptFlags(LinuxFileFlags flags) => (LinuxSocketType)(flags & LinuxFileFlags.NonBlock) | LinuxSocketType.CloseOnExec;
 
     protected T GetOption<T>(LinuxSocketOptionLevel level, int option) where T : unmanaged
     {
