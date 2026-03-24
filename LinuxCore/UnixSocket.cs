@@ -11,7 +11,6 @@ public sealed class UnixSocket : LinuxSocketBase
 {
     public UnixSocketAddress LocalAddress
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             GetAddress(out sockaddr_un nativeAddress, out var addressLength);
