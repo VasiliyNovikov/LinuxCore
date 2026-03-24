@@ -10,9 +10,9 @@ namespace LinuxCore;
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
 {
-    public const int MaxPayloadLength = 107;
+    public const int MaxPayloadLength = SocketInterop.SOCKADDR_UN_PATH_LENGTH - 1;
 
-    private const int MaxStoredLength = 108;
+    private const int MaxStoredLength = SocketInterop.SOCKADDR_UN_PATH_LENGTH;
     private const byte PathnameKind = 1;
     private const byte AbstractKind = 2;
 
