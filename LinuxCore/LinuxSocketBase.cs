@@ -44,18 +44,17 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
         listen(Descriptor, backlog).ThrowIfError();
     }
 
-    protected FileDescriptor Accept() => accept4(Descriptor, null, null, GetAcceptFlags(Flags)).ThrowIfError();
+    protected FileDescriptor Accept() => AcceptCore(Flags).ThrowIfError();
 
     protected bool TryAccept(out FileDescriptor descriptor)
     {
         var flags = Flags;
-        if ((flags & LinuxFileFlags.NonBlock) == 0)
-            throw new InvalidOperationException("TryAccept requires a nonblocking listening socket.");
-
-        return TryComplete(accept4(Descriptor, null, null, GetAcceptFlags(flags)), out descriptor);
+        return (flags & LinuxFileFlags.NonBlock) == 0
+            ? throw new InvalidOperationException("TryAccept requires a nonblocking listening socket.")
+            : TryComplete(AcceptCore(flags), out descriptor);
     }
 
-    private static LinuxSocketType GetAcceptFlags(LinuxFileFlags flags) => (LinuxSocketType)(flags & LinuxFileFlags.NonBlock) | LinuxSocketType.CloseOnExec;
+    private LinuxResult<FileDescriptor> AcceptCore(LinuxFileFlags flags) => accept4(Descriptor, null, null, (LinuxSocketType)(flags & LinuxFileFlags.NonBlock) | LinuxSocketType.CloseOnExec);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Send(ReadOnlySpan<byte> buffer, LinuxSocketMessageFlags flags = default)
