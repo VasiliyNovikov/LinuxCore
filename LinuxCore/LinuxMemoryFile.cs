@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 
-using static LinuxCore.Interop.MemFd;
 using static LinuxCore.Interop.File;
+using static LinuxCore.Interop.MemFd;
 
 namespace LinuxCore;
 

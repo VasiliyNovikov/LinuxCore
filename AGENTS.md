@@ -18,10 +18,10 @@ All projects target **net10.0** and use `LangVersion=preview`. Warnings are trea
 The library is a thin Linux LibC wrapper with two distinct layers:
 
 - **`LinuxCore/Interop/`** — raw P/Invoke declarations only. Each file maps to one libc header/subsystem (e.g. `File.cs`, `Socket.cs`, `Time.cs`). These are `internal static unsafe partial` classes using `[LibraryImport]` (source-generated P/Invoke, AOT-compatible).
-- **`LinuxCore/` (root)** — public API types that wrap the `Interop` layer. These expose ergonomic, safe-ish abstractions (e.g. `LinuxFile`, `LinuxMemoryFile`, `LinuxEvent`, `LinuxSemaphore`, `LinuxClock`).
+- **`LinuxCore/` (root)** — public API types that wrap the `Interop` layer. These expose ergonomic, safe-ish abstractions (e.g. `LinuxFile`, `LinuxMemoryFile`, `LinuxEvent`, `LinuxSemaphore`, `LinuxClock`, `UnixSocket`).
 
 The hierarchy for file-descriptor-owning types is:  
-`NativeObject` (finalizer + `IDisposable`) → `FileObject` (holds `FileDescriptor` and provides shared I/O and descriptor-control helpers) → concrete types like `LinuxFile`, `LinuxMemoryFile`, `LinuxEventBase`, `LinuxSocketBase`.
+`NativeObject` (finalizer + `IDisposable`) → `FileObject` (holds `FileDescriptor` and provides shared I/O and descriptor-control helpers) → concrete types like `LinuxFile`, `LinuxMemoryFile`, `LinuxEvent`, `LinuxSemaphore`, and `UnixSocket` via `LinuxSocketBase`.
 
 ## Key Conventions
 
@@ -54,6 +54,10 @@ Central package versions are in `Directory.Packages.props`. Add new dependencies
 - `LinuxCore` for all public API types; `LinuxCore.Interop` for internal P/Invoke.
 - File-scoped namespace declarations (`namespace LinuxCore;`) throughout.
 - Nullable reference types are enabled globally.
+
+### Editing conventions
+- Before editing files, check and follow repository formatting/editing rules from configuration files (for example `.editorconfig`) and preserve them in any changes.
+- Preserve intentional alignment in constants/enums when a file or member indicates formatting suppression (for example `IDE0055` suppressions or interop formatting exemptions), even if automated formatters try to collapse it.
 
 ### File object ownership
 - `FileObject` constructor accepts `ownsDescriptor` (default `true`). When `false`, the finalizer/Dispose will not close the file descriptor — use this when wrapping externally-managed descriptors.

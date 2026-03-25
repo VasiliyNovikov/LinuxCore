@@ -62,19 +62,19 @@ public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDesc
     protected void FileControl(int cmd, int arg) => fcntl(descriptor, cmd, arg).ThrowIfError();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static bool TryComplete(LinuxResult<nuint> result, out nuint count)
+    protected static bool TryComplete<T>(LinuxResult<T> result, out T value) where T : unmanaged
     {
         if (result.IsError)
         {
             var error = LinuxErrorNumber.Last;
             if (error is LinuxErrorNumber.TryAgain or LinuxErrorNumber.InterruptedSystemCall)
             {
-                count = 0;
+                value = default;
                 return false;
             }
             throw new LinuxException(error);
         }
-        count = result;
+        value = result;
         return true;
     }
 }
