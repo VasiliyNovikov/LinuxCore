@@ -15,11 +15,10 @@ public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
 
     public static readonly UnixSocketAddress Unnamed;
 
-
     private readonly UnixSocketAddressKind _kind;
     private readonly byte _length;
     private fixed byte _path[MaxPathLength];
-    
+
     public UnixSocketAddressKind Kind => _kind;
 
     public readonly int Length => _length;
