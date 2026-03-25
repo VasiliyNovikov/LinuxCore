@@ -40,7 +40,7 @@ public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
     {
         ArgumentNullException.ThrowIfNull(path);
         var maxByteCount = Encoding.UTF8.GetMaxByteCount(path.Length);
-        if (maxByteCount > MaxPathLength)
+        if (maxByteCount > Encoding.UTF8.GetMaxByteCount(MaxPathLength))
             throw new ArgumentOutOfRangeException(nameof(path), $"Pathname Unix socket path must be at most {MaxPathLength} bytes.");
 
         Span<byte> pathBytes = stackalloc byte[maxByteCount];
@@ -65,7 +65,7 @@ public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
     {
         ArgumentNullException.ThrowIfNull(name);
         var maxByteCount = Encoding.UTF8.GetMaxByteCount(name.Length);
-        if (maxByteCount > MaxAbstractNameLength)
+        if (maxByteCount > Encoding.UTF8.GetMaxByteCount(MaxAbstractNameLength))
             throw new ArgumentOutOfRangeException(nameof(name), $"Abstract Unix socket name must be at most {MaxAbstractNameLength} bytes.");
 
         Span<byte> nameBytes = stackalloc byte[Encoding.UTF8.GetMaxByteCount(name.Length)];
