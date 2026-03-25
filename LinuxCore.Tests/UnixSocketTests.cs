@@ -240,7 +240,7 @@ public class UnixSocketTests
 
             using var socket = new UnixSocket();
             socket.Bind(address);
-            
+
             var localAddress = socket.LocalAddress;
             Assert.AreEqual(address, localAddress);
         }
