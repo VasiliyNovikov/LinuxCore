@@ -3,14 +3,14 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
-using SocketInterop = LinuxCore.Interop.Socket;
+using static LinuxCore.Interop.Socket;
 
 namespace LinuxCore;
 
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
 {
-    public const byte MaxPathLength = SocketInterop.SOCKADDR_UN_PATH_LENGTH;
+    public const byte MaxPathLength = SOCKADDR_UN_PATH_LENGTH;
     public const byte MaxAbstractNameLength = MaxPathLength - 1;
 
     public static readonly UnixSocketAddress Unnamed;
@@ -23,7 +23,7 @@ public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
 
     public readonly int Length => _length;
 
-    public readonly ReadOnlySpan<byte> PathBytes => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in _path[0]), _length);
+    public readonly ReadOnlySpan<byte> PathBytes => MemoryMarshal.CreateReadOnlySpan(in _path[0], _length);
 
     public readonly string Path => Encoding.UTF8.GetString(PathBytes);
 
@@ -109,11 +109,11 @@ public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator !=(UnixSocketAddress left, UnixSocketAddress right) => !left.Equals(right);
 
-    internal readonly void WriteTo(out SocketInterop.sockaddr_un address, out uint addressLength)
+    internal readonly void ToNative(out sockaddr_un address, out uint addressLength)
     {
         address.sun_family = (ushort)LinuxAddressFamily.Unix;
 
-        var nativePath = MemoryMarshal.CreateSpan(ref address.sun_path[0], SocketInterop.SOCKADDR_UN_PATH_LENGTH);
+        var nativePath = MemoryMarshal.CreateSpan(ref address.sun_path[0], SOCKADDR_UN_PATH_LENGTH);
         uint nativePathLength;
         switch (_kind)
         {
@@ -136,19 +136,19 @@ public unsafe struct UnixSocketAddress : IEquatable<UnixSocketAddress>
                     nativePathLength = MaxPathLength;
                 break;
         }
-        addressLength = SocketInterop.SOCKADDR_UN_PATH_OFFSET + nativePathLength;
+        addressLength = SOCKADDR_UN_PATH_OFFSET + nativePathLength;
     }
 
-    internal static UnixSocketAddress FromNative(SocketInterop.sockaddr_un address, uint addressLength)
+    internal static UnixSocketAddress FromNative(in sockaddr_un address, uint addressLength)
     {
-        if (addressLength >= SocketInterop.SOCKADDR_UN_PATH_OFFSET && address.sun_family != (ushort)LinuxAddressFamily.Unix)
+        if (addressLength >= SOCKADDR_UN_PATH_OFFSET && address.sun_family != (ushort)LinuxAddressFamily.Unix)
             throw new InvalidOperationException($"Expected AF_UNIX but received family {(LinuxAddressFamily)address.sun_family}.");
 
-        if (addressLength <= SocketInterop.SOCKADDR_UN_PATH_OFFSET)
+        if (addressLength <= SOCKADDR_UN_PATH_OFFSET)
             return Unnamed;
 
-        var nativeLength = (int)Math.Min(addressLength - SocketInterop.SOCKADDR_UN_PATH_OFFSET, SocketInterop.SOCKADDR_UN_PATH_LENGTH);
-        var nativePath = MemoryMarshal.CreateReadOnlySpan(ref address.sun_path[0], nativeLength);
+        var nativeLength = (int)Math.Min(addressLength - SOCKADDR_UN_PATH_OFFSET, SOCKADDR_UN_PATH_LENGTH);
+        var nativePath = MemoryMarshal.CreateReadOnlySpan(in address.sun_path[0], nativeLength);
 
         if (nativePath[0] == 0)
             return new(UnixSocketAddressKind.Abstract, nativePath[1..]);

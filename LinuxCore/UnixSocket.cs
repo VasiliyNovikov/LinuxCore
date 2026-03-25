@@ -30,20 +30,20 @@ public sealed class UnixSocket : LinuxSocketBase
 
     public void Bind(in UnixSocketAddress address)
     {
-        address.WriteTo(out sockaddr_un nativeAddress, out var addressLength);
+        address.ToNative(out sockaddr_un nativeAddress, out var addressLength);
         Bind(in nativeAddress, addressLength);
     }
 
     public void Connect(in UnixSocketAddress address)
     {
-        address.WriteTo(out sockaddr_un nativeAddress, out var addressLength);
+        address.ToNative(out sockaddr_un nativeAddress, out var addressLength);
         Connect(in nativeAddress, addressLength);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int SendTo(in UnixSocketAddress address, ReadOnlySpan<byte> buffer, LinuxSocketMessageFlags flags = default)
     {
-        address.WriteTo(out sockaddr_un nativeAddress, out var addressLength);
+        address.ToNative(out sockaddr_un nativeAddress, out var addressLength);
         return SendTo(in nativeAddress, addressLength, buffer, flags);
     }
 
@@ -58,7 +58,7 @@ public sealed class UnixSocket : LinuxSocketBase
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TrySendTo(in UnixSocketAddress address, ReadOnlySpan<byte> buffer, out nuint sentCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
     {
-        address.WriteTo(out var nativeAddress, out var addressLength);
+        address.ToNative(out var nativeAddress, out var addressLength);
         return TrySendTo(in nativeAddress, addressLength, buffer, out sentCount, flags);
     }
 
