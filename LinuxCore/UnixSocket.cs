@@ -82,7 +82,7 @@ public sealed unsafe class UnixSocket : LinuxSocketBase
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int ReceiveFileDescriptors(Span<byte> buffer, Span<FileDescriptor> fileDescriptors, out int receivedDescriptorCount, out LinuxSocketMessageFlags receivedMessageFlags, LinuxSocketMessageFlags flags = default)
+    public int ReceiveFileDescriptors(Span<byte> buffer, Span<FileDescriptor> fileDescriptors, out int receivedDescriptorCount, out LinuxSocketMessageFlags receivedMessageFlags, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.CmsgCloseOnExec)
     {
         var receivedCount = ReceiveMessage(buffer, LinuxSocketOptionLevel.Socket, LinuxControlMessageType.ScmRights, MemoryMarshal.AsBytes(fileDescriptors), out var receivedControlCount, out receivedMessageFlags, flags);
         receivedDescriptorCount = receivedControlCount / sizeof(FileDescriptor);

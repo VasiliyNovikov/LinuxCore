@@ -317,6 +317,7 @@ public class UnixSocketTests
         Assert.AreNotEqual(memfd.Descriptor, recvFd);
 
         using var recvFile = new LinuxMemoryFile(recvFd);
+        Assert.IsTrue(recvFile.CloseOnExec);
         Assert.AreEqual(payload.Length, recvFile.Size);
     }
 
@@ -345,6 +346,7 @@ public class UnixSocketTests
         Assert.AreNotEqual(memfd.Descriptor, recvFd);
 
         using var recvFile = new LinuxMemoryFile(recvFd);
+        Assert.IsTrue(recvFile.CloseOnExec);
         Assert.AreEqual(payload.Length, recvFile.Size);
     }
 

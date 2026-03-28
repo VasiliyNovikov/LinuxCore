@@ -12,5 +12,6 @@ public enum LinuxSocketMessageFlags
     Peek = Socket.MSG_PEEK,
     DontWait = Socket.MSG_DONTWAIT,
     WaitAll = Socket.MSG_WAITALL,
-    ControlTruncated = Socket.MSG_CTRUNC
+    ControlTruncated = Socket.MSG_CTRUNC,
+    CmsgCloseOnExec = Socket.MSG_CMSG_CLOEXEC
 }

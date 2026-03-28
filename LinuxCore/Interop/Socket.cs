@@ -6,22 +6,23 @@ namespace LinuxCore.Interop;
 
 internal static unsafe partial class Socket
 {
-    public const int MSG_OOB       = 0x0001; // Process out-of-band data
-    public const int MSG_PEEK      = 0x0002; // Peek at incoming message
-    public const int MSG_DONTROUTE = 0x0004; // Don't route
-    public const int MSG_CTRUNC    = 0x0008; // Control data lost
-    public const int MSG_PROXY     = 0x0010; // Supply or originate a proxy
-    public const int MSG_TRUNC     = 0x0020; // Packet was truncated
-    public const int MSG_DONTWAIT  = 0x0040; // Nonblocking IO
-    public const int MSG_EOR       = 0x0080; // End of record
-    public const int MSG_WAITALL   = 0x0100; // Wait for full request
-    public const int MSG_FIN       = 0x0200; // Sender will send no more
-    public const int MSG_SYN       = 0x0400; // Sender has more to send
-    public const int MSG_CONFIRM   = 0x0800; // Confirm path validity
-    public const int MSG_RST       = 0x1000; // Reset the connection
-    public const int MSG_ERRQUEUE  = 0x2000; // Fetch message from error queue
-    public const int MSG_NOSIGNAL  = 0x4000; // Do not generate SIGPIPE
-    public const int MSG_MORE      = 0x8000; // Sender will send more
+    public const int MSG_OOB            = 0x0001;     // Process out-of-band data
+    public const int MSG_PEEK           = 0x0002;     // Peek at incoming message
+    public const int MSG_DONTROUTE      = 0x0004;     // Don't route
+    public const int MSG_CTRUNC         = 0x0008;     // Control data lost
+    public const int MSG_PROXY          = 0x0010;     // Supply or originate a proxy
+    public const int MSG_TRUNC          = 0x0020;     // Packet was truncated
+    public const int MSG_DONTWAIT       = 0x0040;     // Nonblocking IO
+    public const int MSG_EOR            = 0x0080;     // End of record
+    public const int MSG_WAITALL        = 0x0100;     // Wait for full request
+    public const int MSG_FIN            = 0x0200;     // Sender will send no more
+    public const int MSG_SYN            = 0x0400;     // Sender has more to send
+    public const int MSG_CONFIRM        = 0x0800;     // Confirm path validity
+    public const int MSG_RST            = 0x1000;     // Reset the connection
+    public const int MSG_ERRQUEUE       = 0x2000;     // Fetch message from error queue
+    public const int MSG_NOSIGNAL       = 0x4000;     // Do not generate SIGPIPE
+    public const int MSG_MORE           = 0x8000;     // Sender will send more
+    public const int MSG_CMSG_CLOEXEC   = 0x40000000; // Set FD_CLOEXEC on received fds
 
     public const int SCM_RIGHTS      = 0x01;
     public const int SCM_CREDENTIALS = 0x02;
