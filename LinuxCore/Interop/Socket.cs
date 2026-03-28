@@ -23,6 +23,9 @@ internal static unsafe partial class Socket
     public const int MSG_NOSIGNAL  = 0x4000; // Do not generate SIGPIPE
     public const int MSG_MORE      = 0x8000; // Sender will send more
 
+    public const int SCM_RIGHTS      = 0x01;
+    public const int SCM_CREDENTIALS = 0x02;
+
     public const byte SOCKADDR_UN_PATH_OFFSET = 2;
     public const byte SOCKADDR_UN_PATH_LENGTH = 108;
 
@@ -37,6 +40,33 @@ internal static unsafe partial class Socket
     {
         public ushort sun_family;
         public fixed byte sun_path[SOCKADDR_UN_PATH_LENGTH];
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct iovec
+    {
+        public void* iov_base;
+        public nuint iov_len;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct msghdr
+    {
+        public void*  msg_name;
+        public uint   msg_namelen;
+        public iovec* msg_iov;
+        public nuint  msg_iovlen;
+        public void*  msg_control;
+        public nuint  msg_controllen;
+        public int    msg_flags;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct cmsghdr
+    {
+        public nuint cmsg_len;
+        public int   cmsg_level;
+        public int   cmsg_type;
     }
 
     // int socket(int domain, int type, int protocol);
@@ -114,4 +144,26 @@ internal static unsafe partial class Socket
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
     public static partial LinuxResult<nuint> recvfrom_noblock(FileDescriptor socket, void* buffer, nuint length, int flags, sockaddr* address, ref uint address_len);
+
+    // ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "sendmsg")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static partial LinuxResult<nuint> sendmsg(FileDescriptor sockfd, msghdr* msg, int flags);
+
+    // ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "sendmsg")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial LinuxResult<nuint> sendmsg_noblock(FileDescriptor sockfd, msghdr* msg, int flags);
+
+    // ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "recvmsg")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static partial LinuxResult<nuint> recvmsg(FileDescriptor sockfd, msghdr* msg, int flags);
+
+    // ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "recvmsg")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial LinuxResult<nuint> recvmsg_noblock(FileDescriptor sockfd, msghdr* msg, int flags);
 }

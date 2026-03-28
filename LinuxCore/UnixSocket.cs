@@ -76,6 +76,18 @@ public sealed class UnixSocket : LinuxSocketBase
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int SendFileDescriptors(ReadOnlySpan<byte> buffer, ReadOnlySpan<FileDescriptor> fileDescriptors, LinuxSocketMessageFlags flags = default)
+    {
+        return SendMessage(buffer, LinuxSocketOptionLevel.Socket, LinuxControlMessageType.ScmRights, fileDescriptors, flags);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int ReceiveFileDescriptors(Span<byte> buffer, Span<FileDescriptor> fileDescriptors, out int receivedDescriptorCount, out LinuxSocketMessageFlags messageFlags, LinuxSocketMessageFlags flags = default)
+    {
+        return ReceiveMessage(buffer, LinuxSocketOptionLevel.Socket, LinuxControlMessageType.ScmRights, fileDescriptors, out receivedDescriptorCount, out messageFlags, flags);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public new UnixSocket Accept() => new(base.Accept());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

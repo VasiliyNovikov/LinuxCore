@@ -306,4 +306,60 @@ public class UnixSocketTests
         if (File.Exists(path))
             File.Delete(path);
     }
+
+    [TestMethod]
+    public void UnixSocket_SendFileDescriptors_RoundTrips_FileDescriptor()
+    {
+        var address = UnixSocketAddress.FromAbstractName(CreateAbstractPath());
+
+        using var sender = new UnixSocket(LinuxSocketType.Datagram);
+        using var receiver = new UnixSocket(LinuxSocketType.Datagram);
+        receiver.Bind(address);
+        sender.Connect(address);
+
+        using var memfd = new LinuxMemoryFile("test-fd-passing");
+        var payload = "fd-content"u8;
+        memfd.Write(payload);
+
+        ReadOnlySpan<FileDescriptor> fds = [memfd.Descriptor];
+        var body = "hello"u8;
+        Assert.AreEqual(body.Length, sender.SendFileDescriptors(body, fds));
+
+        Span<byte> recvBuffer = stackalloc byte[body.Length];
+        Span<FileDescriptor> recvFds = stackalloc FileDescriptor[1];
+        Assert.AreEqual(body.Length, receiver.ReceiveFileDescriptors(recvBuffer, recvFds, out var fdCount, out var msgFlags));
+        Assert.AreEqual(1, fdCount);
+        Assert.AreEqual(LinuxSocketMessageFlags.None, msgFlags & LinuxSocketMessageFlags.ControlTruncated);
+        CollectionAssert.AreEqual(body.ToArray(), recvBuffer.ToArray());
+
+        using var receivedFile = new LinuxMemoryFile(recvFds[0]);
+        Assert.AreEqual(payload.Length, receivedFile.Size);
+    }
+
+    [TestMethod]
+    public void UnixSocket_SendFileDescriptors_WithMinimalPayload_Succeeds()
+    {
+        var address = UnixSocketAddress.FromAbstractName(CreateAbstractPath());
+
+        using var sender = new UnixSocket(LinuxSocketType.Datagram);
+        using var receiver = new UnixSocket(LinuxSocketType.Datagram);
+        receiver.Bind(address);
+        sender.Connect(address);
+
+        using var memfd = new LinuxMemoryFile("test-fd-minimal");
+        var payload = "memfd-data"u8;
+        memfd.Write(payload);
+
+        ReadOnlySpan<FileDescriptor> fds = [memfd.Descriptor];
+        ReadOnlySpan<byte> body = stackalloc byte[1];
+        Assert.AreEqual(1, sender.SendFileDescriptors(body, fds));
+
+        Span<byte> recvBuffer = stackalloc byte[1];
+        Span<FileDescriptor> recvFds = stackalloc FileDescriptor[1];
+        Assert.AreEqual(1, receiver.ReceiveFileDescriptors(recvBuffer, recvFds, out var fdCount, out _));
+        Assert.AreEqual(1, fdCount);
+
+        using var receivedFile = new LinuxMemoryFile(recvFds[0]);
+        Assert.AreEqual(payload.Length, receivedFile.Size);
+    }
 }
