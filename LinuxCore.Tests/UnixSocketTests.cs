@@ -290,6 +290,66 @@ public class UnixSocketTests
         _ = Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => UnixSocketAddress.FromAbstractName(name));
     }
 
+    [TestMethod]
+    public void UnixSocket_SendFileDescriptors_RoundTrips_FileDescriptor()
+    {
+        var address = UnixSocketAddress.FromAbstractName(CreateAbstractPath());
+
+        using var sender = new UnixSocket(LinuxSocketType.Datagram);
+        using var receiver = new UnixSocket(LinuxSocketType.Datagram);
+        receiver.Bind(address);
+        sender.Connect(address);
+
+        using var memfd = new LinuxMemoryFile("test-fd-passing");
+        var payload = "fd-content"u8;
+        memfd.Write(payload);
+
+        var body = "hello"u8;
+        Assert.AreEqual(body.Length, sender.SendFileDescriptors(body, [memfd.Descriptor]));
+
+        Span<byte> recvBuffer = stackalloc byte[body.Length];
+        Span<FileDescriptor> recvFds = stackalloc FileDescriptor[1];
+        Assert.AreEqual(body.Length, receiver.ReceiveFileDescriptors(recvBuffer, recvFds, out var fdCount, out var msgFlags));
+        Assert.AreEqual(1, fdCount);
+        Assert.AreEqual(LinuxSocketMessageFlags.None, msgFlags & LinuxSocketMessageFlags.ControlTruncated);
+        CollectionAssert.AreEqual(body.ToArray(), recvBuffer.ToArray());
+        var recvFd = recvFds[0];
+        Assert.AreNotEqual(memfd.Descriptor, recvFd);
+
+        using var recvFile = new LinuxMemoryFile(recvFd);
+        Assert.IsTrue(recvFile.CloseOnExec);
+        Assert.AreEqual(payload.Length, recvFile.Size);
+    }
+
+    [TestMethod]
+    public void UnixSocket_SendFileDescriptors_WithMinimalPayload_Succeeds()
+    {
+        var address = UnixSocketAddress.FromAbstractName(CreateAbstractPath());
+
+        using var sender = new UnixSocket(LinuxSocketType.Datagram);
+        using var receiver = new UnixSocket(LinuxSocketType.Datagram);
+        receiver.Bind(address);
+        sender.Connect(address);
+
+        using var memfd = new LinuxMemoryFile("test-fd-minimal");
+        var payload = "memfd-data"u8;
+        memfd.Write(payload);
+
+        ReadOnlySpan<byte> body = stackalloc byte[1];
+        Assert.AreEqual(1, sender.SendFileDescriptors(body, [memfd.Descriptor]));
+
+        Span<byte> recvBuffer = stackalloc byte[1];
+        Span<FileDescriptor> recvFds = stackalloc FileDescriptor[1];
+        Assert.AreEqual(1, receiver.ReceiveFileDescriptors(recvBuffer, recvFds, out var fdCount, out _));
+        Assert.AreEqual(1, fdCount);
+        var recvFd = recvFds[0];
+        Assert.AreNotEqual(memfd.Descriptor, recvFd);
+
+        using var recvFile = new LinuxMemoryFile(recvFd);
+        Assert.IsTrue(recvFile.CloseOnExec);
+        Assert.AreEqual(payload.Length, recvFile.Size);
+    }
+
     private static string CreateAbstractPath() => Encoding.ASCII.GetString([0x80, 0xFF, 0x00, .. Guid.NewGuid().ToByteArray()]);
 
     private static string CreateSocketPath() => $"/tmp/linuxcore-{Guid.NewGuid():N}.sock";

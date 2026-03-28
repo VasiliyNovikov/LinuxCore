@@ -6,22 +6,26 @@ namespace LinuxCore.Interop;
 
 internal static unsafe partial class Socket
 {
-    public const int MSG_OOB       = 0x0001; // Process out-of-band data
-    public const int MSG_PEEK      = 0x0002; // Peek at incoming message
-    public const int MSG_DONTROUTE = 0x0004; // Don't route
-    public const int MSG_CTRUNC    = 0x0008; // Control data lost
-    public const int MSG_PROXY     = 0x0010; // Supply or originate a proxy
-    public const int MSG_TRUNC     = 0x0020; // Packet was truncated
-    public const int MSG_DONTWAIT  = 0x0040; // Nonblocking IO
-    public const int MSG_EOR       = 0x0080; // End of record
-    public const int MSG_WAITALL   = 0x0100; // Wait for full request
-    public const int MSG_FIN       = 0x0200; // Sender will send no more
-    public const int MSG_SYN       = 0x0400; // Sender has more to send
-    public const int MSG_CONFIRM   = 0x0800; // Confirm path validity
-    public const int MSG_RST       = 0x1000; // Reset the connection
-    public const int MSG_ERRQUEUE  = 0x2000; // Fetch message from error queue
-    public const int MSG_NOSIGNAL  = 0x4000; // Do not generate SIGPIPE
-    public const int MSG_MORE      = 0x8000; // Sender will send more
+    public const int MSG_OOB            = 0x0001;     // Process out-of-band data
+    public const int MSG_PEEK           = 0x0002;     // Peek at incoming message
+    public const int MSG_DONTROUTE      = 0x0004;     // Don't route
+    public const int MSG_CTRUNC         = 0x0008;     // Control data lost
+    public const int MSG_PROXY          = 0x0010;     // Supply or originate a proxy
+    public const int MSG_TRUNC          = 0x0020;     // Packet was truncated
+    public const int MSG_DONTWAIT       = 0x0040;     // Nonblocking IO
+    public const int MSG_EOR            = 0x0080;     // End of record
+    public const int MSG_WAITALL        = 0x0100;     // Wait for full request
+    public const int MSG_FIN            = 0x0200;     // Sender will send no more
+    public const int MSG_SYN            = 0x0400;     // Sender has more to send
+    public const int MSG_CONFIRM        = 0x0800;     // Confirm path validity
+    public const int MSG_RST            = 0x1000;     // Reset the connection
+    public const int MSG_ERRQUEUE       = 0x2000;     // Fetch message from error queue
+    public const int MSG_NOSIGNAL       = 0x4000;     // Do not generate SIGPIPE
+    public const int MSG_MORE           = 0x8000;     // Sender will send more
+    public const int MSG_CMSG_CLOEXEC   = 0x40000000; // Set FD_CLOEXEC on received fds
+
+    public const int SCM_RIGHTS      = 0x01;
+    public const int SCM_CREDENTIALS = 0x02;
 
     public const byte SOCKADDR_UN_PATH_OFFSET = 2;
     public const byte SOCKADDR_UN_PATH_LENGTH = 108;
@@ -37,6 +41,33 @@ internal static unsafe partial class Socket
     {
         public ushort sun_family;
         public fixed byte sun_path[SOCKADDR_UN_PATH_LENGTH];
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct iovec
+    {
+        public void* iov_base;
+        public nuint iov_len;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct msghdr
+    {
+        public void*  msg_name;
+        public uint   msg_namelen;
+        public iovec* msg_iov;
+        public nuint  msg_iovlen;
+        public void*  msg_control;
+        public nuint  msg_controllen;
+        public int    msg_flags;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct cmsghdr
+    {
+        public nuint cmsg_len;
+        public int   cmsg_level;
+        public int   cmsg_type;
     }
 
     // int socket(int domain, int type, int protocol);
@@ -114,4 +145,26 @@ internal static unsafe partial class Socket
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
     public static partial LinuxResult<nuint> recvfrom_noblock(FileDescriptor socket, void* buffer, nuint length, int flags, sockaddr* address, ref uint address_len);
+
+    // ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "sendmsg")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static partial LinuxResult<nuint> sendmsg(FileDescriptor sockfd, msghdr* msg, int flags);
+
+    // ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "sendmsg")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial LinuxResult<nuint> sendmsg_noblock(FileDescriptor sockfd, msghdr* msg, int flags);
+
+    // ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "recvmsg")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static partial LinuxResult<nuint> recvmsg(FileDescriptor sockfd, msghdr* msg, int flags);
+
+    // ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "recvmsg")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial LinuxResult<nuint> recvmsg_noblock(FileDescriptor sockfd, msghdr* msg, int flags);
 }
