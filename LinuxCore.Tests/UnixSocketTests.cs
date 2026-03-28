@@ -304,9 +304,8 @@ public class UnixSocketTests
         var payload = "fd-content"u8;
         memfd.Write(payload);
 
-        ReadOnlySpan<FileDescriptor> fds = [memfd.Descriptor];
         var body = "hello"u8;
-        Assert.AreEqual(body.Length, sender.SendFileDescriptors(body, fds));
+        Assert.AreEqual(body.Length, sender.SendFileDescriptors(body, [memfd.Descriptor]));
 
         Span<byte> recvBuffer = stackalloc byte[body.Length];
         Span<FileDescriptor> recvFds = stackalloc FileDescriptor[1];
@@ -314,6 +313,8 @@ public class UnixSocketTests
         Assert.AreEqual(1, fdCount);
         Assert.AreEqual(LinuxSocketMessageFlags.None, msgFlags & LinuxSocketMessageFlags.ControlTruncated);
         CollectionAssert.AreEqual(body.ToArray(), recvBuffer.ToArray());
+        var receivedFd = recvFds[0];
+        Assert.AreNotEqual(memfd.Descriptor, receivedFd);
 
         using var receivedFile = new LinuxMemoryFile(recvFds[0]);
         Assert.AreEqual(payload.Length, receivedFile.Size);
@@ -335,7 +336,7 @@ public class UnixSocketTests
 
         ReadOnlySpan<FileDescriptor> fds = [memfd.Descriptor];
         ReadOnlySpan<byte> body = stackalloc byte[1];
-        Assert.AreEqual(1, sender.SendFileDescriptors(body, fds));
+        Assert.AreEqual(1, sender.SendFileDescriptors(body, [memfd.Descriptor]));
 
         Span<byte> recvBuffer = stackalloc byte[1];
         Span<FileDescriptor> recvFds = stackalloc FileDescriptor[1];
