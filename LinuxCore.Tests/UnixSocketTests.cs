@@ -313,11 +313,11 @@ public class UnixSocketTests
         Assert.AreEqual(1, fdCount);
         Assert.AreEqual(LinuxSocketMessageFlags.None, msgFlags & LinuxSocketMessageFlags.ControlTruncated);
         CollectionAssert.AreEqual(body.ToArray(), recvBuffer.ToArray());
-        var receivedFd = recvFds[0];
-        Assert.AreNotEqual(memfd.Descriptor, receivedFd);
+        var recvFd = recvFds[0];
+        Assert.AreNotEqual(memfd.Descriptor, recvFd);
 
-        using var receivedFile = new LinuxMemoryFile(recvFds[0]);
-        Assert.AreEqual(payload.Length, receivedFile.Size);
+        using var recvFile = new LinuxMemoryFile(recvFd);
+        Assert.AreEqual(payload.Length, recvFile.Size);
     }
 
     [TestMethod]
@@ -334,7 +334,6 @@ public class UnixSocketTests
         var payload = "memfd-data"u8;
         memfd.Write(payload);
 
-        ReadOnlySpan<FileDescriptor> fds = [memfd.Descriptor];
         ReadOnlySpan<byte> body = stackalloc byte[1];
         Assert.AreEqual(1, sender.SendFileDescriptors(body, [memfd.Descriptor]));
 
@@ -342,9 +341,11 @@ public class UnixSocketTests
         Span<FileDescriptor> recvFds = stackalloc FileDescriptor[1];
         Assert.AreEqual(1, receiver.ReceiveFileDescriptors(recvBuffer, recvFds, out var fdCount, out _));
         Assert.AreEqual(1, fdCount);
+        var recvFd = recvFds[0];
+        Assert.AreNotEqual(memfd.Descriptor, recvFd);
 
-        using var receivedFile = new LinuxMemoryFile(recvFds[0]);
-        Assert.AreEqual(payload.Length, receivedFile.Size);
+        using var recvFile = new LinuxMemoryFile(recvFd);
+        Assert.AreEqual(payload.Length, recvFile.Size);
     }
 
     private static string CreateAbstractPath() => Encoding.ASCII.GetString([0x80, 0xFF, 0x00, .. Guid.NewGuid().ToByteArray()]);
