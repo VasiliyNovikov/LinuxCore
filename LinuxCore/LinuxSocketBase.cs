@@ -156,43 +156,40 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SkipLocalsInit]
-    public int SendMessage<T>(ReadOnlySpan<byte> buffer, LinuxSocketOptionLevel cmsgLevel, LinuxControlMessageType cmsgType, ReadOnlySpan<T> cmsgData, LinuxSocketMessageFlags flags = default)
-        where T : unmanaged
+    public int SendMessage(ReadOnlySpan<byte> buffer, LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType, ReadOnlySpan<byte> controlBuffer, LinuxSocketMessageFlags flags = default)
     {
-        var controlLen = CmsgSpace(cmsgData);
+        var controlLen = ControlMessageSpace(controlBuffer);
         var controlPtr = stackalloc byte[controlLen];
         fixed (byte* bufferPtr = buffer)
         {
             msghdr msg;
             iovec iov;
-            BuildSendMessageHeader(bufferPtr, (nuint)buffer.Length, controlPtr, (nuint)controlLen, &msg, &iov, cmsgLevel, cmsgType, cmsgData);
+            BuildSendMessageHeader(bufferPtr, (nuint)buffer.Length, controlPtr, (nuint)controlLen, &msg, &iov, controlMessageLevel, controlMessageType, controlBuffer);
             return (int)sendmsg(Descriptor, &msg, (int)flags).ThrowIfError();
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SkipLocalsInit]
-    public bool TrySendMessage<T>(ReadOnlySpan<byte> buffer, LinuxSocketOptionLevel cmsgLevel, LinuxControlMessageType cmsgType, ReadOnlySpan<T> cmsgData, out nuint sentCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
-        where T : unmanaged
+    public bool TrySendMessage(ReadOnlySpan<byte> buffer, LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType, ReadOnlySpan<byte> controlBuffer, out nuint sentCount, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
     {
         flags |= LinuxSocketMessageFlags.DontWait;
-        var controlLen = CmsgSpace(cmsgData);
+        var controlLen = ControlMessageSpace(controlBuffer);
         var controlPtr = stackalloc byte[controlLen];
         fixed (byte* bufferPtr = buffer)
         {
             msghdr msg;
             iovec iov;
-            BuildSendMessageHeader(bufferPtr, (nuint)buffer.Length, controlPtr, (nuint)controlLen, &msg, &iov, cmsgLevel, cmsgType, cmsgData);
+            BuildSendMessageHeader(bufferPtr, (nuint)buffer.Length, controlPtr, (nuint)controlLen, &msg, &iov, controlMessageLevel, controlMessageType, controlBuffer);
             return TryComplete(sendmsg_noblock(Descriptor, &msg, (int)flags), out sentCount);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SkipLocalsInit]
-    public int ReceiveMessage<T>(Span<byte> buffer, LinuxSocketOptionLevel cmsgLevel, LinuxControlMessageType cmsgType, Span<T> cmsgData, out int cmsgDataCount, out LinuxSocketMessageFlags messageFlags, LinuxSocketMessageFlags flags = default)
-        where T : unmanaged
+    public int ReceiveMessage(Span<byte> buffer, LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType, Span<byte> controlBuffer, out int receivedControlCount, out LinuxSocketMessageFlags receivedMessageFlags, LinuxSocketMessageFlags flags = default)
     {
-        var controlLen = CmsgSpace(cmsgData);
+        var controlLen = ControlMessageSpace(controlBuffer);
         var controlPtr = stackalloc byte[controlLen];
         fixed (byte* bufferPtr = buffer)
         {
@@ -200,19 +197,18 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
             iovec iov;
             BuildMessageHeader(bufferPtr, (nuint)buffer.Length, controlPtr, (nuint)controlLen, &msg, &iov);
             var result = (int)recvmsg(Descriptor, &msg, (int)flags).ThrowIfError();
-            messageFlags = (LinuxSocketMessageFlags)msg.msg_flags;
-            cmsgDataCount = ParseControlMessage(cmsgLevel, cmsgType, &msg, cmsgData);
+            receivedMessageFlags = (LinuxSocketMessageFlags)msg.msg_flags;
+            receivedControlCount = ParseControlMessage(controlMessageLevel, controlMessageType, &msg, controlBuffer);
             return result;
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SkipLocalsInit]
-    public bool TryReceiveMessage<T>(Span<byte> buffer, LinuxSocketOptionLevel cmsgLevel, LinuxControlMessageType cmsgType, Span<T> cmsgData, out nuint receivedCount, out int cmsgDataCount, out LinuxSocketMessageFlags messageFlags, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
-        where T : unmanaged
+    public bool TryReceiveMessage(Span<byte> buffer, LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType, Span<byte> controlBuffer, out nuint receivedCount, out int receivedControlCount, out LinuxSocketMessageFlags receivedMessageFlags, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
     {
         flags |= LinuxSocketMessageFlags.DontWait;
-        var controlLen = CmsgSpace(cmsgData);
+        var controlLen = ControlMessageSpace(controlBuffer);
         var controlPtr = stackalloc byte[controlLen];
         fixed (byte* bufferPtr = buffer)
         {
@@ -221,12 +217,12 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
             BuildMessageHeader(bufferPtr, (nuint)buffer.Length, controlPtr, (nuint)controlLen, &msg, &iov);
             if (TryComplete(recvmsg_noblock(Descriptor, &msg, (int)flags), out receivedCount))
             {
-                messageFlags = (LinuxSocketMessageFlags)msg.msg_flags;
-                cmsgDataCount = ParseControlMessage(cmsgLevel, cmsgType, &msg, cmsgData);
+                receivedMessageFlags = (LinuxSocketMessageFlags)msg.msg_flags;
+                receivedControlCount = ParseControlMessage(controlMessageLevel, controlMessageType, &msg, controlBuffer);
                 return true;
             }
-            cmsgDataCount = 0;
-            messageFlags = default;
+            receivedControlCount = 0;
+            receivedMessageFlags = default;
             return false;
         }
     }
@@ -259,14 +255,13 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void BuildSendMessageHeader<T>(byte* bufferPtr, nuint bufferLen, byte* controlPtr, nuint controlLen, msghdr* msg, iovec* iov, LinuxSocketOptionLevel cmsgLevel, LinuxControlMessageType cmsgType, ReadOnlySpan<T> cmsgData)
-        where T : unmanaged
+    private static void BuildSendMessageHeader(byte* bufferPtr, nuint bufferLen, byte* controlPtr, nuint controlLen, msghdr* msg, iovec* iov, LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType, ReadOnlySpan<byte> controlBuffer)
     {
         var cmsg = (cmsghdr*)controlPtr;
-        cmsg->cmsg_len = (nuint)(sizeof(cmsghdr) + cmsgData.Length * sizeof(T));
-        cmsg->cmsg_level = (int)cmsgLevel;
-        cmsg->cmsg_type = (int)cmsgType;
-        cmsgData.CopyTo(new Span<T>(CmsgData(cmsg), cmsgData.Length));
+        cmsg->cmsg_len = (nuint)(sizeof(cmsghdr) + controlBuffer.Length);
+        cmsg->cmsg_level = (int)controlMessageLevel;
+        cmsg->cmsg_type = (int)controlMessageType;
+        controlBuffer.CopyTo(new Span<byte>(ControlMessageData(cmsg), controlBuffer.Length));
         BuildMessageHeader(bufferPtr, bufferLen, controlPtr, controlLen, msg, iov);
     }
 
@@ -284,42 +279,41 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int ParseControlMessage<T>(LinuxSocketOptionLevel cmsgLevel, LinuxControlMessageType cmsgType, msghdr* msg, Span<T> cmsgData)
-        where T : unmanaged
+    private static int ParseControlMessage(LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType, msghdr* msg, Span<byte> controlBuffer)
     {
-        for (var cmsg = CmsgFirstHeader(msg); cmsg != null; cmsg = CmsgNextHeader(msg, cmsg))
+        for (var cmsg = ControlMessageFirst(msg); cmsg != null; cmsg = ControlMessageNext(msg, cmsg))
         {
-            if (cmsg->cmsg_level == (int)cmsgLevel && cmsg->cmsg_type == (int)cmsgType)
+            if (cmsg->cmsg_level != (int)controlMessageLevel || cmsg->cmsg_type != (int)controlMessageType)
+                continue;
+
+            var dataLen = (int)cmsg->cmsg_len - sizeof(cmsghdr);
+            if (dataLen > 0)
             {
-                var dataLen = (int)cmsg->cmsg_len - sizeof(cmsghdr);
-                if (dataLen > 0)
-                {
-                    var count = Math.Min(dataLen / sizeof(T), cmsgData.Length);
-                    new ReadOnlySpan<T>(CmsgData(cmsg), count).CopyTo(cmsgData);
-                    return count;
-                }
-                break;
+                var count = Math.Min(dataLen, controlBuffer.Length);
+                new ReadOnlySpan<byte>(ControlMessageData(cmsg), count).CopyTo(controlBuffer);
+                return count;
             }
+            break;
         }
         return 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int CmsgAlign(int len) => (len + (sizeof(nuint) - 1)) & ~(sizeof(nuint) - 1);
+    private static int ControlMessageAlign(int len) => (len + (sizeof(nuint) - 1)) & ~(sizeof(nuint) - 1);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int CmsgSpace<T>(ReadOnlySpan<T> cmsgData) where T : unmanaged => sizeof(cmsghdr) + CmsgAlign(cmsgData.Length * sizeof(T));
+    private static int ControlMessageSpace(ReadOnlySpan<byte> cmsgData) => sizeof(cmsghdr) + ControlMessageAlign(cmsgData.Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void* CmsgData(cmsghdr* cmsg) => (byte*)cmsg + sizeof(cmsghdr);
+    private static void* ControlMessageData(cmsghdr* cmsg) => (byte*)cmsg + sizeof(cmsghdr);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static cmsghdr* CmsgFirstHeader(msghdr* msg) => msg->msg_controllen >= (nuint)sizeof(cmsghdr) ? (cmsghdr*)msg->msg_control : null;
+    private static cmsghdr* ControlMessageFirst(msghdr* msg) => msg->msg_controllen >= (nuint)sizeof(cmsghdr) ? (cmsghdr*)msg->msg_control : null;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static cmsghdr* CmsgNextHeader(msghdr* msg, cmsghdr* cmsg)
+    private static cmsghdr* ControlMessageNext(msghdr* msg, cmsghdr* cmsg)
     {
-        var next = (cmsghdr*)((byte*)cmsg + CmsgAlign((int)cmsg->cmsg_len));
+        var next = (cmsghdr*)((byte*)cmsg + ControlMessageAlign((int)cmsg->cmsg_len));
         var end = (byte*)msg->msg_control + msg->msg_controllen;
         return (byte*)next + sizeof(cmsghdr) > end ? null : next;
     }

@@ -290,23 +290,6 @@ public class UnixSocketTests
         _ = Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => UnixSocketAddress.FromAbstractName(name));
     }
 
-    private static string CreateAbstractPath() => Encoding.ASCII.GetString([0x80, 0xFF, 0x00, .. Guid.NewGuid().ToByteArray()]);
-
-    private static string CreateSocketPath() => $"/tmp/linuxcore-{Guid.NewGuid():N}.sock";
-
-    private static string CreateMaxSocketPath()
-    {
-        const string prefix = "/tmp/";
-        var suffix = Guid.NewGuid().ToString("N")[..8];
-        return prefix + new string('p', UnixSocketAddress.MaxPathLength - prefix.Length - suffix.Length) + suffix;
-    }
-
-    private static void DeleteSocketPath(string path)
-    {
-        if (File.Exists(path))
-            File.Delete(path);
-    }
-
     [TestMethod]
     public void UnixSocket_SendFileDescriptors_RoundTrips_FileDescriptor()
     {
@@ -361,5 +344,22 @@ public class UnixSocketTests
 
         using var receivedFile = new LinuxMemoryFile(recvFds[0]);
         Assert.AreEqual(payload.Length, receivedFile.Size);
+    }
+
+    private static string CreateAbstractPath() => Encoding.ASCII.GetString([0x80, 0xFF, 0x00, .. Guid.NewGuid().ToByteArray()]);
+
+    private static string CreateSocketPath() => $"/tmp/linuxcore-{Guid.NewGuid():N}.sock";
+
+    private static string CreateMaxSocketPath()
+    {
+        const string prefix = "/tmp/";
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        return prefix + new string('p', UnixSocketAddress.MaxPathLength - prefix.Length - suffix.Length) + suffix;
+    }
+
+    private static void DeleteSocketPath(string path)
+    {
+        if (File.Exists(path))
+            File.Delete(path);
     }
 }

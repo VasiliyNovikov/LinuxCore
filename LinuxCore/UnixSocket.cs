@@ -2,12 +2,12 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-
+using System.Runtime.InteropServices;
 using static LinuxCore.Interop.Socket;
 
 namespace LinuxCore;
 
-public sealed class UnixSocket : LinuxSocketBase
+public sealed unsafe class UnixSocket : LinuxSocketBase
 {
     public UnixSocketAddress LocalAddress
     {
@@ -78,13 +78,15 @@ public sealed class UnixSocket : LinuxSocketBase
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int SendFileDescriptors(ReadOnlySpan<byte> buffer, ReadOnlySpan<FileDescriptor> fileDescriptors, LinuxSocketMessageFlags flags = default)
     {
-        return SendMessage(buffer, LinuxSocketOptionLevel.Socket, LinuxControlMessageType.ScmRights, fileDescriptors, flags);
+        return SendMessage(buffer, LinuxSocketOptionLevel.Socket, LinuxControlMessageType.ScmRights, MemoryMarshal.AsBytes(fileDescriptors), flags);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int ReceiveFileDescriptors(Span<byte> buffer, Span<FileDescriptor> fileDescriptors, out int receivedDescriptorCount, out LinuxSocketMessageFlags messageFlags, LinuxSocketMessageFlags flags = default)
+    public int ReceiveFileDescriptors(Span<byte> buffer, Span<FileDescriptor> fileDescriptors, out int receivedDescriptorCount, out LinuxSocketMessageFlags receivedMessageFlags, LinuxSocketMessageFlags flags = default)
     {
-        return ReceiveMessage(buffer, LinuxSocketOptionLevel.Socket, LinuxControlMessageType.ScmRights, fileDescriptors, out receivedDescriptorCount, out messageFlags, flags);
+        var receivedCount = ReceiveMessage(buffer, LinuxSocketOptionLevel.Socket, LinuxControlMessageType.ScmRights, MemoryMarshal.AsBytes(fileDescriptors), out var receivedControlCount, out receivedMessageFlags, flags);
+        receivedDescriptorCount = receivedControlCount / sizeof(FileDescriptor);
+        return receivedCount;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
