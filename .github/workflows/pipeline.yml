@@ -23,9 +23,6 @@ jobs:
           - name: alpine-x64
             os: ubuntu-latest
             container: mcr.microsoft.com/dotnet/sdk:10.0-alpine
-          - name: alpine-arm64
-            os: ubuntu-24.04-arm
-            container: mcr.microsoft.com/dotnet/sdk:10.0-alpine
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container || '' }}
     steps:
@@ -50,10 +47,24 @@ jobs:
           path: TestResults-${{ matrix.name }}
         if: ${{ always() }}
 
+  validate-alpine-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build & Test
+        run: >
+          docker run --rm
+          -v "${{ github.workspace }}:/src"
+          -w /src
+          mcr.microsoft.com/dotnet/sdk:10.0-alpine
+          sh -c "dotnet build && dotnet test --no-build"
+
   publish:
     if: ${{ success() && (vars.PUBLISH == 'true' || vars.PUBLISH == 'auto' && github.ref_name == 'master') }}
     needs:
       - validate
+      - validate-alpine-arm64
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
