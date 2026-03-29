@@ -118,4 +118,10 @@ internal static unsafe partial class File
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LinuxResult fstat(FileDescriptor fd, out stat statbuf) => HasFstat ? fstat_direct(fd, out statbuf) : __fxstat(1, fd, out statbuf);
+
+    // off_t lseek(int fd, off_t offset, int whence);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "lseek")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial LinuxResult<long> lseek(FileDescriptor fd, long offset, LinuxSeekOrigin whence);
 }
