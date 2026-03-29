@@ -318,7 +318,10 @@ public class UnixSocketTests
 
         using var recvFile = new LinuxMemoryFile(recvFd);
         Assert.IsTrue(recvFile.CloseOnExec);
-        Assert.AreEqual(payload.Length, recvFile.Size);
+        recvFile.Position = 0;
+        Span<byte> recvPayload = stackalloc byte[payload.Length];
+        Assert.AreEqual(payload.Length, recvFile.Read(recvPayload));
+        CollectionAssert.AreEqual(payload.ToArray(), recvPayload.ToArray());
     }
 
     [TestMethod]
@@ -347,7 +350,10 @@ public class UnixSocketTests
 
         using var recvFile = new LinuxMemoryFile(recvFd);
         Assert.IsTrue(recvFile.CloseOnExec);
-        Assert.AreEqual(payload.Length, recvFile.Size);
+        recvFile.Position = 0;
+        Span<byte> recvPayload = stackalloc byte[payload.Length];
+        Assert.AreEqual(payload.Length, recvFile.Read(recvPayload));
+        CollectionAssert.AreEqual(payload.ToArray(), recvPayload.ToArray());
     }
 
     private static string CreateAbstractPath() => Encoding.ASCII.GetString([0x80, 0xFF, 0x00, .. Guid.NewGuid().ToByteArray()]);

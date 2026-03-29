@@ -88,4 +88,71 @@ public class LinuxFileTests
             File.Delete(filePath);
         }
     }
+
+    [TestMethod]
+    public void Linux_File_Seek()
+    {
+        var filePath = Path.GetTempFileName();
+        try
+        {
+            const string content = "Hello, Linux File System!";
+            File.WriteAllText(filePath, content);
+
+            using var file = new LinuxFile(filePath, LinuxFileFlags.ReadOnly);
+
+            // Seek from beginning
+            Assert.AreEqual(7L, file.Seek(7, LinuxSeekOrigin.Begin));
+
+            // Read from seeked position
+            Span<byte> buffer = stackalloc byte[5];
+            Assert.AreEqual(5, file.Read(buffer));
+            Assert.AreEqual("Linux", Encoding.ASCII.GetString(buffer));
+
+            // Seek from current position
+            Assert.AreEqual(18L, file.Seek(6, LinuxSeekOrigin.Current));
+
+            // Seek from end
+            Assert.AreEqual(content.Length - 7, file.Seek(-7, LinuxSeekOrigin.End));
+            buffer = stackalloc byte[7];
+            Assert.AreEqual(7, file.Read(buffer));
+            Assert.AreEqual("System!", Encoding.ASCII.GetString(buffer));
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
+
+    [TestMethod]
+    public void Linux_File_Position()
+    {
+        var filePath = Path.GetTempFileName();
+        try
+        {
+            const string content = "Hello, Linux File System!";
+            File.WriteAllText(filePath, content);
+
+            using var file = new LinuxFile(filePath, LinuxFileFlags.ReadOnly);
+
+            // Initial position is 0
+            Assert.AreEqual(0L, file.Position);
+
+            // Read advances position
+            Span<byte> buffer = stackalloc byte[5];
+            file.Read(buffer);
+            Assert.AreEqual(5L, file.Position);
+
+            // Set position
+            file.Position = 7;
+            Assert.AreEqual(7L, file.Position);
+
+            // Read from new position
+            file.Read(buffer);
+            Assert.AreEqual("Linux", Encoding.ASCII.GetString(buffer));
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
 }

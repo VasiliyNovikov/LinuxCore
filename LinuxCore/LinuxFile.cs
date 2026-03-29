@@ -47,6 +47,17 @@ public unsafe class LinuxFile(FileDescriptor descriptor, bool ownsDescriptor = t
         private set;
     }
 
+    public long Position
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Seek(0, LinuxSeekOrigin.Current);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        set => Seek(value, LinuxSeekOrigin.Begin);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long Seek(long offset, LinuxSeekOrigin origin) => lseek(Descriptor, offset, origin).ThrowIfError();
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Read(Span<byte> buffer)
     {
