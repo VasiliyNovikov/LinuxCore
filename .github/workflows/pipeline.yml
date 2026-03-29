@@ -11,10 +11,23 @@ jobs:
   validate:
     strategy:
       matrix:
-        os:
-          - ubuntu-latest
-          - ubuntu-24.04-arm
+        include:
+          - name: ubuntu-24.04-x64
+            os: ubuntu-24.04
+          - name: ubuntu-24.04-arm64
+            os: ubuntu-24.04-arm
+          - name: ubuntu-22.04-x64
+            os: ubuntu-22.04
+          - name: ubuntu-22.04-arm64
+            os: ubuntu-22.04-arm
+          - name: alpine-x64
+            os: ubuntu-latest
+            container: mcr.microsoft.com/dotnet/sdk:10.0-alpine
+          - name: alpine-arm64
+            os: ubuntu-24.04-arm
+            container: mcr.microsoft.com/dotnet/sdk:10.0-alpine
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container || '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -27,13 +40,13 @@ jobs:
         run: dotnet build
 
       - name: Test
-        run: dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.os }}"
+        run: dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}"
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ matrix.os }}
-          path: TestResults-${{ matrix.os }}
+          name: test-results-${{ matrix.name }}
+          path: TestResults-${{ matrix.name }}
         if: ${{ always() }}
 
   publish:
