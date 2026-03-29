@@ -11,9 +11,15 @@ jobs:
   validate:
     strategy:
       matrix:
-        os:
-          - ubuntu-latest
-          - ubuntu-24.04-arm
+        include:
+          - name: ubuntu-24.04-x64
+            os: ubuntu-24.04
+          - name: ubuntu-24.04-arm64
+            os: ubuntu-24.04-arm
+          - name: ubuntu-22.04-x64
+            os: ubuntu-22.04
+          - name: ubuntu-22.04-arm64
+            os: ubuntu-22.04-arm
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -23,23 +29,50 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Build
-        run: dotnet build
-
-      - name: Test
-        run: dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.os }}"
+      - name: Build & Test
+        run: |
+          dotnet build
+          dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}"
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ matrix.os }}
-          path: TestResults-${{ matrix.os }}
+          name: test-results-${{ matrix.name }}
+          path: TestResults-${{ matrix.name }}
+        if: ${{ always() }}
+
+  validate-alpine:
+    strategy:
+      matrix:
+        include:
+          - name: alpine-x64
+            os: ubuntu-latest
+          - name: alpine-arm64
+            os: ubuntu-24.04-arm
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build & Test
+        run: >
+          docker run --rm
+          -v "${{ github.workspace }}:/src"
+          -w /src
+          mcr.microsoft.com/dotnet/sdk:10.0-alpine
+          sh -c "dotnet build && dotnet test --no-build --logger trx --results-directory TestResults-${{ matrix.name }}"
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.name }}
+          path: TestResults-${{ matrix.name }}
         if: ${{ always() }}
 
   publish:
     if: ${{ success() && (vars.PUBLISH == 'true' || vars.PUBLISH == 'auto' && github.ref_name == 'master') }}
     needs:
       - validate
+      - validate-alpine
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
