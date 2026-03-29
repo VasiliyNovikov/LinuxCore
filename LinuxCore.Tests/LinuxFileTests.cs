@@ -101,7 +101,7 @@ public class LinuxFileTests
             using var file = new LinuxFile(filePath, LinuxFileFlags.ReadOnly);
 
             // Seek from beginning
-            Assert.AreEqual(7L, file.Seek(7, LinuxSeekOrigin.Set));
+            Assert.AreEqual(7L, file.Seek(7, LinuxSeekOrigin.Begin));
 
             // Read from seeked position
             Span<byte> buffer = stackalloc byte[5];

@@ -52,7 +52,7 @@ public unsafe class LinuxFile(FileDescriptor descriptor, bool ownsDescriptor = t
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => Seek(0, LinuxSeekOrigin.Current);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        set => Seek(value, LinuxSeekOrigin.Set);
+        set => Seek(value, LinuxSeekOrigin.Begin);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
