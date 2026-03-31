@@ -5,6 +5,7 @@ namespace LinuxCore.Interop;
 
 internal static partial class Time
 {
+    public const int CLOCK_REALTIME  = 0;
     public const int CLOCK_MONOTONIC = 1;
 
     [StructLayout(LayoutKind.Sequential)]
