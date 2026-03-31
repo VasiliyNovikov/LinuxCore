@@ -34,25 +34,17 @@ internal static unsafe partial class User
 
     // int getpwnam_r(const char *name, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "getpwnam_r", StringMarshalling = StringMarshalling.Utf8)]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SuppressGCTransition]
     public static partial LinuxErrorNumber getpwnam_r(string name, out passwd pwd, byte* buf, nuint buflen, out passwd* result);
 
     // int getpwuid_r(uid_t uid, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "getpwuid_r")]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SuppressGCTransition]
     public static partial LinuxErrorNumber getpwuid_r(uint uid, out passwd pwd, byte* buf, nuint buflen, out passwd* result);
 
     // int getgrnam_r(const char *name, struct group *grp, char *buf, size_t buflen, struct group **result);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "getgrnam_r", StringMarshalling = StringMarshalling.Utf8)]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SuppressGCTransition]
     public static partial LinuxErrorNumber getgrnam_r(string name, out group grp, byte* buf, nuint buflen, out group* result);
 
     // int getgrgid_r(gid_t gid, struct group *grp, char *buf, size_t buflen, struct group **result);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "getgrgid_r")]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SuppressGCTransition]
     public static partial LinuxErrorNumber getgrgid_r(uint gid, out group grp, byte* buf, nuint buflen, out group* result);
 }
