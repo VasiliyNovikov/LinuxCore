@@ -13,12 +13,12 @@ public class LinuxUser : LinuxSecurityObject
     public string? Shell { get; }
     public LinuxGroup Group => field ??= LinuxGroup.Get(GroupId)!;
 
-    private unsafe LinuxUser(passwd* pwd)
-        : base(pwd->pw_uid, Utf8StringMarshaller.ConvertToManaged(pwd->pw_name)!)
+    private unsafe LinuxUser(in passwd pwd)
+        : base(pwd.pw_uid, pwd.pw_name)
     {
-        GroupId = pwd->pw_gid;
-        Home = Utf8StringMarshaller.ConvertToManaged(pwd->pw_dir);
-        Shell = Utf8StringMarshaller.ConvertToManaged(pwd->pw_shell);
+        GroupId = pwd.pw_gid;
+        Home = Utf8StringMarshaller.ConvertToManaged(pwd.pw_dir);
+        Shell = Utf8StringMarshaller.ConvertToManaged(pwd.pw_shell);
     }
 
     public static LinuxUser? Get(string name) => ByNameQueryHelper.Instance.Get(name);
@@ -31,20 +31,18 @@ public class LinuxUser : LinuxSecurityObject
     private abstract class UserQueryHelper<TId> : QueryHelper<LinuxUser, passwd, TId>
     {
         protected override SysConfName BufferSizeConst => SysConfName.GetPwRSizeMax;
-        protected override unsafe LinuxUser FromNative(passwd* pwd) => new(pwd);
+        protected override LinuxUser FromNative(in passwd pwd) => new(pwd);
     }
 
     private sealed class ByNameQueryHelper : UserQueryHelper<string>
     {
         protected override unsafe LinuxErrorNumber NativeGetReturn(string name, out passwd objectBuffer, byte* buffer, nuint bufferLen, out passwd* result) => getpwnam_r(name, out objectBuffer, buffer, bufferLen, out result);
-
         public static readonly ByNameQueryHelper Instance = new();
     }
 
     private sealed class ByUidQueryHelper : UserQueryHelper<uint>
     {
         protected override unsafe LinuxErrorNumber NativeGetReturn(uint uid, out passwd objectBuffer, byte* buffer, nuint bufferLen, out passwd* result) => getpwuid_r(uid, out objectBuffer, buffer, bufferLen, out result);
-
         public static readonly ByUidQueryHelper Instance = new();
     }
 }

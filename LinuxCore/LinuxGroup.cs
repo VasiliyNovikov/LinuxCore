@@ -9,11 +9,11 @@ public class LinuxGroup : LinuxSecurityObject
 {
     public ImmutableArray<string> Members { get; }
 
-    private unsafe LinuxGroup(group* group)
-        : base(group->gr_gid, Utf8StringMarshaller.ConvertToManaged(group->gr_name)!)
+    private unsafe LinuxGroup(in group group)
+        : base(group.gr_gid, group.gr_name)
     {
         var membersBuilder = ImmutableArray.CreateBuilder<string>();
-        for (var memberPtr = group->gr_mem; *memberPtr != null; ++memberPtr)
+        for (var memberPtr = group.gr_mem; *memberPtr != null; ++memberPtr)
             membersBuilder.Add(Utf8StringMarshaller.ConvertToManaged(*memberPtr)!);
         Members = membersBuilder.ToImmutable();
     }
@@ -24,7 +24,7 @@ public class LinuxGroup : LinuxSecurityObject
     private abstract class GroupQueryHelper<TId> : QueryHelper<LinuxGroup, group, TId>
     {
         protected override SysConfName BufferSizeConst => SysConfName.GetGrRSizeMax;
-        protected override unsafe LinuxGroup FromNative(group* group) => new(group);
+        protected override LinuxGroup FromNative(in group group) => new(group);
     }
 
     private sealed class ByNameQueryHelper : GroupQueryHelper<string>

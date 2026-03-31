@@ -1,12 +1,13 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.Marshalling;
 
 namespace LinuxCore;
 
-public abstract class LinuxSecurityObject(uint id, string name)
+public abstract unsafe class LinuxSecurityObject(uint id, byte* name)
 {
     public uint Id => id;
-    public string Name => name;
+    public string Name { get; } = Utf8StringMarshaller.ConvertToManaged(name)!;
 
     protected abstract class QueryHelper<T, TNative, TId>
         where T : LinuxSecurityObject
@@ -22,10 +23,10 @@ public abstract class LinuxSecurityObject(uint id, string name)
                 {
                     fixed (byte* bufferPtr = buffer)
                     {
-                        var error = self.NativeGetReturn(id, out _, bufferPtr, (nuint)bufferSize, out var result);
+                        var error = self.NativeGetReturn(id, out var nativeObject, bufferPtr, (nuint)bufferSize, out var result);
                         if (error == LinuxErrorNumber.OK)
                         {
-                            @object = result is null ? null : self.FromNative(result);
+                            @object = result is null ? null : self.FromNative(nativeObject);
                             return true;
                         }
 
@@ -54,7 +55,7 @@ public abstract class LinuxSecurityObject(uint id, string name)
         }
 
         protected abstract SysConfName BufferSizeConst { get; }
-        protected abstract unsafe LinuxErrorNumber NativeGetReturn(TId id, out TNative objectBuffer, byte* buffer, nuint bufferLen, out TNative* result);
-        protected abstract unsafe T FromNative(TNative* nativeObject);
+        protected abstract unsafe LinuxErrorNumber NativeGetReturn(TId id, out TNative nativeObject, byte* buffer, nuint bufferLen, out TNative* result);
+        protected abstract T FromNative(in TNative nativeObject);
     }
 }
