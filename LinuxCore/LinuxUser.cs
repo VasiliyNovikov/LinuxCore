@@ -25,24 +25,25 @@ public class LinuxUser : LinuxSecurityObject
     public static LinuxUser? Get(uint id) => ByUidQueryHelper.Instance.Get(id);
 
     public static uint CurrentId => geteuid();
-    public static LinuxUser Current => Get(CurrentId)!;
+    public static LinuxUser? Current => Get(CurrentId);
     public static bool IsRoot => CurrentId == RootUserId;
 
     private abstract class UserQueryHelper<TId> : QueryHelper<LinuxUser, passwd, TId>
     {
+        protected override SysConfName BufferSizeConst => SysConfName.GetPwRSizeMax;
         protected override unsafe LinuxUser FromNative(passwd* pwd) => new(pwd);
     }
 
     private sealed class ByNameQueryHelper : UserQueryHelper<string>
     {
-        protected override unsafe LinuxErrorNumber NativeGetReturn(string name, out passwd pwd, byte* buffer, nuint bufferLen, out passwd* result) => getpwnam_r(name, out pwd, buffer, bufferLen, out result);
+        protected override unsafe LinuxErrorNumber NativeGetReturn(string name, out passwd objectBuffer, byte* buffer, nuint bufferLen, out passwd* result) => getpwnam_r(name, out objectBuffer, buffer, bufferLen, out result);
 
         public static readonly ByNameQueryHelper Instance = new();
     }
 
     private sealed class ByUidQueryHelper : UserQueryHelper<uint>
     {
-        protected override unsafe LinuxErrorNumber NativeGetReturn(uint uid, out passwd pwd, byte* buffer, nuint bufferLen, out passwd* result) => getpwuid_r(uid, out pwd, buffer, bufferLen, out result);
+        protected override unsafe LinuxErrorNumber NativeGetReturn(uint uid, out passwd objectBuffer, byte* buffer, nuint bufferLen, out passwd* result) => getpwuid_r(uid, out objectBuffer, buffer, bufferLen, out result);
 
         public static readonly ByUidQueryHelper Instance = new();
     }
