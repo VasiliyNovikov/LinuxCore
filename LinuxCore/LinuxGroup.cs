@@ -29,13 +29,13 @@ public class LinuxGroup : LinuxSecurityObject
 
     private sealed class ByNameQueryHelper : GroupQueryHelper<string>
     {
-        protected override unsafe LinuxErrorNumber NativeGetReturn(string name, out group objectBuffer, byte* buffer, nuint bufferLen, out group* result) => getgrnam_r(name, out objectBuffer, buffer, bufferLen, out result);
+        protected override unsafe LinuxErrorNumber NativeGet(string name, out group objectBuffer, byte* buffer, nuint bufferLen, out group* result) => getgrnam_r(name, out objectBuffer, buffer, bufferLen, out result);
         public static readonly ByNameQueryHelper Instance = new();
     }
 
     private sealed class ByGidQueryHelper : GroupQueryHelper<uint>
     {
-        protected override unsafe LinuxErrorNumber NativeGetReturn(uint gid, out group objectBuffer, byte* buffer, nuint bufferLen, out group* result) => getgrgid_r(gid, out objectBuffer, buffer, bufferLen, out result);
+        protected override unsafe LinuxErrorNumber NativeGet(uint gid, out group objectBuffer, byte* buffer, nuint bufferLen, out group* result) => getgrgid_r(gid, out objectBuffer, buffer, bufferLen, out result);
         public static readonly ByGidQueryHelper Instance = new();
     }
 }

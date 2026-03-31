@@ -36,13 +36,13 @@ public class LinuxUser : LinuxSecurityObject
 
     private sealed class ByNameQueryHelper : UserQueryHelper<string>
     {
-        protected override unsafe LinuxErrorNumber NativeGetReturn(string name, out passwd objectBuffer, byte* buffer, nuint bufferLen, out passwd* result) => getpwnam_r(name, out objectBuffer, buffer, bufferLen, out result);
+        protected override unsafe LinuxErrorNumber NativeGet(string name, out passwd objectBuffer, byte* buffer, nuint bufferLen, out passwd* result) => getpwnam_r(name, out objectBuffer, buffer, bufferLen, out result);
         public static readonly ByNameQueryHelper Instance = new();
     }
 
     private sealed class ByUidQueryHelper : UserQueryHelper<uint>
     {
-        protected override unsafe LinuxErrorNumber NativeGetReturn(uint uid, out passwd objectBuffer, byte* buffer, nuint bufferLen, out passwd* result) => getpwuid_r(uid, out objectBuffer, buffer, bufferLen, out result);
+        protected override unsafe LinuxErrorNumber NativeGet(uint uid, out passwd objectBuffer, byte* buffer, nuint bufferLen, out passwd* result) => getpwuid_r(uid, out objectBuffer, buffer, bufferLen, out result);
         public static readonly ByUidQueryHelper Instance = new();
     }
 }

@@ -5,8 +5,6 @@ namespace LinuxCore.Interop;
 
 internal static partial class SysConf
 {
-
-
     // long sysconf(int name);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "sysconf")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
