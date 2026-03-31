@@ -108,14 +108,14 @@ public static unsafe class LinuxErrorNumberExtensions
 
     extension(LinuxErrorNumber errorNumber)
     {
-        public static LinuxErrorNumber Last
+        public static ref LinuxErrorNumber Last
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 if (_lastErrorNumberLocation is null)
                     _lastErrorNumberLocation = __errno_location();
-                return *_lastErrorNumberLocation;
+                return ref *_lastErrorNumberLocation;
             }
         }
 

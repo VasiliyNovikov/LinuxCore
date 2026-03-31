@@ -11,5 +11,5 @@ internal static partial class SysConf
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "sysconf")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial LinuxResult<long> sysconf(SysConfName name);
+    public static partial long sysconf(SysConfName name);
 }
