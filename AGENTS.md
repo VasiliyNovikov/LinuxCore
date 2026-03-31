@@ -13,15 +13,26 @@ dotnet run -c Release --project LinuxCore.Benchmarks                  # benchmar
 
 All projects target **net10.0** and use `LangVersion=preview`. Warnings are treated as errors (`TreatWarningsAsErrors=true`). Documentation XML is generated for the main library.
 
+## CI
+
+The GitHub Actions pipeline (`.github/workflows/pipeline.yml`) has three jobs:
+
+- **`validate`** — builds and tests on a matrix of Ubuntu runners: `ubuntu-24.04` (x64 + arm64) and `ubuntu-22.04` (x64 + arm64). Uploads TRX test results as artifacts.
+- **`validate-alpine`** — builds and tests under musl/Alpine Linux via Docker (`mcr.microsoft.com/dotnet/sdk:10.0-alpine`) on x64 and arm64 runners. Uploads TRX test results as artifacts.
+- **`publish`** — publishes to NuGet, gated on both `validate` and `validate-alpine` succeeding. Runs when `PUBLISH` is `'true'` on any branch, or `'auto'` on the `master` branch.
+
 ## Architecture
 
 The library is a thin Linux LibC wrapper with two distinct layers:
 
-- **`LinuxCore/Interop/`** — raw P/Invoke declarations only. Each file maps to one libc header/subsystem (e.g. `File.cs`, `Socket.cs`, `Time.cs`). These are `internal static unsafe partial` classes using `[LibraryImport]` (source-generated P/Invoke, AOT-compatible).
-- **`LinuxCore/` (root)** — public API types that wrap the `Interop` layer. These expose ergonomic, safe-ish abstractions (e.g. `LinuxFile`, `LinuxMemoryFile`, `LinuxEvent`, `LinuxSemaphore`, `LinuxClock`, `UnixSocket`).
+- **`LinuxCore/Interop/`** — raw P/Invoke declarations only. Each file maps to one libc header/subsystem (e.g. `File.cs`, `Socket.cs`, `Time.cs`, `SysConf.cs`, `User.cs`). These are `internal static unsafe partial` classes using `[LibraryImport]` (source-generated P/Invoke, AOT-compatible).
+- **`LinuxCore/` (root)** — public API types that wrap the `Interop` layer. These expose ergonomic, safe-ish abstractions (e.g. `LinuxFile`, `LinuxMemoryFile`, `LinuxEvent`, `LinuxSemaphore`, `LinuxClock`, `UnixSocket`, `LinuxUser`, `LinuxGroup`, `SystemConfiguration`).
 
 The hierarchy for file-descriptor-owning types is:  
 `NativeObject` (finalizer + `IDisposable`) → `FileObject` (holds `FileDescriptor` and provides shared I/O and descriptor-control helpers) → concrete types like `LinuxFile`, `LinuxMemoryFile`, `LinuxEvent`, `LinuxSemaphore`, and `UnixSocket` via `LinuxSocketBase`.
+
+For non-FD security objects:  
+`LinuxSecurityObject` (base with `Id` and `Name`) → `LinuxUser` (passwd lookup via `getpwnam_r`/`getpwuid_r`) and `LinuxGroup` (group lookup via `getgrnam_r`/`getgrgid_r`). These use an internal `QueryHelper<T, TNative, TId>` pattern with `ArrayPool<byte>` buffers sized via `sysconf`.
 
 ## Key Conventions
 
