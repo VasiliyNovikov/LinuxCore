@@ -30,7 +30,7 @@ public class LinuxUser : LinuxSecurityObject
 
     private abstract class UserQueryHelper<TId> : QueryHelper<LinuxUser, passwd, TId>
     {
-        protected override SysConfName BufferSizeConst => SysConfName.GetPwRSizeMax;
+        protected override SystemConfigurationName BufferSizeConst => SystemConfigurationName.GetPwRSizeMax;
         protected override LinuxUser FromNative(in passwd pwd) => new(pwd);
     }
 

@@ -54,7 +54,7 @@ public abstract unsafe class LinuxSecurityObject(uint id, byte* name)
             }
         }
 
-        protected abstract SysConfName BufferSizeConst { get; }
+        protected abstract SystemConfigurationName BufferSizeConst { get; }
         protected abstract unsafe LinuxErrorNumber NativeGetReturn(TId id, out TNative nativeObject, byte* buffer, nuint bufferLen, out TNative* result);
         protected abstract T FromNative(in TNative nativeObject);
     }

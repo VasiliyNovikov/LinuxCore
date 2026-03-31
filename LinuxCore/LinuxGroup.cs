@@ -23,7 +23,7 @@ public class LinuxGroup : LinuxSecurityObject
 
     private abstract class GroupQueryHelper<TId> : QueryHelper<LinuxGroup, group, TId>
     {
-        protected override SysConfName BufferSizeConst => SysConfName.GetGrRSizeMax;
+        protected override SystemConfigurationName BufferSizeConst => SystemConfigurationName.GetGrRSizeMax;
         protected override LinuxGroup FromNative(in group group) => new(group);
     }
 

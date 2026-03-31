@@ -4,7 +4,7 @@ namespace LinuxCore;
 
 [SuppressMessage("Microsoft.Formatting", "IDE0055: Fix formatting", Justification = "Intentional enum value alignment")]
 [SuppressMessage("Design", "CA1069: Enums values should not be duplicated", Justification = "Mirrors glibc _SC_IOV_MAX = _SC_UIO_MAXIOV alias")]
-public enum SysConfName
+public enum SystemConfigurationName
 {
     ArgMax                      = 0,   // _SC_ARG_MAX
     ChildMax                    = 1,   // _SC_CHILD_MAX

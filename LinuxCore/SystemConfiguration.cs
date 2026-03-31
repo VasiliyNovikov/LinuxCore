@@ -7,7 +7,7 @@ namespace LinuxCore;
 public static class SystemConfiguration
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long Get(SysConfName name)
+    public static long Get(SystemConfigurationName name)
     {
         LinuxErrorNumber.Last = LinuxErrorNumber.OK;
         var result = sysconf(name);
