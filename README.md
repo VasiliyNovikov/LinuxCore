@@ -7,7 +7,7 @@ A thin, AOT-compatible .NET wrapper around Linux libc APIs. Provides ergonomic, 
 
 ## Features
 
-- **File I/O** — `LinuxFile` for `open`/`read`/`write`/`fstat` with `Span<byte>` support
+- **File I/O** — `LinuxFile` for `open`/`read`/`write`/`seek`/`fstat` with `Span<byte>` support
 - **Memory Files** — `LinuxMemoryFile` for `memfd_create` and memfd seals via `fcntl`
 - **Events & Semaphores** — `LinuxEvent` and `LinuxSemaphore` backed by `eventfd`
 - **Polling** — `LinuxPoll` for `poll()`-based readiness notification
@@ -16,6 +16,8 @@ A thin, AOT-compatible .NET wrapper around Linux libc APIs. Provides ergonomic, 
 - **Resource Limits** — `LinuxResourceLimit` for `getrlimit`/`setrlimit`
 - **Cancellation** — `LinuxCancellationToken` bridges `CancellationToken` to native poll
 - **Sockets** — `UnixSocket` for AF_UNIX sockets and `LinuxSocketBase` for shared raw socket operations
+- **System Configuration** — `SystemConfiguration` for `sysconf()` queries (page size, max open files, etc.)
+- **Users & Groups** — `LinuxUser` and `LinuxGroup` for passwd/group lookups by name or ID
 
 ## Requirements
 
@@ -37,6 +39,10 @@ NativeObject (IDisposable + Finalizer)
        ├─ LinuxEventBase → LinuxEvent, LinuxSemaphore
        ├─ LinuxSocketBase → UnixSocket
        └─ LinuxFile → LinuxMemoryFile
+
+LinuxSecurityObject (Id + Name)
+  ├─ LinuxUser
+  └─ LinuxGroup
 ```
 
 ## License
