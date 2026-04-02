@@ -11,8 +11,8 @@ A thin, AOT-compatible .NET wrapper around Linux libc APIs. Provides ergonomic, 
 - **Memory Files** — `LinuxMemoryFile` for `memfd_create` and memfd seals via `fcntl`
 - **Events & Semaphores** — `LinuxEvent` and `LinuxSemaphore` backed by `eventfd`
 - **Polling** — `LinuxPoll` for `poll()`-based readiness notification
-- **Clocks** — `LinuxClock` for nanosecond-precision monotonic timestamps
-- **Scheduling** — `LinuxScheduler` for `sched_setscheduler` (FIFO, RR, etc.)
+- **Clocks** — `LinuxClock` for nanosecond-precision monotonic and wall-clock (`CLOCK_REALTIME`) timestamps
+- **Scheduling** — `LinuxScheduler` for `sched_setscheduler`/`sched_getscheduler` (FIFO, RR, etc.)
 - **Resource Limits** — `LinuxResourceLimit` for `getrlimit`/`setrlimit`
 - **Cancellation** — `LinuxCancellationToken` bridges `CancellationToken` to native poll
 - **Sockets** — `UnixSocket` for AF_UNIX sockets and `LinuxSocketBase` for shared raw socket operations
