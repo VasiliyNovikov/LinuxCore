@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace LinuxCore.Interop;
 
-internal static partial class Time
+internal static unsafe partial class Time
 {
     public const int CLOCK_REALTIME  = 0;
     public const int CLOCK_MONOTONIC = 1;
@@ -19,5 +19,5 @@ internal static partial class Time
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "clock_gettime")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial LinuxResult clock_gettime(int clockid, out timespec tp);
+    public static partial LinuxResult clock_gettime(int clockid, timespec* tp);
 }

@@ -7,24 +7,22 @@ namespace LinuxCore;
 
 public static class LinuxClock
 {
+    /// <summary>
+    /// Gets the current time from the monotonic clock, which is not affected by system time changes.
+    /// </summary>
     public static long MonotonicNanoseconds
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            GetMonotonic(out var time);
-            return time.tv_sec * 1_000_000_000L + time.tv_nsec;
-        }
+        get => GetClockNanoseconds(CLOCK_MONOTONIC);
     }
 
+    /// <summary>
+    /// Gets the current time from the monotonic clock, which is not affected by system time changes.
+    /// </summary>
     public static TimeSpan Monotonic
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            GetMonotonic(out var time);
-            return TimeSpan.FromTicks(time.tv_sec * TimeSpan.TicksPerSecond + time.tv_nsec / TimeSpan.NanosecondsPerTick);
-        }
+        get => GetClock(CLOCK_MONOTONIC);
     }
 
     /// <summary>
@@ -33,11 +31,7 @@ public static class LinuxClock
     public static DateTimeOffset Realtime
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            GetRealtime(out var time);
-            return DateTimeOffset.UnixEpoch.AddTicks(time.tv_sec * TimeSpan.TicksPerSecond + time.tv_nsec / TimeSpan.NanosecondsPerTick);
-        }
+        get => DateTimeOffset.UnixEpoch + GetClock(CLOCK_REALTIME);
     }
 
     /// <summary>
@@ -46,16 +40,17 @@ public static class LinuxClock
     public static long RealtimeNanoseconds
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            GetRealtime(out var time);
-            return time.tv_sec * 1_000_000_000L + time.tv_nsec;
-        }
+        get => GetClockNanoseconds(CLOCK_REALTIME);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void GetMonotonic(out timespec time) => clock_gettime(CLOCK_MONOTONIC, out time);
+    private static TimeSpan GetClock(int clockId) => TimeSpan.FromTicks(GetClockNanoseconds(clockId) / TimeSpan.NanosecondsPerTick);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void GetRealtime(out timespec time) => clock_gettime(CLOCK_REALTIME, out time);
+    private static unsafe long GetClockNanoseconds(int clockId)
+    {
+        Unsafe.SkipInit(out timespec time);
+        clock_gettime(clockId, &time); // Deliberately not checking for errors as CLOCK_MONOTONIC and CLOCK_REALTIME should always be supported
+        return time.tv_sec * 1_000_000_000L + time.tv_nsec;
+    }
 }

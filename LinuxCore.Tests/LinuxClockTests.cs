@@ -32,8 +32,8 @@ public class LinuxClockTests
         var realtime = LinuxClock.Realtime;
         var after = DateTimeOffset.UtcNow;
 
-        Assert.IsTrue(realtime >= before, $"Realtime {realtime} is before UtcNow snapshot {before}");
-        Assert.IsTrue(realtime <= after, $"Realtime {realtime} is after UtcNow snapshot {after}");
+        Assert.IsGreaterThanOrEqualTo(before, realtime, $"Realtime {realtime} is before UtcNow snapshot {before}");
+        Assert.IsLessThanOrEqualTo(after, realtime, $"Realtime {realtime} is after UtcNow snapshot {after}");
     }
 
     [TestMethod]
@@ -43,7 +43,7 @@ public class LinuxClockTests
 
         // Must be after 2020-01-01T00:00:00Z: 1577836800 seconds * 1e9
         const long minExpected = 1_577_836_800L * 1_000_000_000L;
-        Assert.IsTrue(ns > minExpected, $"RealtimeNanoseconds {ns} looks too small");
+        Assert.IsGreaterThan(minExpected, ns, $"RealtimeNanoseconds {ns} looks too small");
     }
 
     [TestMethod]
@@ -54,6 +54,6 @@ public class LinuxClockTests
 
         // Both readings are close in time; allow 10ms tolerance
         var dtNs = (dt - DateTimeOffset.UnixEpoch).Ticks * TimeSpan.NanosecondsPerTick;
-        Assert.AreEqual((double)ns, (double)dtNs, 10_000_000.0); // 10ms in nanoseconds
+        Assert.AreEqual(ns, dtNs, 10_000_000.0); // 10ms in nanoseconds
     }
 }
