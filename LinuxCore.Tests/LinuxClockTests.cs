@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Threading;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -14,7 +15,7 @@ public class LinuxClockTests
         var sw = Stopwatch.StartNew();
         var start = LinuxClock.Monotonic;
 
-        System.Threading.Thread.Sleep(100);
+        Thread.Sleep(100);
 
         sw.Stop();
         var end = LinuxClock.Monotonic;
