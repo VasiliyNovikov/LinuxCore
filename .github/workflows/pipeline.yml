@@ -14,12 +14,16 @@ jobs:
         include:
           - name: ubuntu-24.04-x64
             os: ubuntu-24.04
+            aot_runtime: linux-x64
           - name: ubuntu-24.04-arm64
             os: ubuntu-24.04-arm
+            aot_runtime: linux-arm64
           - name: ubuntu-22.04-x64
             os: ubuntu-22.04
+            aot_runtime: linux-x64
           - name: ubuntu-22.04-arm64
             os: ubuntu-22.04-arm
+            aot_runtime: linux-arm64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -29,10 +33,20 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Install NativeAOT prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang zlib1g-dev
+
       - name: Build & Test
         run: |
           dotnet build
           dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}"
+
+      - name: NativeAOT Smoke
+        run: |
+          dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true --self-contained true -o "artifacts/aot-smoke/${{ matrix.name }}"
+          "./artifacts/aot-smoke/${{ matrix.name }}/LinuxCore.AotSmokeTest"
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
@@ -47,8 +61,10 @@ jobs:
         include:
           - name: alpine-x64
             os: ubuntu-latest
+            aot_runtime: linux-musl-x64
           - name: alpine-arm64
             os: ubuntu-24.04-arm
+            aot_runtime: linux-musl-arm64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -59,7 +75,11 @@ jobs:
           -v "${{ github.workspace }}:/src"
           -w /src
           mcr.microsoft.com/dotnet/sdk:10.0-alpine
-          sh -c "dotnet build && dotnet test --no-build --logger trx --results-directory TestResults-${{ matrix.name }}"
+          sh -c "apk add --no-cache clang build-base zlib-dev &&
+          dotnet build &&
+          dotnet test --no-build --logger trx --results-directory TestResults-${{ matrix.name }} &&
+          dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true --self-contained true -o /tmp/aot-smoke &&
+          /tmp/aot-smoke/LinuxCore.AotSmokeTest"
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
@@ -95,4 +115,6 @@ jobs:
         run: dotnet pack ./LinuxCore/LinuxCore.csproj -c Release --no-build -p:Version=${{ steps.package_version.outputs.version }}
 
       - name: Push
-        run: dotnet nuget push **/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+        run: |
+          dotnet nuget push **/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+          dotnet nuget push **/*.snupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate

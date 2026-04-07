@@ -4,9 +4,17 @@ using System.Threading;
 
 namespace LinuxCore;
 
+/// <summary>
+/// Bridges a managed <see cref="CancellationToken"/> into an <c>eventfd</c> so it can be
+/// waited on together with Linux file descriptors via <see cref="LinuxPoll"/>.
+/// </summary>
 public sealed class LinuxCancellationToken : IDisposable
 {
     private const LinuxPoll.Event NativePollEvent = LinuxPoll.Event.Readable;
+
+    /// <summary>
+    /// A non-cancelable token wrapper that can be reused when cancellation is not needed.
+    /// </summary>
     public static LinuxCancellationToken None { get; } = new(CancellationToken.None);
 
     private readonly CancellationToken _cancellationToken;
@@ -29,9 +37,15 @@ public sealed class LinuxCancellationToken : IDisposable
         _event?.Dispose();
     }
 
+    /// <summary>
+    /// Throws <see cref="OperationCanceledException"/> if cancellation has been requested.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ThrowIfCancellationRequested() => _cancellationToken.ThrowIfCancellationRequested();
 
+    /// <summary>
+    /// Waits until one of the requested file objects becomes ready or the wrapped token is canceled.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Wait(ReadOnlySpan<IFileObject> objects, ReadOnlySpan<LinuxPoll.Event> events)
     {
@@ -54,6 +68,9 @@ public sealed class LinuxCancellationToken : IDisposable
         return false;
     }
 
+    /// <summary>
+    /// Waits until the requested file object becomes ready or the wrapped token is canceled.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Wait(IFileObject @object, LinuxPoll.Event events) => Wait([@object], [events]);
 }
