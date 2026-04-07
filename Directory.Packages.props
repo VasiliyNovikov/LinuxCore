@@ -5,7 +5,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageVersion Include="MSTest" Version="4.1.0" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.201" />
+    <PackageVersion Include="MSTest" Version="4.2.1" />
     <PackageVersion Include="NuGet.Versioning" Version="7.3.0" />
   </ItemGroup>
 </Project>

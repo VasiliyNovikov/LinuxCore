@@ -6,11 +6,18 @@ using LinuxCore.Interop;
 
 namespace LinuxCore;
 
+/// <summary>
+/// Provides an <c>eventfd</c>-backed semaphore that batches increments in managed state
+/// and only toggles kernel readiness when transitioning between zero and non-zero counts.
+/// </summary>
 public sealed class LinuxSemaphoreSlim(uint initialValue = 0)
     : LinuxEventBase(initialValue == 0 ? 0u : 1u, EventFd.EFD_SEMAPHORE)
 {
     private ulong _count = initialValue;
 
+    /// <summary>
+    /// Increments the semaphore by one.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Increment()
     {
@@ -18,6 +25,9 @@ public sealed class LinuxSemaphoreSlim(uint initialValue = 0)
             WriteOne();
     }
 
+    /// <summary>
+    /// Adds the specified number of tokens to the semaphore.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(uint value)
     {
@@ -67,6 +77,9 @@ public sealed class LinuxSemaphoreSlim(uint initialValue = 0)
             LinuxPoll.Wait(Descriptor, LinuxPoll.Event.Readable, Timeout.Infinite);
     }
 
+    /// <summary>
+    /// Removes up to <paramref name="value"/> tokens, blocking until they become available.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Remove(uint value)
     {

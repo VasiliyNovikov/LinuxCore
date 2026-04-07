@@ -18,6 +18,7 @@
     <File Path="README.md" />
   </Folder>
   <Project Path="LinuxCore/LinuxCore.csproj" />
+  <Project Path="LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj" />
   <Project Path="LinuxCore.Benchmarks/LinuxCore.Benchmarks.csproj" />
   <Project Path="LinuxCore.Tests/LinuxCore.Tests.csproj" />
 </Solution>

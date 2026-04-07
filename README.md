@@ -45,6 +45,12 @@ LinuxSecurityObject (Id + Name)
   └─ LinuxGroup
 ```
 
+## Operational notes
+
+- `LinuxScheduler.Set(...)` and some `LinuxResourceLimit.Set(...)` calls may require root privileges or Linux capabilities such as `CAP_SYS_NICE` / `CAP_SYS_RESOURCE`.
+- AF_UNIX pathname sockets are subject to the kernel `sockaddr_un.sun_path` limit (108 bytes on Linux).
+- NativeAOT compatibility is exercised in CI on both glibc (Ubuntu) and musl (Alpine) runners via a small smoke app.
+
 ## License
 
 [MIT](LICENSE)

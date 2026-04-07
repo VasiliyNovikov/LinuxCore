@@ -7,8 +7,14 @@ using static LinuxCore.Interop.Poll;
 
 namespace LinuxCore;
 
+/// <summary>
+/// Provides access to <c>poll(2)</c> for waiting on Linux file descriptors.
+/// </summary>
 public static unsafe class LinuxPoll
 {
+    /// <summary>
+    /// Waits for one or more file descriptors to become ready.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Wait(Span<Query> queries, int timeoutMilliseconds)
     {
@@ -25,9 +31,15 @@ public static unsafe class LinuxPoll
         }
     }
 
+    /// <summary>
+    /// Waits for one or more file descriptors to become ready.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Wait(Span<Query> queries, TimeSpan timeout) => Wait(queries, (int)timeout.TotalMilliseconds);
 
+    /// <summary>
+    /// Waits for a single file descriptor to become ready and returns the resulting events.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Event? Wait(FileDescriptor descriptor, Event @event, int timeoutMilliseconds)
     {
@@ -37,18 +49,38 @@ public static unsafe class LinuxPoll
             : null;
     }
 
+    /// <summary>
+    /// Waits for a single file descriptor to become ready and returns the resulting events.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Event? Wait(FileDescriptor descriptor, Event @event, TimeSpan timeout) => Wait(descriptor, @event, (int)timeout.TotalMilliseconds);
 
+    /// <summary>
+    /// Represents a single file descriptor poll request.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly struct Query(FileDescriptor descriptor, Event events)
     {
+        /// <summary>
+        /// The descriptor being polled.
+        /// </summary>
         public readonly FileDescriptor Descriptor = descriptor;
+
+        /// <summary>
+        /// The events of interest for the descriptor.
+        /// </summary>
         public readonly Event Events = events;
+
+        /// <summary>
+        /// The events returned by the last poll call.
+        /// </summary>
         public readonly Event ReturnedEvents;
     }
 
+    /// <summary>
+    /// Poll event flags returned by <c>poll(2)</c>.
+    /// </summary>
     [Flags]
     [SuppressMessage("Style", "IDE0055:Fix formatting")]
     public enum Event : short
