@@ -1,28 +1,24 @@
 {
-  "last_run": "2026-04-01T01:11:00Z",
-  "last_run_id": "23826984705",
-  "monthly_summary_issue": "open (created 2026-04-01, title: [Repo Assist] Monthly Activity 2026-04); previous March issue #30 closed",
+  "last_run": "2026-04-07T01:05:00Z",
+  "last_run_id": "24059059097",
+  "monthly_summary_issue": "open (issue #33, title: [Repo Assist] Monthly Activity 2026-04)",
   "prs_open": [
     {
-      "branch": "repo-assist/improve-scheduler-clock-2026-03-31-b8bcb7fba925fa99",
-      "pr_number": 31,
-      "title": "Add CLOCK_REALTIME to LinuxClock and Get() to LinuxScheduler",
-      "created": "2026-03-31"
-    },
-    {
-      "branch": "repo-assist/perf-cache-sysconf-buffer-size",
-      "title": "Perf: cache sysconf buffer-size hint in QueryHelper",
-      "created": "2026-04-01",
-      "note": "Branch pushed at workflow end; maintainer must create PR manually"
+      "branch": "repo-assist/improve-clock-sleep-2026-04-07",
+      "title": "Add additional clock types, high-precision sleep, and CI NuGet caching",
+      "created": "2026-04-07",
+      "note": "Branch pushed; maintainer must create PR manually (same limitation as before)"
     }
   ],
-  "issues_to_close": [
-    {
-      "number": 29,
-      "reason": "PR tracking issue for PR #31 which was already manually created by maintainer"
-    }
+  "merged_since_last_run": [
+    { "number": 31, "title": "Add CLOCK_REALTIME to LinuxClock and Get() to LinuxScheduler", "merged": "2026-04-02" },
+    { "number": 32, "title": "Perf: cache sysconf buffer-size hint in QueryHelper", "merged": "2026-04-01" },
+    { "number": 34, "title": "Update Agentic workflows to latest version", "merged": "2026-04-06" }
+  ],
+  "closed_issues": [
+    { "number": 29, "reason": "Tracking issue for PR #31, closed when PR was merged on 2026-04-02" }
   ],
   "comments_made": {},
   "issue_cursor": null,
-  "notes": "April 2026 run. Created perf PR (sysconf caching in QueryHelper). PR #31 from last run still open - needs maintainer review. Issue #29 (old PR tracking issue) can be closed once #31 is reviewed. No open bugs to fix (Task 3 had nothing to do)."
+  "notes": "April 2026, run 2. Pushed branch repo-assist/improve-clock-sleep-2026-04-07 with: 3 new clock types (CLOCK_BOOTTIME, CLOCK_PROCESS_CPUTIME_ID, CLOCK_THREAD_CPUTIME_ID), clock_nanosleep-based Sleep/SleepUntil, and CI NuGet caching. All previous PRs from memory have been merged. No open issues except monthly summary #33."
 }
