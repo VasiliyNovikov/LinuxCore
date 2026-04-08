@@ -1,24 +1,19 @@
 {
-  "last_run": "2026-04-07T01:05:00Z",
-  "last_run_id": "24059059097",
+  "last_run": "2026-04-08T01:07:00Z",
+  "last_run_id": "24112146834",
   "monthly_summary_issue": "open (issue #33, title: [Repo Assist] Monthly Activity 2026-04)",
   "prs_open": [
     {
-      "branch": "repo-assist/improve-clock-sleep-2026-04-07",
-      "title": "Add additional clock types, high-precision sleep, and CI NuGet caching",
-      "created": "2026-04-07",
-      "note": "Branch pushed; maintainer must create PR manually (same limitation as before)"
+      "branch": "repo-assist/improve-clock-sleep-global-json-2026-04-08",
+      "title": "Add additional clock types, Sleep/SleepUntil, and global.json SDK pinning",
+      "created": "2026-04-08",
+      "note": "Patch created via safeoutputs. Includes clock additions + global.json. Maintainer must apply patch manually."
     }
   ],
-  "merged_since_last_run": [
-    { "number": 31, "title": "Add CLOCK_REALTIME to LinuxClock and Get() to LinuxScheduler", "merged": "2026-04-02" },
-    { "number": 32, "title": "Perf: cache sysconf buffer-size hint in QueryHelper", "merged": "2026-04-01" },
-    { "number": 34, "title": "Update Agentic workflows to latest version", "merged": "2026-04-06" }
-  ],
-  "closed_issues": [
-    { "number": 29, "reason": "Tracking issue for PR #31, closed when PR was merged on 2026-04-02" }
+  "open_issues": [
+    { "number": 35, "title": "[Repo Assist] Add additional clock types...", "note": "Superseded — can be closed. The new PR (this run) excludes workflow changes." }
   ],
   "comments_made": {},
   "issue_cursor": null,
-  "notes": "April 2026, run 2. Pushed branch repo-assist/improve-clock-sleep-2026-04-07 with: 3 new clock types (CLOCK_BOOTTIME, CLOCK_PROCESS_CPUTIME_ID, CLOCK_THREAD_CPUTIME_ID), clock_nanosleep-based Sleep/SleepUntil, and CI NuGet caching. All previous PRs from memory have been merged. No open issues except monthly summary #33."
+  "notes": "April 2026, run 3. Created PR patch for: 3 new clock types (CLOCK_BOOTTIME, CLOCK_PROCESS_CPUTIME_ID, CLOCK_THREAD_CPUTIME_ID), clock_nanosleep-based Sleep/SleepUntil, and global.json SDK pinning (10.0.201, rollForward: latestFeature). All 93 tests pass (12 new). Issue #35 is superseded and can be closed. Previous branch repo-assist/improve-clock-sleep-2026-04-07-05b9b2ed69c3f353 exists on remote but is empty (blocked by workflow permission)."
 }
