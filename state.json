@@ -1,19 +1,21 @@
 {
-  "last_run": "2026-04-08T01:07:00Z",
-  "last_run_id": "24112146834",
+  "last_run": "2026-04-09T00:56:59Z",
+  "last_run_id": "24166685939",
   "monthly_summary_issue": "open (issue #33, title: [Repo Assist] Monthly Activity 2026-04)",
-  "prs_open": [
-    {
-      "branch": "repo-assist/improve-clock-sleep-global-json-2026-04-08",
-      "title": "Add additional clock types, Sleep/SleepUntil, and global.json SDK pinning",
-      "created": "2026-04-08",
-      "note": "Patch created via safeoutputs. Includes clock additions + global.json. Maintainer must apply patch manually."
-    }
-  ],
+  "prs_open": [],
   "open_issues": [
-    { "number": 35, "title": "[Repo Assist] Add additional clock types...", "note": "Superseded — can be closed. The new PR (this run) excludes workflow changes." }
+    { "number": 35, "title": "[Repo Assist] Add additional clock types...", "note": "Superseded — can be closed." },
+    { "number": 37, "title": "[Repo Assist] Add additional clock types, Sleep/SleepUntil methods, and global.json SDK pinning", "note": "Superseded by run 24166685939 patch (no global.json). Has compare link for branch repo-assist/improve-clock-sleep-global-json-2026-04-08-ff0f91758900b284." }
+  ],
+  "pending_patches": [
+    {
+      "run_id": "24166685939",
+      "branch": "repo-assist/improve-clock-types-sleep-2026-04-09",
+      "title": "Add additional clock types and high-precision sleep via clock_nanosleep",
+      "note": "Clean patch: 3 new clock types (CLOCK_BOOTTIME, CLOCK_PROCESS_CPUTIME_ID, CLOCK_THREAD_CPUTIME_ID), Sleep/SleepUntil via clock_nanosleep. No global.json. 93 tests pass (12 new)."
+    }
   ],
   "comments_made": {},
   "issue_cursor": null,
-  "notes": "April 2026, run 3. Created PR patch for: 3 new clock types (CLOCK_BOOTTIME, CLOCK_PROCESS_CPUTIME_ID, CLOCK_THREAD_CPUTIME_ID), clock_nanosleep-based Sleep/SleepUntil, and global.json SDK pinning (10.0.201, rollForward: latestFeature). All 93 tests pass (12 new). Issue #35 is superseded and can be closed. Previous branch repo-assist/improve-clock-sleep-2026-04-07-05b9b2ed69c3f353 exists on remote but is empty (blocked by workflow permission)."
+  "notes": "April 2026, run 4. This run submitted a clean PR patch (no global.json) for clock types + Sleep/SleepUntil. Issues #35 and #37 are superseded and can be closed by maintainer. Future: add clock benchmarks to LinuxCore.Benchmarks."
 }
