@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-04-10T01:07:00Z",
-  "last_run_id": "24221172261",
+  "last_run": "2026-04-11T01:03:00Z",
+  "last_run_id": "24270989145",
   "monthly_summary_issue": "open (issue #33, title: [Repo Assist] Monthly Activity 2026-04)",
   "prs_open": [
     {
@@ -9,25 +9,23 @@
       "branch": "repo-assist/improve-clock-types-sleep-2026-04-09-b2bc6db7591a27fb"
     }
   ],
+  "prs_pending_creation": [
+    {
+      "branch": "repo-assist/tests-cancellationtoken-semaphoreslim-2026-04-11",
+      "title": "[Repo Assist] Tests: add coverage for LinuxCancellationToken.None and LinuxSemaphoreSlim initial value/Remove-blocks",
+      "run": 24270989145
+    },
+    {
+      "branch": "repo-assist/eng-global-json-clock-benchmarks-2026-04-11",
+      "title": "[Repo Assist] Eng: add global.json SDK pin and LinuxClockBenchmarks",
+      "run": 24270989145
+    }
+  ],
   "open_issues": [
     { "number": 35, "title": "[Repo Assist] Add additional clock types...", "note": "Superseded — can be closed." },
     { "number": 37, "title": "[Repo Assist] Add additional clock types, Sleep/SleepUntil methods, and global.json SDK pinning", "note": "Superseded by PR #38. Can be closed." }
   ],
-  "pending_patches": [],
-  "infrastructure_note": "Run 24221172261 had MCP servers blocked by policy (both github and safeoutputs). Local branches were committed but could not be pushed. Two ready-to-submit improvements are prepared and should be submitted next run.",
-  "ready_improvements": [
-    {
-      "task": 8,
-      "description": "Add LinuxClockBenchmarks and switch to BenchmarkSwitcher",
-      "note": "LinuxClockBenchmarks.cs (4 benchmarks: MonotonicNanoseconds, Monotonic, RealtimeNanoseconds, Realtime) + Program.cs updated to use BenchmarkSwitcher.FromAssembly. All 81 tests pass."
-    },
-    {
-      "task": 5,
-      "description": "Add XML documentation to LinuxUser, LinuxGroup, LinuxSecurityObject public members + LinuxSemaphoreSlim.Decrement()",
-      "note": "Files: LinuxUser.cs, LinuxGroup.cs, LinuxSecurityObject.cs, LinuxSemaphoreSlim.cs. All 81 tests pass."
-    }
-  ],
   "comments_made": {},
   "issue_cursor": null,
-  "notes": "April 2026, run 5. MCP policy block prevented all GitHub writes. Next run: implement the two ready improvements and submit PRs. PR #38 still open for review. Issues #35 and #37 superseded, maintainer should close them."
+  "notes": "April 2026, run 6. Tasks 9 (testing) and 4 (engineering) completed. Two PR patches submitted: tests for LinuxCancellationToken.None + LinuxSemaphoreSlim; global.json + LinuxClockBenchmarks. Monthly summary issue #33 updated. PR #38 still open. Issues #35 and #37 should be closed by maintainer."
 }
