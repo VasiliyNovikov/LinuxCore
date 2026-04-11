@@ -129,4 +129,58 @@ public class LinuxSynchronizationTests
         Assert.ThrowsExactly<OperationCanceledException>(() => token.Wait(@event, LinuxPoll.Event.Readable));
         thread.Join();
     }
+
+    [TestMethod]
+    public void LinuxCancellationToken_None_Wait_Returns_True_When_Object_Is_Ready()
+    {
+        using var @event = new LinuxEvent();
+        @event.Set();
+
+        Assert.IsTrue(LinuxCancellationToken.None.Wait(@event, LinuxPoll.Event.Readable));
+        @event.Wait();
+    }
+
+    [TestMethod]
+    public void LinuxCancellationToken_None_ThrowIfCancellationRequested_Does_Not_Throw()
+    {
+        // Should not throw since CancellationToken.None is never cancelled
+        LinuxCancellationToken.None.ThrowIfCancellationRequested();
+    }
+
+    [TestMethod]
+    public void LinuxSemaphoreSlim_InitialValue_Is_Immediately_Available()
+    {
+        using var semaphore = new LinuxSemaphoreSlim(3);
+
+        // Descriptor should already be readable with 3 available tokens
+        Assert.AreEqual(LinuxPoll.Event.Readable, LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+
+        semaphore.Decrement();
+        Assert.AreEqual(LinuxPoll.Event.Readable, LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+
+        semaphore.Remove(2);
+        Assert.IsNull(LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+    }
+
+    [TestMethod]
+    public void LinuxSemaphoreSlim_Remove_Blocks_Until_Enough_Tokens_Available()
+    {
+        using var semaphore = new LinuxSemaphoreSlim();
+        using var started = new ManualResetEventSlim();
+
+        var thread = new Thread(() =>
+        {
+            started.Set();
+            Thread.Sleep(50);
+            semaphore.Add(3);
+        });
+
+        thread.Start();
+        Assert.IsTrue(started.Wait(TimeSpan.FromSeconds(1)));
+
+        semaphore.Remove(3);
+        thread.Join();
+
+        Assert.IsNull(LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+    }
 }
