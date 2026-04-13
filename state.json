@@ -1,31 +1,43 @@
 {
-  "last_run": "2026-04-11T01:03:00Z",
-  "last_run_id": "24270989145",
+  "last_run": "2026-04-13T01:12:00Z",
+  "last_run_id": "24321103535",
   "monthly_summary_issue": "open (issue #33, title: [Repo Assist] Monthly Activity 2026-04)",
   "prs_open": [
     {
       "number": 38,
       "title": "[Repo Assist] Add additional clock types and high-precision sleep via clock_nanosleep",
       "branch": "repo-assist/improve-clock-types-sleep-2026-04-09-b2bc6db7591a27fb"
-    }
-  ],
-  "prs_pending_creation": [
-    {
-      "branch": "repo-assist/tests-cancellationtoken-semaphoreslim-2026-04-11",
-      "title": "[Repo Assist] Tests: add coverage for LinuxCancellationToken.None and LinuxSemaphoreSlim initial value/Remove-blocks",
-      "run": 24270989145
     },
     {
-      "branch": "repo-assist/eng-global-json-clock-benchmarks-2026-04-11",
-      "title": "[Repo Assist] Eng: add global.json SDK pin and LinuxClockBenchmarks",
-      "run": 24270989145
+      "number": 40,
+      "title": "[Repo Assist] Tests: add coverage for LinuxCancellationToken.None and LinuxSemaphoreSlim initial value/Remove-blocks",
+      "branch": "repo-assist/tests-cancellationtoken-semaphoreslim-2026-04-11-4791e60d8f38d2f5"
+    },
+    {
+      "branch": "repo-assist/improve-poll-timeout-semaphore-doc-2026-04-13",
+      "title": "[Repo Assist] Fix LinuxPoll.Wait(TimeSpan) overflow and add Decrement() doc",
+      "run": 24321103535,
+      "note": "PR patch submitted this run"
     }
   ],
   "open_issues": [
-    { "number": 35, "title": "[Repo Assist] Add additional clock types...", "note": "Superseded — can be closed." },
-    { "number": 37, "title": "[Repo Assist] Add additional clock types, Sleep/SleepUntil methods, and global.json SDK pinning", "note": "Superseded by PR #38. Can be closed." }
+    {
+      "number": 35,
+      "title": "[Repo Assist] Add additional clock types...",
+      "note": "Superseded \u2014 can be closed."
+    },
+    {
+      "number": 37,
+      "title": "[Repo Assist] Add additional clock types, Sleep/SleepUntil methods, and global.json SDK pinning",
+      "note": "Superseded by PR #38. Can be closed."
+    },
+    {
+      "number": 41,
+      "title": "[Repo Assist] Eng: add global.json SDK pin and LinuxClockBenchmarks",
+      "note": "Protected files \u2014 maintainer must create PR manually."
+    }
   ],
   "comments_made": {},
   "issue_cursor": null,
-  "notes": "April 2026, run 6. Tasks 9 (testing) and 4 (engineering) completed. Two PR patches submitted: tests for LinuxCancellationToken.None + LinuxSemaphoreSlim; global.json + LinuxClockBenchmarks. Monthly summary issue #33 updated. PR #38 still open. Issues #35 and #37 should be closed by maintainer."
+  "notes": "April 2026, run 7. Task 2: no human issues to comment on. Task 5: submitted PR fixing LinuxPoll.Wait(TimeSpan) overflow (Math.Clamp) + Decrement() doc. Monthly summary updated. Issues #35, #37 still need to be closed by maintainer. PR #38, #40 still need review."
 }
