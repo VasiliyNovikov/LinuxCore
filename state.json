@@ -1,30 +1,32 @@
 {
-  "last_run": "2026-04-13T01:12:00Z",
-  "last_run_id": "24321103535",
+  "last_run": "2026-04-14T01:12:00Z",
+  "last_run_id": "24375450519",
   "monthly_summary_issue": "open (issue #33, title: [Repo Assist] Monthly Activity 2026-04)",
   "prs_open": [
     {
       "number": 38,
       "title": "[Repo Assist] Add additional clock types and high-precision sleep via clock_nanosleep",
-      "branch": "repo-assist/improve-clock-types-sleep-2026-04-09-b2bc6db7591a27fb"
+      "branch": "repo-assist/improve-clock-types-sleep-2026-04-09-b2bc6db7591a27fb",
+      "status": "clean - no conflicts, awaiting review"
     },
     {
       "number": 40,
       "title": "[Repo Assist] Tests: add coverage for LinuxCancellationToken.None and LinuxSemaphoreSlim initial value/Remove-blocks",
-      "branch": "repo-assist/tests-cancellationtoken-semaphoreslim-2026-04-11-4791e60d8f38d2f5"
+      "branch": "repo-assist/tests-cancellationtoken-semaphoreslim-2026-04-11-4791e60d8f38d2f5",
+      "status": "clean - 85 tests pass (+4 new), awaiting review"
     },
     {
-      "branch": "repo-assist/improve-poll-timeout-semaphore-doc-2026-04-13",
+      "number": 42,
       "title": "[Repo Assist] Fix LinuxPoll.Wait(TimeSpan) overflow and add Decrement() doc",
-      "run": 24321103535,
-      "note": "PR patch submitted this run"
+      "branch": "repo-assist/improve-poll-timeout-semaphore-doc-2026-04-13-da7183303bc4615a",
+      "status": "clean - 81 tests pass, awaiting review"
     }
   ],
   "open_issues": [
     {
       "number": 35,
       "title": "[Repo Assist] Add additional clock types...",
-      "note": "Superseded \u2014 can be closed."
+      "note": "Superseded - can be closed."
     },
     {
       "number": 37,
@@ -32,12 +34,17 @@
       "note": "Superseded by PR #38. Can be closed."
     },
     {
+      "number": 39,
+      "title": "[aw] Repo Assist failed",
+      "note": "Infrastructure failure (MCP servers blocked). Run 24321103535 succeeded. Run 24375450519 also had MCP servers blocked. Can be closed once runs are stable."
+    },
+    {
       "number": 41,
       "title": "[Repo Assist] Eng: add global.json SDK pin and LinuxClockBenchmarks",
-      "note": "Protected files \u2014 maintainer must create PR manually."
+      "note": "Protected files - maintainer must create PR manually."
     }
   ],
   "comments_made": {},
   "issue_cursor": null,
-  "notes": "April 2026, run 7. Task 2: no human issues to comment on. Task 5: submitted PR fixing LinuxPoll.Wait(TimeSpan) overflow (Math.Clamp) + Decrement() doc. Monthly summary updated. Issues #35, #37 still need to be closed by maintainer. PR #38, #40 still need review."
+  "notes": "April 2026, run 8. INFRASTRUCTURE ISSUE: MCP servers blocked again (safeoutputs + github), same as run 24221172261. No GitHub writes possible this run. Planned actions: comment on #39 (infra failure resolved), update monthly summary #33. All PRs are clean: #38 clean, #40 clean (85 tests), #42 clean (81 tests). Next run: comment on #39 suggesting closure, update monthly summary with run 8 entry noting infra failure."
 }
