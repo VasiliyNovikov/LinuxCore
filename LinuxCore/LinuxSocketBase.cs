@@ -6,11 +6,23 @@ using static LinuxCore.Interop.Socket;
 
 namespace LinuxCore;
 
-public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool ownsDescriptor = true) : FileObject(descriptor, ownsDescriptor)
+public abstract unsafe class LinuxSocketBase : FileObject
 {
+    // Cached at construction to avoid an fcntl(F_GETFL) syscall on every Accept()/TryAccept() call.
+    private readonly bool _isNonBlocking;
+
+    protected LinuxSocketBase(FileDescriptor descriptor, bool ownsDescriptor = true)
+        : base(descriptor, ownsDescriptor)
+    {
+        _isNonBlocking = (Flags & LinuxFileFlags.NonBlock) != 0;
+    }
+
     protected LinuxSocketBase(LinuxAddressFamily domain, LinuxSocketType type, ProtocolType protocol)
         : this(socket(domain, type | LinuxSocketType.CloseOnExec, protocol).ThrowIfError())
     {
+        // Override the value set by the chained constructor (which called fcntl) with the
+        // known flag extracted from the type parameter — avoids a syscall on the hot accept path.
+        _isNonBlocking = (type & LinuxSocketType.NonBlocking) != 0;
     }
 
     protected void Bind<TAddress>(in TAddress address) where TAddress : unmanaged => Bind(in address, (uint)sizeof(TAddress));
@@ -44,17 +56,17 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
         listen(Descriptor, backlog).ThrowIfError();
     }
 
-    protected FileDescriptor Accept() => AcceptCore(Flags).ThrowIfError();
+    protected FileDescriptor Accept() => AcceptCore().ThrowIfError();
 
     protected bool TryAccept(out FileDescriptor descriptor)
     {
-        var flags = Flags;
-        return (flags & LinuxFileFlags.NonBlock) == 0
+        return !_isNonBlocking
             ? throw new InvalidOperationException("TryAccept requires a nonblocking listening socket.")
-            : TryComplete(AcceptCore(flags), out descriptor);
+            : TryComplete(AcceptCore(), out descriptor);
     }
 
-    private LinuxResult<FileDescriptor> AcceptCore(LinuxFileFlags flags) => accept4(Descriptor, null, null, (LinuxSocketType)(flags & LinuxFileFlags.NonBlock) | LinuxSocketType.CloseOnExec);
+    private LinuxResult<FileDescriptor> AcceptCore() =>
+        accept4(Descriptor, null, null, (_isNonBlocking ? LinuxSocketType.NonBlocking : default) | LinuxSocketType.CloseOnExec);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Send(ReadOnlySpan<byte> buffer, LinuxSocketMessageFlags flags = default)
