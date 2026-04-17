@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-04-15T01:11:05Z",
-  "last_run_id": "24431099702",
+  "last_run": "2026-04-17T01:12:07Z",
+  "last_run_id": "24542487560",
   "monthly_summary_issue": "open (issue #33, title: [Repo Assist] Monthly Activity 2026-04)",
   "prs_open": [
     {
@@ -24,8 +24,17 @@
   ],
   "pending_branches": [
     {
-      "branch": "repo-assist/perf-socket-nonblocking-cache-2026-04-15",
-      "description": "Perf: cache IsNonBlocking flag in LinuxSocketBase to avoid fcntl on each Accept. 81 tests pass. PR creation blocked by safeoutputs MCP outage."
+      "branch": "repo-assist/perf-socket-nonblocking-cache-2026-04-15-3772a32820fe9fbb",
+      "description": "Perf: cache IsNonBlocking flag in LinuxSocketBase to avoid fcntl on each Accept. 81 tests pass. Branch already on remote. PR creation blocked by safeoutputs MCP outage."
+    },
+    {
+      "branch": "repo-assist/tests-missing-coverage-2026-04-17",
+      "description": "Tests: 8 new tests for MonotonicNanoseconds, LinuxEvent(isSet:true), LinuxFile.DeviceId, LinuxPoll TimeSpan overloads. 89 tests pass (+8 new). Branch LOCAL ONLY - needs push and PR creation. Commit hash: 8487e41",
+      "files_changed": [
+        "LinuxCore.Tests/LinuxClockTests.cs",
+        "LinuxCore.Tests/LinuxSynchronizationTests.cs",
+        "LinuxCore.Tests/LinuxFileTests.cs"
+      ]
     }
   ],
   "open_issues": [
@@ -42,7 +51,7 @@
     {
       "number": 39,
       "title": "[aw] Repo Assist failed",
-      "note": "Infrastructure failure (MCP servers blocked). Still happening in run 24431099702. Can be closed once runs are stable."
+      "note": "Infrastructure failure (MCP servers blocked). Still happening repeatedly. Can be closed once runs are stable."
     },
     {
       "number": 41,
@@ -52,5 +61,5 @@
   ],
   "comments_made": {},
   "issue_cursor": null,
-  "notes": "April 2026, run 9. INFRASTRUCTURE ISSUE: safeoutputs MCP server blocked again (same as runs 24221172261 and 24375450519). Cannot create PRs, comment on issues, or update monthly summary. Task 8 work completed: cached _isNonBlocking in LinuxSocketBase - eliminates fcntl syscall per Accept(). Branch ready: repo-assist/perf-socket-nonblocking-cache-2026-04-15. Next run: create PR for the pending branch, comment on #39 suggesting closure, update monthly summary #33. Tasks selected this run: 2 (Issue Investigation) and 8 (Performance Improvements). The pending_branches field tracks code ready to be pushed when safeoutputs MCP recovers."
+  "notes": "April 2026, run 10. INFRASTRUCTURE ISSUE: safeoutputs MCP server blocked again (runs 24221172261, 24375450519, 24431099702, 24542487560 all affected). Cannot create PRs, comment on issues, or update monthly summary. Task 9 work completed: 8 new tests added covering MonotonicNanoseconds, LinuxEvent(isSet:true), LinuxFile.DeviceId, and LinuxPoll TimeSpan overloads (89 tests pass). Branch repo-assist/tests-missing-coverage-2026-04-17 is LOCAL ONLY - needs git push + PR creation next run. Perf branch already on remote (repo-assist/perf-socket-nonblocking-cache-2026-04-15-3772a32820fe9fbb), just needs PR. Tasks selected this run: 3 (Issue Investigation and Fix - no open bugs found, pivoted to pending perf PR) and 9 (Testing Improvements - completed). Next run: (1) push tests branch and create PR, (2) create PR for perf branch, (3) update monthly summary #33, (4) comment on #35 #37 suggesting closure."
 }
