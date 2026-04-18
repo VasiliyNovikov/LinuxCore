@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-04-17T01:12:07Z",
-  "last_run_id": "24542487560",
+  "last_run": "2026-04-18T01:05:07Z",
+  "last_run_id": "24593261327",
   "monthly_summary_issue": "open (issue #33, title: [Repo Assist] Monthly Activity 2026-04)",
   "prs_open": [
     {
@@ -20,21 +20,33 @@
       "title": "[Repo Assist] Fix LinuxPoll.Wait(TimeSpan) overflow and add Decrement() doc",
       "branch": "repo-assist/improve-poll-timeout-semaphore-doc-2026-04-13-da7183303bc4615a",
       "status": "clean - 81 tests pass, awaiting review"
+    },
+    {
+      "number": 43,
+      "title": "[Repo Assist] Perf: cache IsNonBlocking flag in LinuxSocketBase to avoid fcntl on each Accept",
+      "branch": "repo-assist/perf-socket-nonblocking-cache-2026-04-15-3772a32820fe9fbb",
+      "status": "clean - 81 tests pass, awaiting review"
     }
   ],
   "pending_branches": [
     {
-      "branch": "repo-assist/perf-socket-nonblocking-cache-2026-04-15-3772a32820fe9fbb",
-      "description": "Perf: cache IsNonBlocking flag in LinuxSocketBase to avoid fcntl on each Accept. 81 tests pass. Branch already on remote. PR creation blocked by safeoutputs MCP outage."
-    },
-    {
-      "branch": "repo-assist/tests-missing-coverage-2026-04-17",
-      "description": "Tests: 8 new tests for MonotonicNanoseconds, LinuxEvent(isSet:true), LinuxFile.DeviceId, LinuxPoll TimeSpan overloads. 89 tests pass (+8 new). Branch LOCAL ONLY - needs push and PR creation. Commit hash: 8487e41",
+      "branch": "repo-assist/tests-missing-coverage-2026-04-18",
+      "description": "Tests: 7 new tests for MonotonicNanoseconds (positive + consistent with Monotonic), LinuxEvent(isSet:true), LinuxPoll TimeSpan overloads (2 tests), LinuxSemaphoreSlim(initialValue:2), Linux_File_DeviceId. 88 tests pass (+7 new). Branch LOCAL ONLY - needs push and PR.",
       "files_changed": [
         "LinuxCore.Tests/LinuxClockTests.cs",
         "LinuxCore.Tests/LinuxSynchronizationTests.cs",
         "LinuxCore.Tests/LinuxFileTests.cs"
-      ]
+      ],
+      "commit": "45b9217"
+    },
+    {
+      "branch": "repo-assist/improve-file-xmldocs-2026-04-18",
+      "description": "Docs: add XML documentation to LinuxFile and LinuxMemoryFile public API (class summaries, constructors, properties, methods). 81 tests pass. Branch LOCAL ONLY - needs push and PR.",
+      "files_changed": [
+        "LinuxCore/LinuxFile.cs",
+        "LinuxCore/LinuxMemoryFile.cs"
+      ],
+      "commit": "0ced486"
     }
   ],
   "open_issues": [
@@ -51,7 +63,7 @@
     {
       "number": 39,
       "title": "[aw] Repo Assist failed",
-      "note": "Infrastructure failure (MCP servers blocked). Still happening repeatedly. Can be closed once runs are stable."
+      "note": "Infrastructure failure (MCP servers blocked). Recurring. Can be closed once runs are stable."
     },
     {
       "number": 41,
@@ -61,5 +73,5 @@
   ],
   "comments_made": {},
   "issue_cursor": null,
-  "notes": "April 2026, run 10. INFRASTRUCTURE ISSUE: safeoutputs MCP server blocked again (runs 24221172261, 24375450519, 24431099702, 24542487560 all affected). Cannot create PRs, comment on issues, or update monthly summary. Task 9 work completed: 8 new tests added covering MonotonicNanoseconds, LinuxEvent(isSet:true), LinuxFile.DeviceId, and LinuxPoll TimeSpan overloads (89 tests pass). Branch repo-assist/tests-missing-coverage-2026-04-17 is LOCAL ONLY - needs git push + PR creation next run. Perf branch already on remote (repo-assist/perf-socket-nonblocking-cache-2026-04-15-3772a32820fe9fbb), just needs PR. Tasks selected this run: 3 (Issue Investigation and Fix - no open bugs found, pivoted to pending perf PR) and 9 (Testing Improvements - completed). Next run: (1) push tests branch and create PR, (2) create PR for perf branch, (3) update monthly summary #33, (4) comment on #35 #37 suggesting closure."
+  "notes": "April 2026, run 11 (run_id 24593261327). INFRASTRUCTURE ISSUE: safeoutputs MCP server STILL not available (tools not in function definitions). Cannot push branches, create PRs, comment on issues, or update monthly summary. PR #43 (perf branch) was created by a previous run - confirmed in prs.json. Task 9 work completed (88 tests pass, +7 new). Task 5 work completed (XML docs for LinuxFile/LinuxMemoryFile). Both branches are LOCAL ONLY - will be lost when runner exits. Next run MUST: (1) re-implement tests branch and create PR (redo work from this run), (2) re-implement docs branch and create PR, (3) update monthly summary #33, (4) comment on #35 and #37 suggesting closure. Specific tests to add for Task 9 (from LinuxClockTests.cs): MonotonicNanoseconds_Is_Positive and MonotonicNanoseconds_And_Monotonic_Are_Consistent. From LinuxSynchronizationTests.cs: LinuxEvent_IsSet_True_Is_Immediately_Readable, LinuxPoll_Wait_TimeSpan_Overload_Times_Out_On_Unset_Event, LinuxPoll_Wait_Single_TimeSpan_Overload_Times_Out_On_Unset_Event, LinuxSemaphoreSlim_WithInitialValue_IsImmediatelyDecrementable. From LinuxFileTests.cs: Linux_File_DeviceId. For Task 5 docs: add class-level summaries + member docs to LinuxFile.cs and LinuxMemoryFile.cs."
 }
