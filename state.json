@@ -1,39 +1,43 @@
 {
-  "last_run": "2026-04-26T01:16:13Z",
-  "last_run_id": "24945020727",
+  "last_run": "2026-04-27T01:18:10Z",
+  "last_run_id": "24972032593",
   "monthly_summary_issue": "open (issue #33, title: [Repo Assist] Monthly Activity 2026-04)",
   "prs_open": [
     {
       "number": 38,
       "title": "[Repo Assist] Add additional clock types and high-precision sleep via clock_nanosleep",
       "branch": "repo-assist/improve-clock-types-sleep-2026-04-09-b2bc6db7591a27fb",
-      "status": "awaiting review, no merge conflicts with master"
+      "status": "awaiting review"
     },
     {
       "number": 40,
       "title": "[Repo Assist] Tests: add coverage for LinuxCancellationToken.None and LinuxSemaphoreSlim initial value/Remove-blocks",
       "branch": "repo-assist/tests-cancellationtoken-semaphoreslim-2026-04-11-4791e60d8f38d2f5",
-      "status": "awaiting review, no merge conflicts with master"
+      "status": "awaiting review"
     },
     {
       "number": 42,
       "title": "[Repo Assist] Fix LinuxPoll.Wait(TimeSpan) overflow and add Decrement() doc",
       "branch": "repo-assist/improve-poll-timeout-semaphore-doc-2026-04-13-da7183303bc4615a",
-      "status": "awaiting review, no merge conflicts with master"
+      "status": "awaiting review"
     },
     {
       "number": 43,
       "title": "[Repo Assist] Perf: cache IsNonBlocking flag in LinuxSocketBase to avoid fcntl on each Accept",
       "branch": "repo-assist/perf-socket-nonblocking-cache-2026-04-15-3772a32820fe9fbb",
-      "status": "awaiting review, no merge conflicts with master"
+      "status": "awaiting review"
     }
   ],
   "pending_branches": [
     {
-      "branch": "repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-26",
-      "description": "Perf: optimize LinuxCancellationToken.Wait for non-cancelable tokens. Fast path in Wait(IFileObject, LinuxPoll.Event) when _event is null calls LinuxPoll.Wait directly. Wait(ReadOnlySpan, ...) stackallocs objectCount instead of objectCount+1. 2 new tests added. 83 tests pass. LOCAL ONLY - needs push and PR. Commit: c4fbb24",
-      "commit": "c4fbb24",
+      "branch": "repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-27",
+      "description": "Perf: optimize LinuxCancellationToken.Wait for non-cancelable tokens. Fast path in Wait(IFileObject, Event) when _event is null calls LinuxPoll.Wait directly. Wait(ReadOnlySpan, ...) branches stackalloc size. 2 new tests added (None_Wait_Returns and None_Wait_Span_Returns). 83 tests pass. LOCAL ONLY - needs push and PR.",
       "files_changed": ["LinuxCore/LinuxCancellationToken.cs", "LinuxCore.Tests/LinuxSynchronizationTests.cs"]
+    },
+    {
+      "branch": "repo-assist/eng-global-json-nuget-cache-2026-04-27",
+      "description": "Eng: add global.json SDK pin (10.0.201, rollForward=patch) and NuGet package caching to validate and publish CI jobs (actions/cache@v4 keyed on runner.os+arch+csproj hash). LOCAL ONLY - needs push and PR.",
+      "files_changed": ["global.json", ".github/workflows/pipeline.yml"]
     }
   ],
   "open_issues": [
@@ -55,15 +59,15 @@
     {
       "number": 39,
       "title": "[aw] Repo Assist failed",
-      "note": "Infrastructure failure (MCP servers blocked). Recurring. Can be closed once runs are stable."
+      "note": "Infrastructure failure (MCP servers blocked). Can be closed once runs are stable."
     },
     {
       "number": 41,
       "title": "[Repo Assist] Eng: add global.json SDK pin and LinuxClockBenchmarks",
-      "note": "Can be closed - global.json work not yet done; benchmarks part still open."
+      "note": "global.json work now tracked in pending_branches. Benchmarks part still open."
     }
   ],
   "comments_made": {},
   "issue_cursor": null,
-  "notes": "April 2026, run 19 (run_id 24945020727). INFRASTRUCTURE ISSUE PERSISTS: safeoutputs MCP server still not available (tools not in function definitions). Git push requires credentials not available. CANNOT push branches, create PRs, comment on issues, or update monthly summary. Tasks selected were Task 3 (Issue Investigation and Fix) and Task 6 (Maintain Repo Assist PRs). Task 6: All 4 open PRs (#38, #40, #42, #43) have no merge conflicts with master and are clean. Task 3: Implemented and committed perf improvement to LinuxCancellationToken.Wait on branch repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-26 (commit c4fbb24). 83 tests pass. Code review passed. LOCAL ONLY. NEXT RUN MUST: push this branch and create PR titled '[Repo Assist] Perf: optimize LinuxCancellationToken.Wait for non-cancelable tokens', update monthly summary #33."
+  "notes": "April 2026, run 20 (run_id 24972032593). INFRASTRUCTURE ISSUE PERSISTS: safeoutputs MCP server not available, git push requires credentials not available. Tasks selected: Task 4 (Engineering Investments) and Task 3 (Issue Investigation and Fix). Task 4: Created global.json (pin .NET SDK 10.0.201) + NuGet caching in CI on branch repo-assist/eng-global-json-nuget-cache-2026-04-27. Task 3: Re-implemented perf optimization for LinuxCancellationToken.Wait on branch repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-27 (83 tests pass). BOTH LOCAL ONLY. NEXT RUN MUST: re-implement these two changes (branches are local only, lost at end of run), push, and create PRs. Monthly summary #33 not updated (no way to post comments without safeoutputs tools)."
 }
