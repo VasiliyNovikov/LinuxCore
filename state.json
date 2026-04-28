@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-04-27T01:18:10Z",
-  "last_run_id": "24972032593",
+  "last_run": "2026-04-28T01:25:38Z",
+  "last_run_id": "25028716882",
   "monthly_summary_issue": "open (issue #33, title: [Repo Assist] Monthly Activity 2026-04)",
   "prs_open": [
     {
@@ -30,14 +30,18 @@
   ],
   "pending_branches": [
     {
-      "branch": "repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-27",
-      "description": "Perf: optimize LinuxCancellationToken.Wait for non-cancelable tokens. Fast path in Wait(IFileObject, Event) when _event is null calls LinuxPoll.Wait directly. Wait(ReadOnlySpan, ...) branches stackalloc size. 2 new tests added (None_Wait_Returns and None_Wait_Span_Returns). 83 tests pass. LOCAL ONLY - needs push and PR.",
-      "files_changed": ["LinuxCore/LinuxCancellationToken.cs", "LinuxCore.Tests/LinuxSynchronizationTests.cs"]
-    },
+      "branch": "repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-28",
+      "description": "Perf: optimize LinuxCancellationToken.Wait for non-cancelable tokens. When _event is null: Wait(ReadOnlySpan,...) allocates exactly objectCount queries instead of objectCount+1; Wait(IFileObject, Event) fast-paths to LinuxPoll.Wait(FileDescriptor, Event, int) directly. 81 tests pass. LOCAL ONLY - needs push and PR.",
+      "files_changed": [
+        "LinuxCore/LinuxCancellationToken.cs"
+      ]
+    }
+  ],
+  "pending_prs_needed": [
     {
-      "branch": "repo-assist/eng-global-json-nuget-cache-2026-04-27",
-      "description": "Eng: add global.json SDK pin (10.0.201, rollForward=patch) and NuGet package caching to validate and publish CI jobs (actions/cache@v4 keyed on runner.os+arch+csproj hash). LOCAL ONLY - needs push and PR.",
-      "files_changed": ["global.json", ".github/workflows/pipeline.yml"]
+      "branch": "repo-assist/eng-global-json-clock-benchmarks-2026-04-11-a3cc57eddaacf5e7",
+      "description": "Eng: add global.json SDK pin (10.0.201, latestPatch) and LinuxClockBenchmarks; update Program.cs to BenchmarkSwitcher. Remote branch exists, 81 tests pass. NEEDS PR ONLY - no code changes needed.",
+      "closes_issue": 41
     }
   ],
   "open_issues": [
@@ -59,15 +63,15 @@
     {
       "number": 39,
       "title": "[aw] Repo Assist failed",
-      "note": "Infrastructure failure (MCP servers blocked). Can be closed once runs are stable."
+      "note": "Infrastructure failure (MCP registry 401). Can be closed once runs succeed."
     },
     {
       "number": 41,
       "title": "[Repo Assist] Eng: add global.json SDK pin and LinuxClockBenchmarks",
-      "note": "global.json work now tracked in pending_branches. Benchmarks part still open."
+      "note": "Remote branch repo-assist/eng-global-json-clock-benchmarks-2026-04-11-a3cc57eddaacf5e7 has the changes. PR needs to be created."
     }
   ],
   "comments_made": {},
   "issue_cursor": null,
-  "notes": "April 2026, run 20 (run_id 24972032593). INFRASTRUCTURE ISSUE PERSISTS: safeoutputs MCP server not available, git push requires credentials not available. Tasks selected: Task 4 (Engineering Investments) and Task 3 (Issue Investigation and Fix). Task 4: Created global.json (pin .NET SDK 10.0.201) + NuGet caching in CI on branch repo-assist/eng-global-json-nuget-cache-2026-04-27. Task 3: Re-implemented perf optimization for LinuxCancellationToken.Wait on branch repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-27 (83 tests pass). BOTH LOCAL ONLY. NEXT RUN MUST: re-implement these two changes (branches are local only, lost at end of run), push, and create PRs. Monthly summary #33 not updated (no way to post comments without safeoutputs tools)."
+  "notes": "April 2026, run 21 (run_id 25028716882). INFRASTRUCTURE ISSUE PERSISTS: safeoutputs MCP server filtered (MCP registry policy check returns 401: 'Failed to fetch MCP registry policy: 401. Non-default MCP servers will be blocked'). GitHub MCP server also filtered. No way to push branches or create/comment on PRs/issues. Task 2 (Issue Investigation and Comment): No user issues exist to comment on (all open issues are Repo Assist). Task 3 (Issue Investigation and Fix): Implemented LinuxCancellationToken.Wait optimization on local branch repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-28 (81 tests pass). Also identified that engineering branch repo-assist/eng-global-json-clock-benchmarks-2026-04-11-a3cc57eddaacf5e7 needs a PR (remote branch exists with changes, 81 tests pass). NEXT RUN MUST: (1) push and create PR for perf-cancellationtoken-wait-fastpath-2026-04-28 (re-implement: add fast path in Wait(IFileObject,Event) when _event is null to call LinuxPoll.Wait(Descriptor,events,Infinite) directly; also change stackalloc to objectCount when _event is null), (2) create PR for engineering branch (no code changes needed, branch already has global.json + LinuxClockBenchmarks + Program.cs BenchmarkSwitcher). Root cause of infra issue: copilot CLI MCP registry check fails 401 because COPILOT_TOKEN is 'placeholder-token-for-credential-isolation'. Monthly summary #33 not updated (no way to post comments)."
 }
