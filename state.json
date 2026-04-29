@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-04-28T01:25:38Z",
-  "last_run_id": "25028716882",
+  "last_run": "2026-04-29T01:28:37Z",
+  "last_run_id": "25086352785",
   "monthly_summary_issue": "open (issue #33, title: [Repo Assist] Monthly Activity 2026-04)",
   "prs_open": [
     {
@@ -30,8 +30,8 @@
   ],
   "pending_branches": [
     {
-      "branch": "repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-28",
-      "description": "Perf: optimize LinuxCancellationToken.Wait for non-cancelable tokens. When _event is null: Wait(ReadOnlySpan,...) allocates exactly objectCount queries instead of objectCount+1; Wait(IFileObject, Event) fast-paths to LinuxPoll.Wait(FileDescriptor, Event, int) directly. 81 tests pass. LOCAL ONLY - needs push and PR.",
+      "branch": "repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-29",
+      "description": "Perf: optimize LinuxCancellationToken.Wait for non-cancelable tokens. When _event is null: Wait(ReadOnlySpan,...) allocates exactly objectCount queries instead of objectCount+1; Wait(IFileObject, Event) fast-paths to LinuxPoll.Wait(FileDescriptor, Event, int) directly. 81 tests pass. LOCAL ONLY - needs push and PR. Commit: f0b26fb.",
       "files_changed": [
         "LinuxCore/LinuxCancellationToken.cs"
       ]
@@ -73,5 +73,5 @@
   ],
   "comments_made": {},
   "issue_cursor": null,
-  "notes": "April 2026, run 21 (run_id 25028716882). INFRASTRUCTURE ISSUE PERSISTS: safeoutputs MCP server filtered (MCP registry policy check returns 401: 'Failed to fetch MCP registry policy: 401. Non-default MCP servers will be blocked'). GitHub MCP server also filtered. No way to push branches or create/comment on PRs/issues. Task 2 (Issue Investigation and Comment): No user issues exist to comment on (all open issues are Repo Assist). Task 3 (Issue Investigation and Fix): Implemented LinuxCancellationToken.Wait optimization on local branch repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-28 (81 tests pass). Also identified that engineering branch repo-assist/eng-global-json-clock-benchmarks-2026-04-11-a3cc57eddaacf5e7 needs a PR (remote branch exists with changes, 81 tests pass). NEXT RUN MUST: (1) push and create PR for perf-cancellationtoken-wait-fastpath-2026-04-28 (re-implement: add fast path in Wait(IFileObject,Event) when _event is null to call LinuxPoll.Wait(Descriptor,events,Infinite) directly; also change stackalloc to objectCount when _event is null), (2) create PR for engineering branch (no code changes needed, branch already has global.json + LinuxClockBenchmarks + Program.cs BenchmarkSwitcher). Root cause of infra issue: copilot CLI MCP registry check fails 401 because COPILOT_TOKEN is 'placeholder-token-for-credential-isolation'. Monthly summary #33 not updated (no way to post comments)."
+  "notes": "April 2026, run 22 (run_id 25086352785). INFRASTRUCTURE ISSUE PERSISTS: safeoutputs MCP server not in available tool list (MCP registry policy check fails 401). gh CLI not authenticated. Cannot push branches or create/comment on PRs/issues. Task 2 (Issue Investigation and Comment): No user issues exist (all 5 open issues are Repo Assist's own). Task 10 (Take Repository Forward): Re-implemented LinuxCancellationToken.Wait optimization on local branch repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-29 (commit f0b26fb, 81 tests pass). Cannot push or create PR. NEXT RUN MUST: (1) push and create PR for perf-cancellationtoken-wait-fastpath-2026-04-29 if branch still exists, else re-implement same changes (stackalloc objectCount when _event is null; fast-path Wait(IFileObject,Event) to LinuxPoll.Wait(Descriptor,events,Infinite) when _event is null), (2) create PR for engineering branch repo-assist/eng-global-json-clock-benchmarks-2026-04-11-a3cc57eddaacf5e7 (remote branch exists, no code changes needed). Root cause of infra issue: COPILOT_TOKEN is placeholder-token-for-credential-isolation. Monthly summary #33 not updated (no way to update issue)."
 }
