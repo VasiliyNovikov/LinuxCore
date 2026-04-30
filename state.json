@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-04-29T01:28:37Z",
-  "last_run_id": "25086352785",
+  "last_run": "2026-04-30T01:27:06Z",
+  "last_run_id": "25142553581",
   "monthly_summary_issue": "open (issue #33, title: [Repo Assist] Monthly Activity 2026-04)",
   "prs_open": [
     {
@@ -30,17 +30,18 @@
   ],
   "pending_branches": [
     {
-      "branch": "repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-29",
-      "description": "Perf: optimize LinuxCancellationToken.Wait for non-cancelable tokens. When _event is null: Wait(ReadOnlySpan,...) allocates exactly objectCount queries instead of objectCount+1; Wait(IFileObject, Event) fast-paths to LinuxPoll.Wait(FileDescriptor, Event, int) directly. 81 tests pass. LOCAL ONLY - needs push and PR. Commit: f0b26fb.",
+      "branch": "repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-30",
+      "description": "Perf: optimize LinuxCancellationToken.Wait for non-cancelable tokens. (1) Wait(ReadOnlySpan,...): stackalloc exactly objectCount when _event is null using ternary (hasCancellationEvent ? objectCount+1 : objectCount). (2) Wait(IFileObject, Event): fast-path to LinuxPoll.Wait(Descriptor, events, Timeout.Infinite).HasValue when _event is null. 81 tests pass. LOCAL ONLY - needs push and PR.",
       "files_changed": [
         "LinuxCore/LinuxCancellationToken.cs"
-      ]
+      ],
+      "commit_message": "Perf: optimize LinuxCancellationToken.Wait for non-cancelable tokens"
     }
   ],
   "pending_prs_needed": [
     {
       "branch": "repo-assist/eng-global-json-clock-benchmarks-2026-04-11-a3cc57eddaacf5e7",
-      "description": "Eng: add global.json SDK pin (10.0.201, latestPatch) and LinuxClockBenchmarks; update Program.cs to BenchmarkSwitcher. Remote branch exists, 81 tests pass. NEEDS PR ONLY - no code changes needed.",
+      "description": "Eng: add global.json SDK pin (10.0.201, latestPatch) and LinuxClockBenchmarks; update Program.cs to BenchmarkSwitcher. Remote branch exists. NEEDS PR ONLY - no code changes needed.",
       "closes_issue": 41
     }
   ],
@@ -73,5 +74,5 @@
   ],
   "comments_made": {},
   "issue_cursor": null,
-  "notes": "April 2026, run 22 (run_id 25086352785). INFRASTRUCTURE ISSUE PERSISTS: safeoutputs MCP server not in available tool list (MCP registry policy check fails 401). gh CLI not authenticated. Cannot push branches or create/comment on PRs/issues. Task 2 (Issue Investigation and Comment): No user issues exist (all 5 open issues are Repo Assist's own). Task 10 (Take Repository Forward): Re-implemented LinuxCancellationToken.Wait optimization on local branch repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-29 (commit f0b26fb, 81 tests pass). Cannot push or create PR. NEXT RUN MUST: (1) push and create PR for perf-cancellationtoken-wait-fastpath-2026-04-29 if branch still exists, else re-implement same changes (stackalloc objectCount when _event is null; fast-path Wait(IFileObject,Event) to LinuxPoll.Wait(Descriptor,events,Infinite) when _event is null), (2) create PR for engineering branch repo-assist/eng-global-json-clock-benchmarks-2026-04-11-a3cc57eddaacf5e7 (remote branch exists, no code changes needed). Root cause of infra issue: COPILOT_TOKEN is placeholder-token-for-credential-isolation. Monthly summary #33 not updated (no way to update issue)."
+  "notes": "April 2026, run 23 (run_id 25142553581). INFRASTRUCTURE ISSUE PERSISTS: safeoutputs MCP server not in available tool list (MCP registry policy check fails 401). gh CLI not authenticated. Cannot push branches or create/comment on PRs/issues. Task 10 (Take Repository Forward): Implemented and committed LinuxCancellationToken.Wait optimization on local branch repo-assist/perf-cancellationtoken-wait-fastpath-2026-04-30. Changes: (1) stackalloc uses ternary so non-cancelable path allocates objectCount slots not objectCount+1; (2) Wait(IFileObject,Event) fast-paths when _event is null. 81 tests pass. CANNOT PUSH due to infra issue. Task 3 (Issue Investigation and Fix): No user-filed bugs exist. Engineering branch repo-assist/eng-global-json-clock-benchmarks-2026-04-11-a3cc57eddaacf5e7 still needs a PR (remote branch exists, no code changes needed). NEXT RUN MUST: (1) re-implement perf-cancellationtoken-wait-fastpath changes on new branch (local branch lost between runner invocations) - same changes as above; (2) create PR for engineering branch repo-assist/eng-global-json-clock-benchmarks-2026-04-11-a3cc57eddaacf5e7."
 }
