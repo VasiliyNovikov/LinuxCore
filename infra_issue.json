@@ -5,6 +5,6 @@
   "log_evidence": "2026-04-28T01:25:37.648Z [ERROR] MCP server 'safeoutputs' filtered: Could not verify server against any configured registry",
   "impact": "Agent cannot push branches or create/update PRs/issues/comments. All runs fail with 'No Safe Outputs Generated'.",
   "first_observed": "early April 2026 (run 24295586019)",
-  "runs_affected": "24295586019, 24375450519, 24486667399, 24542487560, 24593261327, 24617907233, 24643860402, 24698753955, 24754766165, 24811236203, 24867136126, 24918848570, 24945020727, 24972032593, 25028716882, 25086352785, 25142553581, 25197858901, 25240178397, 25266583057",
+  "runs_affected": "24295586019, 24375450519, 24486667399, 24542487560, 24593261327, 24617907233, 24643860402, 24698753955, 24754766165, 24811236203, 24867136126, 24918848570, 24945020727, 24972032593, 25028716882, 25086352785, 25142553581, 25197858901, 25240178397, 25266583057, 25296497959",
   "fix_needed": "Ensure the Copilot token provided to the agentic workflow has access to verify the safeoutputs MCP server against the Copilot MCP registry, OR configure the safeoutputs server as a default/built-in MCP that doesn't require registry verification."
 }
