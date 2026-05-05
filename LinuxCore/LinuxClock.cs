@@ -135,7 +135,7 @@ public static class LinuxClock
     /// <exception cref="LinuxException">The native sleep call failed.</exception>
     public static unsafe void SleepUntil(DateTimeOffset timestamp)
     {
-        if (timestamp <= DateTimeOffset.UtcNow)
+        if (timestamp < DateTimeOffset.UnixEpoch)
             return;
 
         var request = ToTimespec(timestamp - DateTimeOffset.UnixEpoch);

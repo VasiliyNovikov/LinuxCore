@@ -182,8 +182,8 @@ public class LinuxClockTests
     public void LinuxClock_SleepUntil_Waits_Until_Timestamp()
     {
         var duration = TimeSpan.FromMilliseconds(10);
-        var timestamp = DateTimeOffset.UtcNow + duration;
         var sw = Stopwatch.StartNew();
+        var timestamp = DateTimeOffset.UtcNow + duration;
 
         LinuxClock.SleepUntil(timestamp);
 
