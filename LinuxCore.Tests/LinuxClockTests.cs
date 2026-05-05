@@ -63,7 +63,7 @@ public class LinuxClockTests
     {
         var ns = LinuxClock.BootTimeNanoseconds;
 
-        Assert.IsGreaterThan(0L, ns);
+        Assert.IsTrue(ns > 0L, $"BootTimeNanoseconds {ns} should be positive");
     }
 
     [TestMethod]
@@ -89,7 +89,7 @@ public class LinuxClockTests
     {
         var ns = LinuxClock.ProcessCpuTimeNanoseconds;
 
-        Assert.IsGreaterThanOrEqualTo(0L, ns);
+        Assert.IsTrue(ns >= 0L, $"ProcessCpuTimeNanoseconds {ns} should be non-negative");
     }
 
     [TestMethod]
@@ -105,7 +105,7 @@ public class LinuxClockTests
     {
         var ns = LinuxClock.ThreadCpuTimeNanoseconds;
 
-        Assert.IsGreaterThanOrEqualTo(0L, ns);
+        Assert.IsTrue(ns >= 0L, $"ThreadCpuTimeNanoseconds {ns} should be non-negative");
     }
 
     [TestMethod]
@@ -124,7 +124,7 @@ public class LinuxClockTests
         BurnCpu();
 
         var end = LinuxClock.ProcessCpuTimeNanoseconds;
-        Assert.IsGreaterThan(start, end);
+        Assert.IsTrue(end > start, $"Process CPU time did not advance from {start} to {end}");
     }
 
     [TestMethod]
@@ -135,7 +135,7 @@ public class LinuxClockTests
         BurnCpu();
 
         var end = LinuxClock.ThreadCpuTimeNanoseconds;
-        Assert.IsGreaterThan(start, end);
+        Assert.IsTrue(end > start, $"Thread CPU time did not advance from {start} to {end}");
     }
 
     [TestMethod]
