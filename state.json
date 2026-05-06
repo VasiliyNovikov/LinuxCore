@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-05-05T01:22:40Z",
-  "last_run_id": "25352764106",
+  "last_run": "2026-05-06T01:22:00Z",
+  "last_run_id": "25411333206",
   "monthly_summary_issue": "open (issue #33, title: [Repo Assist] Monthly Activity 2026-04) - NEEDS CLOSING (wrong month); create new May 2026 summary",
   "prs_open": [
     {
@@ -30,12 +30,12 @@
   ],
   "pending_branches": [
     {
-      "branch": "repo-assist/perf-cancellationtoken-wait-2026-05-05",
-      "description": "Perf: optimize LinuxCancellationToken.Wait: (1) exact stackalloc size via ternary when _event is null, (2) Wait(IFileObject, Event) fast-paths to LinuxPoll.Wait(Descriptor, events, Timeout.Infinite).HasValue when _event is null. 81 tests pass. LOCAL ONLY - commit 843b9c8. Needs push and PR.",
+      "branch": "repo-assist/improve-cancellationtoken-wait-fastpath-2026-05-06",
+      "description": "Improve LinuxCancellationToken.Wait: (1) Wait(IFileObject,Event) fast-path calls LinuxPoll.Wait directly when _event is null, bypassing span-based overload; (2) Wait(ReadOnlySpan,ReadOnlySpan) uses exact stackalloc size via ternary, removes unnecessary slice. 81 tests pass. LOCAL ONLY - commit a3f13f8. Needs push and PR.",
       "files_changed": [
         "LinuxCore/LinuxCancellationToken.cs"
       ],
-      "commit_message": "Perf: optimize LinuxCancellationToken.Wait stackalloc and single-object fast-path"
+      "commit_message": "Improve LinuxCancellationToken.Wait: fast-path for non-cancelable token and exact stackalloc size"
     }
   ],
   "pending_prs_needed": [
@@ -74,5 +74,5 @@
   ],
   "comments_made": {},
   "issue_cursor": null,
-  "notes": "May 2026, run 5 (run_id 25352764106). Tasks selected: 8 (Performance Improvements) and 2 (Issue Investigation and Comment). INFRASTRUCTURE ISSUE PERSISTS: safeoutputs MCP server not in available tool list (MCP registry 401). gh CLI not authenticated. Cannot push branches or create/comment on PRs/issues. Task 8: Re-implemented and committed LinuxCancellationToken.Wait optimization on local branch repo-assist/perf-cancellationtoken-wait-2026-05-05, commit 843b9c8. Changes: (1) exact stackalloc ternary avoids extra zeroing + slice; (2) Wait(IFileObject,Event) fast-paths via direct LinuxPoll.Wait(Descriptor) when _event is null. 81 tests pass. CANNOT PUSH due to infra issue. Task 2: No user-reported open issues to comment on - all open issues are Repo Assist infrastructure issues. Task 11: Cannot update/create monthly summary. NEXT RUN MUST: (1) push and create PR for repo-assist/perf-cancellationtoken-wait-2026-05-05 (LOCAL branch - lost on env reset, re-implement); (2) create PR for engineering branch (remote exists); (3) close April monthly summary #33 and create May 2026 monthly summary."
+  "notes": "May 2026, run 6 (run_id 25411333206). Tasks selected: 2 (Issue Investigation and Comment) and 5 (Coding Improvements). INFRASTRUCTURE ISSUE PERSISTS: safeoutputs MCP server not in available tool list (MCP registry 401). gh CLI not authenticated. Cannot push branches or create/comment on PRs/issues. Task 2: All open issues are Repo Assist infrastructure/tracking issues - no user-reported issues to comment on. Task 5: Implemented LinuxCancellationToken.Wait improvements on local branch repo-assist/improve-cancellationtoken-wait-fastpath-2026-05-06, commit a3f13f8. Changes: (1) Wait(IFileObject,Event) fast-path avoids span-based delegation when _event is null; (2) Wait(ReadOnlySpan,ReadOnlySpan) uses exact stackalloc size, removes unnecessary slice. 81 tests pass. CANNOT PUSH due to infra issue. Task 11: Cannot update/create monthly summary. NEXT RUN MUST: (1) push and create PR for repo-assist/improve-cancellationtoken-wait-fastpath-2026-05-06 (LOCAL branch - re-implement if lost on env reset); (2) create PR for engineering branch (remote exists); (3) close April monthly summary #33 and create May 2026 monthly summary; (4) close superseded issues #35, #37."
 }
