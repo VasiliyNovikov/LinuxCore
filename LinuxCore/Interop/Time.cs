@@ -19,6 +19,7 @@ internal static unsafe partial class Time
         public readonly long tv_sec;  // seconds
         public readonly long tv_nsec; // nanoseconds
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public timespec(long seconds, long nanoseconds)
         {
             tv_sec = seconds;

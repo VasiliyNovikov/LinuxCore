@@ -105,6 +105,7 @@ public static class LinuxClock
     /// <param name="duration">The amount of time to sleep.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="duration"/> is negative.</exception>
     /// <exception cref="LinuxException">The native sleep call failed.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void Sleep(TimeSpan duration)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(duration, TimeSpan.Zero);
@@ -135,9 +136,6 @@ public static class LinuxClock
     /// <exception cref="LinuxException">The native sleep call failed.</exception>
     public static unsafe void SleepUntil(DateTimeOffset timestamp)
     {
-        if (timestamp < DateTimeOffset.UnixEpoch)
-            return;
-
         var request = ToTimespec(timestamp - DateTimeOffset.UnixEpoch);
 
         while (true)
