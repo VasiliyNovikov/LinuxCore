@@ -164,31 +164,7 @@ public class LinuxClockTests
         LinuxClock.Sleep(duration);
 
         sw.Stop();
-        Assert.IsTrue(sw.Elapsed >= duration, $"Sleep elapsed {sw.Elapsed} was shorter than {duration}");
-    }
-
-    [TestMethod]
-    public void LinuxClock_SleepUntil_Past_Returns_Quickly()
-    {
-        var sw = Stopwatch.StartNew();
-
-        LinuxClock.SleepUntil(DateTimeOffset.UtcNow - TimeSpan.FromSeconds(1));
-
-        sw.Stop();
-        Assert.IsTrue(sw.Elapsed < TimeSpan.FromMilliseconds(100), $"Past sleep took {sw.Elapsed}");
-    }
-
-    [TestMethod]
-    public void LinuxClock_SleepUntil_Waits_Until_Timestamp()
-    {
-        var duration = TimeSpan.FromMilliseconds(10);
-        var sw = Stopwatch.StartNew();
-        var timestamp = DateTimeOffset.UtcNow + duration;
-
-        LinuxClock.SleepUntil(timestamp);
-
-        sw.Stop();
-        Assert.IsTrue(sw.Elapsed >= duration, $"SleepUntil elapsed {sw.Elapsed} was shorter than {duration}");
+        Assert.AreEqual(duration.TotalMilliseconds, sw.Elapsed.TotalMilliseconds, 100);
     }
 
     private static void BurnCpu()

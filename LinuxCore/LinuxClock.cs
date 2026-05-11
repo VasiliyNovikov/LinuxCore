@@ -129,26 +129,6 @@ public static class LinuxClock
         }
     }
 
-    /// <summary>
-    /// Sleeps until the specified UTC timestamp using <c>clock_nanosleep</c> with <c>CLOCK_REALTIME</c>.
-    /// </summary>
-    /// <param name="timestamp">The absolute timestamp to sleep until.</param>
-    /// <exception cref="LinuxException">The native sleep call failed.</exception>
-    public static unsafe void SleepUntil(DateTimeOffset timestamp)
-    {
-        var request = ToTimespec(timestamp - DateTimeOffset.UnixEpoch);
-
-        while (true)
-        {
-            var error = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &request, null);
-            if (error == LinuxErrorNumber.OK)
-                return;
-
-            if (error != LinuxErrorNumber.InterruptedSystemCall)
-                throw new LinuxException(error);
-        }
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static TimeSpan GetClock(int clockId) => TimeSpan.FromTicks(GetClockNanoseconds(clockId) / TimeSpan.NanosecondsPerTick);
 
