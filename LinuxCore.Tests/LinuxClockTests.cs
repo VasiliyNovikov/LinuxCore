@@ -164,6 +164,7 @@ public class LinuxClockTests
         LinuxClock.Sleep(duration);
 
         sw.Stop();
+        Assert.IsTrue(sw.Elapsed >= duration, $"Sleep elapsed {sw.Elapsed} was shorter than {duration}");
         Assert.AreEqual(duration.TotalMilliseconds, sw.Elapsed.TotalMilliseconds, 100);
     }
 
