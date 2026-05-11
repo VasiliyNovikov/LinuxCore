@@ -159,7 +159,7 @@ public class LinuxClockTests
     public void LinuxClock_Sleep_Waits_For_Duration()
     {
         var duration = TimeSpan.FromMilliseconds(100);
-        var precision = duration / 2;
+        var precision = duration / 5;
         var sw = Stopwatch.StartNew();
 
         LinuxClock.Sleep(duration);
