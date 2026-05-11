@@ -158,14 +158,15 @@ public class LinuxClockTests
     [TestMethod]
     public void LinuxClock_Sleep_Waits_For_Duration()
     {
-        var duration = TimeSpan.FromMilliseconds(10);
+        var duration = TimeSpan.FromMilliseconds(100);
+        var precision = duration / 2;
         var sw = Stopwatch.StartNew();
 
         LinuxClock.Sleep(duration);
 
         sw.Stop();
         Assert.IsTrue(sw.Elapsed >= duration, $"Sleep elapsed {sw.Elapsed} was shorter than {duration}");
-        Assert.AreEqual(duration.TotalMilliseconds, sw.Elapsed.TotalMilliseconds, 100);
+        Assert.AreEqual(duration.TotalMilliseconds, sw.Elapsed.TotalMilliseconds, precision.TotalMilliseconds);
     }
 
     private static void BurnCpu()
