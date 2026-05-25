@@ -57,4 +57,122 @@ public class LinuxClockTests
         var dtNs = (dt - DateTimeOffset.UnixEpoch).Ticks * TimeSpan.NanosecondsPerTick;
         Assert.AreEqual(ns, dtNs, 10_000_000.0); // 10ms in nanoseconds
     }
+
+    [TestMethod]
+    public void LinuxClock_BootTimeNanoseconds_Is_Positive()
+    {
+        var ns = LinuxClock.BootTimeNanoseconds;
+
+        Assert.IsTrue(ns > 0L, $"BootTimeNanoseconds {ns} should be positive");
+    }
+
+    [TestMethod]
+    public void LinuxClock_BootTime_Is_Positive()
+    {
+        var time = LinuxClock.BootTime;
+
+        Assert.IsTrue(time > TimeSpan.Zero, $"BootTime {time} should be positive");
+    }
+
+    [TestMethod]
+    public void LinuxClock_BootTime_And_BootTimeNanoseconds_Are_Consistent()
+    {
+        var ns = LinuxClock.BootTimeNanoseconds;
+        var time = LinuxClock.BootTime;
+
+        var timeNs = time.Ticks * TimeSpan.NanosecondsPerTick;
+        Assert.AreEqual(ns, timeNs, 10_000_000.0); // 10ms in nanoseconds
+    }
+
+    [TestMethod]
+    public void LinuxClock_ProcessCpuTimeNanoseconds_Is_NonNegative()
+    {
+        var ns = LinuxClock.ProcessCpuTimeNanoseconds;
+
+        Assert.IsTrue(ns >= 0L, $"ProcessCpuTimeNanoseconds {ns} should be non-negative");
+    }
+
+    [TestMethod]
+    public void LinuxClock_ProcessCpuTime_Is_NonNegative()
+    {
+        var time = LinuxClock.ProcessCpuTime;
+
+        Assert.IsTrue(time >= TimeSpan.Zero, $"ProcessCpuTime {time} should be non-negative");
+    }
+
+    [TestMethod]
+    public void LinuxClock_ThreadCpuTimeNanoseconds_Is_NonNegative()
+    {
+        var ns = LinuxClock.ThreadCpuTimeNanoseconds;
+
+        Assert.IsTrue(ns >= 0L, $"ThreadCpuTimeNanoseconds {ns} should be non-negative");
+    }
+
+    [TestMethod]
+    public void LinuxClock_ThreadCpuTime_Is_NonNegative()
+    {
+        var time = LinuxClock.ThreadCpuTime;
+
+        Assert.IsTrue(time >= TimeSpan.Zero, $"ThreadCpuTime {time} should be non-negative");
+    }
+
+    [TestMethod]
+    public void LinuxClock_ProcessCpuTime_Advances_During_Cpu_Work()
+    {
+        var start = LinuxClock.ProcessCpuTimeNanoseconds;
+
+        BurnCpu();
+
+        var end = LinuxClock.ProcessCpuTimeNanoseconds;
+        Assert.IsTrue(end > start, $"Process CPU time did not advance from {start} to {end}");
+    }
+
+    [TestMethod]
+    public void LinuxClock_ThreadCpuTime_Advances_During_Cpu_Work()
+    {
+        var start = LinuxClock.ThreadCpuTimeNanoseconds;
+
+        BurnCpu();
+
+        var end = LinuxClock.ThreadCpuTimeNanoseconds;
+        Assert.IsTrue(end > start, $"Thread CPU time did not advance from {start} to {end}");
+    }
+
+    [TestMethod]
+    public void LinuxClock_Sleep_Zero_Returns_Quickly()
+    {
+        var sw = Stopwatch.StartNew();
+
+        LinuxClock.Sleep(TimeSpan.Zero);
+
+        sw.Stop();
+        Assert.IsTrue(sw.Elapsed < TimeSpan.FromMilliseconds(100), $"Zero sleep took {sw.Elapsed}");
+    }
+
+    [TestMethod]
+    public void LinuxClock_Sleep_Negative_Throws()
+    {
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => LinuxClock.Sleep(TimeSpan.FromTicks(-1)));
+    }
+
+    [TestMethod]
+    public void LinuxClock_Sleep_Waits_For_Duration()
+    {
+        var duration = TimeSpan.FromMilliseconds(100);
+        var precision = duration / 5;
+        var sw = Stopwatch.StartNew();
+
+        LinuxClock.Sleep(duration);
+
+        sw.Stop();
+        Assert.IsTrue(sw.Elapsed >= duration, $"Sleep elapsed {sw.Elapsed} was shorter than {duration}");
+        Assert.AreEqual(duration.TotalMilliseconds, sw.Elapsed.TotalMilliseconds, precision.TotalMilliseconds);
+    }
+
+    private static void BurnCpu()
+    {
+        var sw = Stopwatch.StartNew();
+        while (sw.Elapsed < TimeSpan.FromMilliseconds(20))
+            Thread.SpinWait(1000);
+    }
 }
