@@ -6,6 +6,8 @@ namespace LinuxCore;
 
 public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDescriptor = true) : NativeObject, IFileObject
 {
+    private bool? _isNonBlocking;
+
     public FileDescriptor Descriptor
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -18,8 +20,16 @@ public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDesc
         get => (LinuxFileFlags)FileControl(F_GETFL);
     }
 
+    // Cached under the assumption descriptor flags are not externally changed after first observation.
+    public bool IsNonBlocking
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _isNonBlocking ??= (Flags & LinuxFileFlags.NonBlock) != 0;
+    }
+
     public bool CloseOnExec
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (FileControl(F_GETFD) & FD_CLOEXEC) != 0;
         set => FileControl(F_SETFD, value ? FD_CLOEXEC : 0);
     }

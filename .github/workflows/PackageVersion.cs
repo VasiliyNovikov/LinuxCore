@@ -1,3 +1,4 @@
+#!
 #:property PublishAot=false
 #:package NuGet.Versioning
 
