@@ -14,6 +14,7 @@ public class UnixSocketTests
     {
         using var socket = new UnixSocket();
         Assert.IsTrue(socket.CloseOnExec);
+        Assert.IsFalse(socket.IsNonBlocking);
     }
 
     [TestMethod]
@@ -56,6 +57,7 @@ public class UnixSocketTests
         try
         {
             using var listener = new UnixSocket(LinuxSocketType.Stream | LinuxSocketType.NonBlocking);
+            Assert.IsTrue(listener.IsNonBlocking);
             listener.Bind(UnixSocketAddress.FromPath(socketPath));
             listener.Listen(1);
 
