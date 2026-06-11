@@ -177,7 +177,9 @@ steps:
       EOF
 
 source: githubnext/agentics/workflows/repo-assist.md@7c7feb61a52b662eb2089aa2945588b7a200d404
-engine: copilot
+engine:
+  id: copilot
+  version: "1.0.43"
 ---
 
 # Repo Assist
