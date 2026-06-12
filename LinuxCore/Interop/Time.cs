@@ -9,6 +9,7 @@ internal static unsafe partial class Time
     public const int CLOCK_MONOTONIC          = 1;
     public const int CLOCK_PROCESS_CPUTIME_ID = 2;
     public const int CLOCK_THREAD_CPUTIME_ID  = 3;
+    public const int CLOCK_MONOTONIC_RAW      = 4;
     public const int CLOCK_BOOTTIME           = 7;
 
     [StructLayout(LayoutKind.Sequential)]
