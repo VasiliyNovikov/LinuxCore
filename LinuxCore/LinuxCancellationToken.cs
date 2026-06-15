@@ -72,5 +72,24 @@ public sealed class LinuxCancellationToken : IDisposable
     /// Waits until the requested file object becomes ready or the wrapped token is canceled.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Wait(IFileObject @object, LinuxPoll.Event events) => Wait([@object], [events]);
+    public bool Wait(IFileObject @object, LinuxPoll.Event events)
+    {
+        Span<LinuxPoll.Query> queries = stackalloc LinuxPoll.Query[2];
+        queries[0] = new(@object.Descriptor, events);
+        if (_event is null)
+        {
+            return LinuxPoll.Wait(queries[..1], Timeout.Infinite);
+        }
+        else
+        {
+            queries[1] = new(_event.Descriptor, NativePollEvent);
+            if (LinuxPoll.Wait(queries, Timeout.Infinite))
+            {
+                if ((queries[1].ReturnedEvents & NativePollEvent) == NativePollEvent)
+                    _cancellationToken.ThrowIfCancellationRequested();
+                return true;
+            }
+            return false;
+        }
+    }
 }
