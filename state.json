@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-06-14T02:05:00Z",
-  "last_run_id": "27485437441",
+  "last_run": "2026-06-15T02:09:00Z",
+  "last_run_id": "27519821237",
   "infrastructure": {
     "mcp_http_approach": "WORKS",
     "mcp_server_url": "http://host.docker.internal:80/mcp/safeoutputs",
@@ -11,7 +11,7 @@
     "dotnet_note": "memory of ~/.netem/.dotnet was wrong; dotnet is at /usr/bin/dotnet"
   },
   "issue_backlog_cursor": 52,
-  "pr_backlog_cursor": 54,
+  "pr_backlog_cursor": 55,
   "monthly_summary": {
     "june_2026_issue": 52,
     "june_2026_status": "active"
@@ -23,9 +23,9 @@
     "issue_41": "2026-06-14 - status update on PR #51 for benchmarks, global.json optional"
   },
   "fix_attempts": {
-    "pr_42": "open - fix LinuxPoll.Wait overflow + Decrement doc"
+    "pr_42": "open - fix LinuxPoll.Wait overflow + Decrement doc (NOTE: outdated, master has moved on; advise maintainer to close and cherry-pick overflow fix)"
   },
-  "open_repo_assist_prs": [40, 42, 51, 54, "pr-linuxpipe-from-run-27485437441"],
+  "open_repo_assist_prs": [40, 42, 51, 54, 55, "pr-perf-cancellation-token-wait-from-run-27519821237"],
   "open_issues": [39, 41, 45, 52, 53],
   "issue_notes": {
     "39": "Old workflow failure issue - runs now succeeding, Repo Assist commented to close",
@@ -36,14 +36,15 @@
   },
   "pr_notes": {
     "40": "Tests: add coverage for LinuxCancellationToken.None and LinuxSemaphoreSlim initial value/Remove-blocks - open, draft",
-    "42": "Fix LinuxPoll.Wait(TimeSpan) overflow and add Decrement() doc - still open, draft",
+    "42": "Fix LinuxPoll.Wait(TimeSpan) overflow and add Decrement() doc - still open, draft. OUTDATED - created April 2026, master has moved significantly. Maintainer should close and cherry-pick just the overflow fix if desired.",
     "51": "Add CLOCK_MONOTONIC_RAW clock and LinuxClockBenchmarks - open, draft",
     "54": "Add LinuxTimer: timerfd-backed timer for event-driven polling - open, draft",
-    "linuxpipe": "Add LinuxPipe: pipe2-backed unidirectional channel - from run 27485437441, branch repo-assist/improve-pipe-2026-06-14, 97 tests pass (4 new)"
+    "55": "Add LinuxPipe: pipe2-backed unidirectional channel - open, draft. Created run 27485437441.",
+    "perf-cancellation-token": "Perf: eliminate heap allocation in LinuxCancellationToken.Wait(IFileObject, Event) - from run 27519821237, branch repo-assist/perf-cancellation-token-wait-2026-06-15, 94 tests pass (1 new)"
   },
   "items_to_check_next_run": [
-    "Find actual PR number for LinuxPipe PR created this run (deferred push)",
+    "Find actual PR number for perf-cancellation-token PR created this run (deferred push)",
     "Check if issues #39 and #45 have been closed by maintainer",
-    "Check if any of PRs #40, #42, #51, #54 have been merged"
+    "Check if any of PRs #40, #42, #51, #54, #55 have been merged"
   ]
 }
