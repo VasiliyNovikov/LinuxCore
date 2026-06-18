@@ -70,6 +70,9 @@ public sealed class LinuxSemaphoreSlim(uint initialValue = 0)
         return 0;
     }
 
+    /// <summary>
+    /// Removes one token from the semaphore, blocking until one becomes available.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Decrement()
     {
