@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-06-17T02:09:00Z",
-  "last_run_id": "27660991779",
+  "last_run": "2026-06-18T02:07:00Z",
+  "last_run_id": "27731951182",
   "infrastructure": {
     "mcp_http_approach": "WORKS",
     "mcp_server_url": "http://host.docker.internal:80/mcp/safeoutputs",
@@ -11,10 +11,11 @@
     "github_mcp_tools": "issue_read(method: get/get_comments), pull_request_read(pullNumber, method: get), list_issues, list_pull_requests, search_pull_requests, search_issues",
     "dotnet_path": "/usr/bin/dotnet (v10.0.300)",
     "rebase_note": "For rebasing old PR branches: git checkout <branch> && git rebase origin/master",
-    "push_to_pr_branch": "push_to_pull_request_branch requires 'message', 'branch', 'pull_request_number' params, 'force' is optional"
+    "push_to_pr_branch": "push_to_pull_request_branch requires 'message', 'branch', 'pull_request_number' params, 'force' is optional",
+    "safeoutputs_create_pr": "create_pull_request returns {result:success, patch:{path,size,lines}} on success - this is normal. Protected files cause issue creation instead."
   },
-  "issue_backlog_cursor": 52,
-  "pr_backlog_cursor": 57,
+  "issue_backlog_cursor": 60,
+  "pr_backlog_cursor": 60,
   "monthly_summary": {
     "june_2026_issue": 52,
     "june_2026_status": "active"
@@ -25,34 +26,43 @@
     "issue_39": "2026-06-14 - noted runs now succeeding, suggested close",
     "issue_41": "2026-06-14 - status update on PR #51 for benchmarks, global.json optional",
     "issue_53": "2026-06-17 - PR submitted on branch repo-assist/eng-ci-fail-fast-2026-06-17",
-    "issue_57": "2026-06-17 - noted duplicate of #53, added duplicate label"
+    "issue_57": "2026-06-17 - noted duplicate of #53, added duplicate label",
+    "issue_58": "2026-06-18 - explained protected-files block for PR #40, noted fresh PR created",
+    "issue_59": "2026-06-18 - explained protected-files block for PR #42, noted fresh PR created"
   },
   "fix_attempts": {
-    "pr_42": "open - overflow fix + Decrement doc - REBASED onto master 2026-06-17 (93 tests pass)"
+    "pr_new_overflow_2026-06-18": "open - fix LinuxPoll.Wait overflow + Decrement doc + 3 semaphore tests - branch repo-assist/fix-poll-overflow-semaphore-doc-2026-06-18, 96 tests pass",
+    "pr_42": "stale - superseded by new overflow-fix PR",
+    "pr_40": "stale - superseded by new overflow-fix PR (tests included in new PR)"
   },
-  "open_repo_assist_prs": [40, 42, 51, 54, 55, 56, "fail-fast-PR-TBD"],
-  "open_issues": [39, 41, 45, 52, 53, 57],
+  "open_repo_assist_prs": [51, 54, 55, 56, "new-overflow-fix-TBD"],
+  "stale_prs_to_close": [40, 42],
+  "open_issues": [39, 41, 45, 52, 53, 57, 58, 59, 60],
   "issue_notes": {
     "39": "Old workflow failure issue - runs now succeeding, Repo Assist commented to close",
-    "41": "Eng branch issue - benchmarks addressed by PR #51. global.json pin remains if desired. Repo Assist commented.",
-    "45": "Protected-files issue about global.json/benchmarks - addressed by PR #51 (benchmarks) and comment on #41 (global.json optional)",
+    "41": "Eng branch issue - benchmarks addressed by PR #51. global.json pin optional. Repo Assist commented.",
+    "45": "Junk issue created accidentally during testing - should be closed",
     "52": "June 2026 monthly summary issue - active",
-    "53": "CI fail-fast issue - PR submitted in run 27660991779 on branch repo-assist/eng-ci-fail-fast-2026-06-17. Repo Assist commented.",
-    "57": "Duplicate of #53 (fail-fast CI) - commented, added duplicate label, should be closed by maintainer"
+    "53": "CI fail-fast issue - superseded by #60 (more recent)",
+    "57": "Duplicate of #53 (fail-fast) - should be closed",
+    "58": "Protected files warning for PR #40 rebase - Repo Assist commented explaining situation",
+    "59": "Protected files warning for PR #42 rebase - Repo Assist commented explaining situation",
+    "60": "fail-fast CI change blocked by protected pipeline.yml - maintainer needs to create PR manually"
   },
   "pr_notes": {
-    "40": "Tests: add coverage for LinuxCancellationToken.None and LinuxSemaphoreSlim - REBASED onto master 2026-06-17, 97 tests pass",
-    "42": "Fix LinuxPoll.Wait(TimeSpan) overflow and add Decrement() doc - REBASED onto master 2026-06-17, 93 tests pass",
     "51": "Add CLOCK_MONOTONIC_RAW clock and LinuxClockBenchmarks - open, draft",
     "54": "Add LinuxTimer: timerfd-backed timer for event-driven polling - open, draft",
     "55": "Add LinuxPipe: pipe2-backed unidirectional channel - open, draft",
     "56": "Perf: eliminate heap allocation in LinuxCancellationToken.Wait(IFileObject, Event) - open, draft",
-    "fail-fast": "CI: add fail-fast: false to validation matrix strategies - submitted in run 27660991779 on branch repo-assist/eng-ci-fail-fast-2026-06-17, PR number TBD"
+    "new_overflow": "Fix LinuxPoll.Wait(TimeSpan) overflow, add Decrement() doc, add semaphore tests - branch repo-assist/fix-poll-overflow-semaphore-doc-2026-06-18, PR number TBD",
+    "40": "STALE - Tests: add coverage for LinuxCancellationToken.None and LinuxSemaphoreSlim - superseded by new overflow-fix PR",
+    "42": "STALE - Fix LinuxPoll.Wait(TimeSpan) overflow and add Decrement() doc - superseded by new overflow-fix PR"
   },
   "items_to_check_next_run": [
-    "Find actual PR number for fail-fast CI PR (branch repo-assist/eng-ci-fail-fast-2026-06-17)",
-    "Check if issues #39, #41, #45, #53, #57 have been closed by maintainer",
-    "Check if any of PRs #40, #42, #51, #54, #55, #56 have been merged",
-    "Verify duplicate issue #57 has been closed"
+    "Find actual PR number for new overflow-fix PR (branch repo-assist/fix-poll-overflow-semaphore-doc-2026-06-18)",
+    "Check if issues #39, #41, #45, #53, #57, #58, #59 have been closed by maintainer",
+    "Check if PRs #40, #42 have been closed (they should be now stale)",
+    "Check if any of PRs #51, #54, #55, #56 have been merged",
+    "Verify new overflow-fix PR has been created"
   ]
 }
