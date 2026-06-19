@@ -129,4 +129,76 @@ public class LinuxSynchronizationTests
         Assert.ThrowsExactly<OperationCanceledException>(() => token.Wait(@event, LinuxPoll.Event.Readable));
         thread.Join();
     }
+
+    [TestMethod]
+    public void LinuxPoll_Wait_TimeSpan_Returns_True_On_Ready_Descriptor()
+    {
+        using var @event = new LinuxEvent();
+        @event.Set();
+
+        var result = LinuxPoll.Wait(@event.Descriptor, LinuxPoll.Event.Readable, TimeSpan.Zero);
+        Assert.AreEqual(LinuxPoll.Event.Readable, result);
+    }
+
+    [TestMethod]
+    public void LinuxPoll_Wait_TimeSpan_Span_Returns_True_On_Ready_Descriptor()
+    {
+        using var @event = new LinuxEvent();
+        @event.Set();
+
+        Span<LinuxPoll.Query> queries = [new(@event.Descriptor, LinuxPoll.Event.Readable)];
+        Assert.IsTrue(LinuxPoll.Wait(queries, TimeSpan.Zero));
+        Assert.AreEqual(LinuxPoll.Event.Readable, queries[0].ReturnedEvents);
+    }
+
+    [TestMethod]
+    public void LinuxEvent_Created_With_IsSet_True_Is_Immediately_Readable()
+    {
+        using var @event = new LinuxEvent(isSet: true);
+        Assert.AreEqual(LinuxPoll.Event.Readable, LinuxPoll.Wait(@event.Descriptor, LinuxPoll.Event.Readable, 0));
+    }
+
+    [TestMethod]
+    public void LinuxSemaphore_WithInitialValue_Is_Immediately_Available()
+    {
+        using var semaphore = new LinuxSemaphore(initialValue: 3);
+
+        Assert.AreEqual(LinuxPoll.Event.Readable, LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+
+        semaphore.Decrement();
+        Assert.AreEqual(LinuxPoll.Event.Readable, LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+
+        semaphore.Decrement();
+        Assert.AreEqual(LinuxPoll.Event.Readable, LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+
+        semaphore.Decrement();
+        Assert.IsNull(LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+    }
+
+    [TestMethod]
+    public void LinuxCancellationToken_None_Wait_Returns_True_When_Object_Ready()
+    {
+        using var @event = new LinuxEvent();
+        @event.Set();
+
+        Assert.IsTrue(LinuxCancellationToken.None.Wait(@event, LinuxPoll.Event.Readable));
+        @event.Wait();
+    }
+
+    [TestMethod]
+    public void LinuxCancellationToken_Wait_Multiple_Objects_Returns_When_First_Ready()
+    {
+        using var cts = new CancellationTokenSource();
+        using var token = new LinuxCancellationToken(cts.Token);
+        using var event1 = new LinuxEvent();
+        using var event2 = new LinuxEvent();
+
+        event1.Set();
+
+        IFileObject[] objects = [event1, event2];
+        LinuxPoll.Event[] events = [LinuxPoll.Event.Readable, LinuxPoll.Event.Readable];
+        Assert.IsTrue(token.Wait(objects, events));
+
+        event1.Wait();
+    }
 }
