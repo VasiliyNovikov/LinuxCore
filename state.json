@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-06-18T02:07:00Z",
-  "last_run_id": "27731951182",
+  "last_run": "2026-06-19T02:35:00Z",
+  "last_run_id": "27801824504",
   "infrastructure": {
     "mcp_http_approach": "WORKS",
     "mcp_server_url": "http://host.docker.internal:80/mcp/safeoutputs",
@@ -12,10 +12,11 @@
     "dotnet_path": "/usr/bin/dotnet (v10.0.300)",
     "rebase_note": "For rebasing old PR branches: git checkout <branch> && git rebase origin/master",
     "push_to_pr_branch": "push_to_pull_request_branch requires 'message', 'branch', 'pull_request_number' params, 'force' is optional",
-    "safeoutputs_create_pr": "create_pull_request returns {result:success, patch:{path,size,lines}} on success - this is normal. Protected files cause issue creation instead."
+    "safeoutputs_create_pr": "create_pull_request returns {result:success, patch:{path,size,lines}} on success - this is normal. Branch push and PR creation happen AFTER the agent run ends (via infrastructure). PR will not appear in GitHub during the run.",
+    "safeoutputs_branch_push_timing": "Branch push and PR creation are async - PR does not appear in GitHub during the run, only after the workflow completes"
   },
   "issue_backlog_cursor": 60,
-  "pr_backlog_cursor": 60,
+  "pr_backlog_cursor": 62,
   "monthly_summary": {
     "june_2026_issue": 52,
     "june_2026_status": "active"
@@ -28,14 +29,16 @@
     "issue_53": "2026-06-17 - PR submitted on branch repo-assist/eng-ci-fail-fast-2026-06-17",
     "issue_57": "2026-06-17 - noted duplicate of #53, added duplicate label",
     "issue_58": "2026-06-18 - explained protected-files block for PR #40, noted fresh PR created",
-    "issue_59": "2026-06-18 - explained protected-files block for PR #42, noted fresh PR created"
+    "issue_59": "2026-06-18 - explained protected-files block for PR #42, noted fresh PR created",
+    "issue_60": "2026-06-19 - explained CI fail-fast situation, noted #53 and #57 can be closed"
   },
   "fix_attempts": {
-    "pr_new_overflow_2026-06-18": "open - fix LinuxPoll.Wait overflow + Decrement doc + 3 semaphore tests - branch repo-assist/fix-poll-overflow-semaphore-doc-2026-06-18, 96 tests pass",
-    "pr_42": "stale - superseded by new overflow-fix PR",
-    "pr_40": "stale - superseded by new overflow-fix PR (tests included in new PR)"
+    "pr_61": "open - fix LinuxPoll.Wait overflow + Decrement doc + 3 semaphore tests - branch repo-assist/fix-poll-overflow-semaphore-doc-2026-06-18-cd3043c2e8538a37, 96 tests pass",
+    "pr_new_sync_tests_2026-06-19": "open - Tests: synchronization coverage (6 new tests) - branch repo-assist/tests-synchronization-coverage-2026-06-19, 99 tests pass",
+    "pr_42": "stale - superseded by PR #61",
+    "pr_40": "stale - superseded by PR #61"
   },
-  "open_repo_assist_prs": [51, 54, 55, 56, "new-overflow-fix-TBD"],
+  "open_repo_assist_prs": [51, 54, 55, 56, 61, "new-sync-tests-TBD"],
   "stale_prs_to_close": [40, 42],
   "open_issues": [39, 41, 45, 52, 53, 57, 58, 59, 60],
   "issue_notes": {
@@ -43,26 +46,27 @@
     "41": "Eng branch issue - benchmarks addressed by PR #51. global.json pin optional. Repo Assist commented.",
     "45": "Junk issue created accidentally during testing - should be closed",
     "52": "June 2026 monthly summary issue - active",
-    "53": "CI fail-fast issue - superseded by #60 (more recent)",
+    "53": "CI fail-fast issue - superseded by #60 (more recent), should be closed",
     "57": "Duplicate of #53 (fail-fast) - should be closed",
-    "58": "Protected files warning for PR #40 rebase - Repo Assist commented explaining situation",
-    "59": "Protected files warning for PR #42 rebase - Repo Assist commented explaining situation",
-    "60": "fail-fast CI change blocked by protected pipeline.yml - maintainer needs to create PR manually"
+    "58": "Protected files warning for PR #40 rebase - Repo Assist commented. Can close when PR #40 is closed.",
+    "59": "Protected files warning for PR #42 rebase - Repo Assist commented. Can close when PR #42 is closed.",
+    "60": "fail-fast CI change - pipeline.yml protected, maintainer needs to create PR manually. Repo Assist commented."
   },
   "pr_notes": {
     "51": "Add CLOCK_MONOTONIC_RAW clock and LinuxClockBenchmarks - open, draft",
     "54": "Add LinuxTimer: timerfd-backed timer for event-driven polling - open, draft",
     "55": "Add LinuxPipe: pipe2-backed unidirectional channel - open, draft",
-    "56": "Perf: eliminate heap allocation in LinuxCancellationToken.Wait(IFileObject, Event) - open, draft",
-    "new_overflow": "Fix LinuxPoll.Wait(TimeSpan) overflow, add Decrement() doc, add semaphore tests - branch repo-assist/fix-poll-overflow-semaphore-doc-2026-06-18, PR number TBD",
-    "40": "STALE - Tests: add coverage for LinuxCancellationToken.None and LinuxSemaphoreSlim - superseded by new overflow-fix PR",
-    "42": "STALE - Fix LinuxPoll.Wait(TimeSpan) overflow and add Decrement() doc - superseded by new overflow-fix PR"
+    "56": "Perf: eliminate heap allocation in LinuxCancellationToken.Wait - open, draft",
+    "61": "Fix LinuxPoll.Wait(TimeSpan) overflow, add Decrement() doc, add semaphore tests - open, draft - supersedes #40 and #42",
+    "new_sync_tests": "Tests: synchronization coverage (6 new tests) - branch repo-assist/tests-synchronization-coverage-2026-06-19, PR number TBD",
+    "40": "STALE - Tests: add coverage for LinuxCancellationToken.None and LinuxSemaphoreSlim - superseded by PR #61",
+    "42": "STALE - Fix LinuxPoll.Wait(TimeSpan) overflow and add Decrement() doc - superseded by PR #61"
   },
   "items_to_check_next_run": [
-    "Find actual PR number for new overflow-fix PR (branch repo-assist/fix-poll-overflow-semaphore-doc-2026-06-18)",
+    "Find actual PR number for new sync tests PR (branch repo-assist/tests-synchronization-coverage-2026-06-19)",
     "Check if issues #39, #41, #45, #53, #57, #58, #59 have been closed by maintainer",
-    "Check if PRs #40, #42 have been closed (they should be now stale)",
-    "Check if any of PRs #51, #54, #55, #56 have been merged",
-    "Verify new overflow-fix PR has been created"
+    "Check if PRs #40, #42 have been closed (they should be stale)",
+    "Check if any of PRs #51, #54, #55, #56, #61 have been merged",
+    "Verify new sync-tests PR has been created"
   ]
 }
