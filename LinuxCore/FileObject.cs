@@ -8,18 +8,28 @@ public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDesc
 {
     private bool? _isNonBlocking;
 
+    /// <summary>
+    /// Gets the underlying Linux file descriptor.
+    /// </summary>
     public FileDescriptor Descriptor
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => descriptor;
     }
 
+    /// <summary>
+    /// Gets the current file status flags via <c>fcntl(F_GETFL)</c>.
+    /// </summary>
     public LinuxFileFlags Flags
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (LinuxFileFlags)FileControl(F_GETFL);
     }
 
+    /// <summary>
+    /// Gets whether the file descriptor is in non-blocking mode (<see cref="LinuxFileFlags.NonBlock"/>).
+    /// The result is cached after the first observation; use <see cref="Flags"/> for a live check.
+    /// </summary>
     // Cached under the assumption descriptor flags are not externally changed after first observation.
     public bool IsNonBlocking
     {
@@ -27,6 +37,10 @@ public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDesc
         get => _isNonBlocking ??= (Flags & LinuxFileFlags.NonBlock) != 0;
     }
 
+    /// <summary>
+    /// Gets or sets the close-on-exec flag (<c>FD_CLOEXEC</c>) via <c>fcntl(F_GETFD/F_SETFD)</c>.
+    /// When <see langword="true"/>, the descriptor is automatically closed when a new process image is executed.
+    /// </summary>
     public bool CloseOnExec
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

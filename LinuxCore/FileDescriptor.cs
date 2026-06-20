@@ -13,6 +13,9 @@ public readonly struct FileDescriptor : IEquatable<FileDescriptor>, IEqualityOpe
 {
     private readonly int _fd;
 
+    /// <summary>
+    /// Closes the file descriptor. Does nothing if this is an invalid (negative) descriptor.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Close()
     {
@@ -20,6 +23,10 @@ public readonly struct FileDescriptor : IEquatable<FileDescriptor>, IEqualityOpe
             File.close(this);
     }
 
+    /// <summary>
+    /// Duplicates this file descriptor via <c>dup(2)</c> and returns the new descriptor.
+    /// The caller is responsible for closing the returned descriptor.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FileDescriptor Clone() => File.dup(this).ThrowIfError();
 

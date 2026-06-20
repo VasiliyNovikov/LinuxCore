@@ -10,6 +10,14 @@ public unsafe class LinuxFile(FileDescriptor descriptor, bool ownsDescriptor = t
 {
     private bool _immutableCached;
 
+    /// <summary>
+    /// Opens the file at <paramref name="path"/> with the given <paramref name="flags"/> and optional <paramref name="mode"/>.
+    /// <see cref="LinuxFileFlags.CloseOnExec"/> is always added; the descriptor is owned by this instance.
+    /// </summary>
+    /// <param name="path">Path to the file to open.</param>
+    /// <param name="flags">Access mode and open-time options (e.g. <see cref="LinuxFileFlags.ReadOnly"/>).</param>
+    /// <param name="mode">Permission bits applied when a new file is created (e.g. with <see cref="LinuxFileFlags.Create"/>).</param>
+    /// <exception cref="LinuxException">The underlying <c>open(2)</c> call failed.</exception>
     public LinuxFile(string path, LinuxFileFlags flags, LinuxFileMode mode = LinuxFileMode.None)
         : this(open(path, flags | LinuxFileFlags.CloseOnExec, mode).ThrowIfError())
     {
