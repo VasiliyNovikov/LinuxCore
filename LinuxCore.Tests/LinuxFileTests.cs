@@ -155,4 +155,41 @@ public class LinuxFileTests
             File.Delete(filePath);
         }
     }
+
+    [TestMethod]
+    public void Linux_File_DeviceId()
+    {
+        var filePath = Path.GetTempFileName();
+        try
+        {
+            using var file = new LinuxFile(filePath, LinuxFileFlags.ReadOnly);
+            Assert.IsTrue(file.DeviceId > 0, $"DeviceId {file.DeviceId} should be positive");
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
+
+    [TestMethod]
+    public void Linux_File_CloseOnExec_Setter()
+    {
+        var filePath = Path.GetTempFileName();
+        try
+        {
+            using var file = new LinuxFile(filePath, LinuxFileFlags.ReadOnly);
+
+            Assert.IsTrue(file.CloseOnExec);
+
+            file.CloseOnExec = false;
+            Assert.IsFalse(file.CloseOnExec);
+
+            file.CloseOnExec = true;
+            Assert.IsTrue(file.CloseOnExec);
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
 }
