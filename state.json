@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-06-19T02:35:00Z",
-  "last_run_id": "27801824504",
+  "last_run": "2026-06-20T01:56:00Z",
+  "last_run_id": "27856701469",
   "infrastructure": {
     "mcp_http_approach": "WORKS",
     "mcp_server_url": "http://host.docker.internal:80/mcp/safeoutputs",
@@ -8,12 +8,13 @@
     "mcp_protocol": "HTTP SSE without Bearer prefix (Authorization: <token> not Authorization: Bearer <token>)",
     "mcp_notes": "Do NOT use 'Bearer' prefix for Authorization header - use the token directly",
     "github_mcp_url": "http://host.docker.internal:80/mcp/github",
-    "github_mcp_tools": "issue_read(method: get/get_comments), pull_request_read(pullNumber, method: get), list_issues, list_pull_requests, search_pull_requests, search_issues",
+    "github_mcp_tools": "issue_read(method: get/get_comments, param: issue_number), pull_request_read(pullNumber, method: get), list_issues, list_pull_requests, search_pull_requests, search_issues",
     "dotnet_path": "/usr/bin/dotnet (v10.0.300)",
     "rebase_note": "For rebasing old PR branches: git checkout <branch> && git rebase origin/master",
     "push_to_pr_branch": "push_to_pull_request_branch requires 'message', 'branch', 'pull_request_number' params, 'force' is optional",
-    "safeoutputs_create_pr": "create_pull_request returns {result:success, patch:{path,size,lines}} on success - this is normal. Branch push and PR creation happen AFTER the agent run ends (via infrastructure). PR will not appear in GitHub during the run.",
-    "safeoutputs_branch_push_timing": "Branch push and PR creation are async - PR does not appear in GitHub during the run, only after the workflow completes"
+    "safeoutputs_create_pr": "create_pull_request returns {result:success, patch:{path,size,lines}} on success - branch push and PR creation happen AFTER run ends",
+    "safeoutputs_branch_push_timing": "Branch push and PR creation are async - PR does not appear in GitHub during the run, only after the workflow completes",
+    "issue_read_param": "issue_read requires 'issue_number' (not 'issueNumber') for get/get_comments"
   },
   "issue_backlog_cursor": 60,
   "pr_backlog_cursor": 62,
@@ -34,11 +35,13 @@
   },
   "fix_attempts": {
     "pr_61": "open - fix LinuxPoll.Wait overflow + Decrement doc + 3 semaphore tests - branch repo-assist/fix-poll-overflow-semaphore-doc-2026-06-18-cd3043c2e8538a37, 96 tests pass",
-    "pr_new_sync_tests_2026-06-19": "open - Tests: synchronization coverage (6 new tests) - branch repo-assist/tests-synchronization-coverage-2026-06-19, 99 tests pass",
+    "pr_62": "open - Tests: synchronization coverage (6 new tests) - branch repo-assist/tests-synchronization-coverage-2026-06-19-e0a9e7d439bcd75e, 99 tests pass",
+    "pr_tests_clock_file_2026_06_20": "open - Tests: MonotonicNanoseconds, DeviceId, CloseOnExec setter (4 new tests, 97 total) - branch repo-assist/tests-clock-file-coverage-2026-06-20, PR TBD",
+    "pr_docs_public_api_2026_06_20": "open - Docs: XML docs for FileDescriptor, FileObject, LinuxFile, LinuxMemoryFile - branch repo-assist/docs-public-api-2026-06-20, PR TBD",
     "pr_42": "stale - superseded by PR #61",
     "pr_40": "stale - superseded by PR #61"
   },
-  "open_repo_assist_prs": [51, 54, 55, 56, 61, "new-sync-tests-TBD"],
+  "open_repo_assist_prs": [51, 54, 55, 56, 61, 62, "tests-clock-file-TBD", "docs-public-api-TBD"],
   "stale_prs_to_close": [40, 42],
   "open_issues": [39, 41, 45, 52, 53, 57, 58, 59, 60],
   "issue_notes": {
@@ -58,15 +61,17 @@
     "55": "Add LinuxPipe: pipe2-backed unidirectional channel - open, draft",
     "56": "Perf: eliminate heap allocation in LinuxCancellationToken.Wait - open, draft",
     "61": "Fix LinuxPoll.Wait(TimeSpan) overflow, add Decrement() doc, add semaphore tests - open, draft - supersedes #40 and #42",
-    "new_sync_tests": "Tests: synchronization coverage (6 new tests) - branch repo-assist/tests-synchronization-coverage-2026-06-19, PR number TBD",
+    "62": "Tests: synchronization coverage (6 new tests) - open, draft",
+    "tests_clock_file": "Tests: add coverage for MonotonicNanoseconds, DeviceId, CloseOnExec setter - branch repo-assist/tests-clock-file-coverage-2026-06-20, PR TBD",
+    "docs_public_api": "Docs: add XML documentation to FileDescriptor, FileObject, LinuxFile, LinuxMemoryFile - branch repo-assist/docs-public-api-2026-06-20, PR TBD",
     "40": "STALE - Tests: add coverage for LinuxCancellationToken.None and LinuxSemaphoreSlim - superseded by PR #61",
     "42": "STALE - Fix LinuxPoll.Wait(TimeSpan) overflow and add Decrement() doc - superseded by PR #61"
   },
   "items_to_check_next_run": [
-    "Find actual PR number for new sync tests PR (branch repo-assist/tests-synchronization-coverage-2026-06-19)",
+    "Find actual PR numbers for new tests PR (branch repo-assist/tests-clock-file-coverage-2026-06-20) and docs PR (branch repo-assist/docs-public-api-2026-06-20)",
     "Check if issues #39, #41, #45, #53, #57, #58, #59 have been closed by maintainer",
     "Check if PRs #40, #42 have been closed (they should be stale)",
-    "Check if any of PRs #51, #54, #55, #56, #61 have been merged",
-    "Verify new sync-tests PR has been created"
+    "Check if any of PRs #51, #54, #55, #56, #61, #62 have been merged",
+    "All NuGet packages are up to date as of 2026-06-20"
   ]
 }
