@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-06-20T01:56:00Z",
-  "last_run_id": "27856701469",
+  "last_run": "2026-06-21T02:08:00Z",
+  "last_run_id": "27890500069",
   "infrastructure": {
     "mcp_http_approach": "WORKS",
     "mcp_server_url": "http://host.docker.internal:80/mcp/safeoutputs",
@@ -14,10 +14,11 @@
     "push_to_pr_branch": "push_to_pull_request_branch requires 'message', 'branch', 'pull_request_number' params, 'force' is optional",
     "safeoutputs_create_pr": "create_pull_request returns {result:success, patch:{path,size,lines}} on success - branch push and PR creation happen AFTER run ends",
     "safeoutputs_branch_push_timing": "Branch push and PR creation are async - PR does not appear in GitHub during the run, only after the workflow completes",
-    "issue_read_param": "issue_read requires 'issue_number' (not 'issueNumber') for get/get_comments"
+    "issue_read_param": "issue_read requires 'issue_number' (not 'issueNumber') for get/get_comments",
+    "shell_injection_warning": "Do NOT use here-doc (<<'EOF') pattern when embedding Python with subprocess that references shell vars - use a file written with cat and separate python3 call instead. Also avoid shell expansion patterns in --data-binary with $() nested in other commands."
   },
   "issue_backlog_cursor": 60,
-  "pr_backlog_cursor": 62,
+  "pr_backlog_cursor": 65,
   "monthly_summary": {
     "june_2026_issue": 52,
     "june_2026_status": "active"
@@ -27,7 +28,8 @@
     "pr_38": "2026-05-08 - noted superseded by PR #44",
     "issue_39": "2026-06-14 - noted runs now succeeding, suggested close",
     "issue_41": "2026-06-14 - status update on PR #51 for benchmarks, global.json optional",
-    "issue_53": "2026-06-17 - PR submitted on branch repo-assist/eng-ci-fail-fast-2026-06-17",
+    "issue_45": "2026-06-21 - junk issue with placeholder body, duplicate of #41, suggested close",
+    "issue_53": "2026-06-17 - noted duplicate of #53, added duplicate label",
     "issue_57": "2026-06-17 - noted duplicate of #53, added duplicate label",
     "issue_58": "2026-06-18 - explained protected-files block for PR #40, noted fresh PR created",
     "issue_59": "2026-06-18 - explained protected-files block for PR #42, noted fresh PR created",
@@ -36,18 +38,19 @@
   "fix_attempts": {
     "pr_61": "open - fix LinuxPoll.Wait overflow + Decrement doc + 3 semaphore tests - branch repo-assist/fix-poll-overflow-semaphore-doc-2026-06-18-cd3043c2e8538a37, 96 tests pass",
     "pr_62": "open - Tests: synchronization coverage (6 new tests) - branch repo-assist/tests-synchronization-coverage-2026-06-19-e0a9e7d439bcd75e, 99 tests pass",
-    "pr_tests_clock_file_2026_06_20": "open - Tests: MonotonicNanoseconds, DeviceId, CloseOnExec setter (4 new tests, 97 total) - branch repo-assist/tests-clock-file-coverage-2026-06-20, PR TBD",
-    "pr_docs_public_api_2026_06_20": "open - Docs: XML docs for FileDescriptor, FileObject, LinuxFile, LinuxMemoryFile - branch repo-assist/docs-public-api-2026-06-20, PR TBD",
+    "pr_63": "open - Tests: MonotonicNanoseconds, DeviceId, CloseOnExec setter (4 new tests, 97 total) - branch repo-assist/tests-clock-file-coverage-2026-06-20-b3312121445876d0",
+    "pr_64": "open - Docs: XML docs for FileDescriptor, FileObject, LinuxFile, LinuxMemoryFile - branch repo-assist/docs-public-api-2026-06-20-94bc436b9f2067c7",
+    "pr_semaphore_add_2026_06_21": "open - Add LinuxSemaphore.Add(uint count) - branch repo-assist/improve-semaphore-add-2026-06-21, 95 tests pass, PR TBD",
     "pr_42": "stale - superseded by PR #61",
     "pr_40": "stale - superseded by PR #61"
   },
-  "open_repo_assist_prs": [51, 54, 55, 56, 61, 62, "tests-clock-file-TBD", "docs-public-api-TBD"],
+  "open_repo_assist_prs": [51, 54, 55, 56, 61, 62, 63, 64, "semaphore-add-TBD"],
   "stale_prs_to_close": [40, 42],
   "open_issues": [39, 41, 45, 52, 53, 57, 58, 59, 60],
   "issue_notes": {
     "39": "Old workflow failure issue - runs now succeeding, Repo Assist commented to close",
     "41": "Eng branch issue - benchmarks addressed by PR #51. global.json pin optional. Repo Assist commented.",
-    "45": "Junk issue created accidentally during testing - should be closed",
+    "45": "Junk issue with placeholder body, duplicate of #41 - Repo Assist commented 2026-06-21, should be closed",
     "52": "June 2026 monthly summary issue - active",
     "53": "CI fail-fast issue - superseded by #60 (more recent), should be closed",
     "57": "Duplicate of #53 (fail-fast) - should be closed",
@@ -62,16 +65,17 @@
     "56": "Perf: eliminate heap allocation in LinuxCancellationToken.Wait - open, draft",
     "61": "Fix LinuxPoll.Wait(TimeSpan) overflow, add Decrement() doc, add semaphore tests - open, draft - supersedes #40 and #42",
     "62": "Tests: synchronization coverage (6 new tests) - open, draft",
-    "tests_clock_file": "Tests: add coverage for MonotonicNanoseconds, DeviceId, CloseOnExec setter - branch repo-assist/tests-clock-file-coverage-2026-06-20, PR TBD",
-    "docs_public_api": "Docs: add XML documentation to FileDescriptor, FileObject, LinuxFile, LinuxMemoryFile - branch repo-assist/docs-public-api-2026-06-20, PR TBD",
+    "63": "Tests: add coverage for MonotonicNanoseconds, DeviceId, CloseOnExec setter - open, draft",
+    "64": "Docs: add XML documentation to FileDescriptor, FileObject, LinuxFile, LinuxMemoryFile - open, draft",
+    "semaphore_add": "Add LinuxSemaphore.Add(uint count) for bulk token addition - branch repo-assist/improve-semaphore-add-2026-06-21, 95 tests pass, PR TBD",
     "40": "STALE - Tests: add coverage for LinuxCancellationToken.None and LinuxSemaphoreSlim - superseded by PR #61",
     "42": "STALE - Fix LinuxPoll.Wait(TimeSpan) overflow and add Decrement() doc - superseded by PR #61"
   },
   "items_to_check_next_run": [
-    "Find actual PR numbers for new tests PR (branch repo-assist/tests-clock-file-coverage-2026-06-20) and docs PR (branch repo-assist/docs-public-api-2026-06-20)",
+    "Find actual PR number for new semaphore-add PR (branch repo-assist/improve-semaphore-add-2026-06-21)",
     "Check if issues #39, #41, #45, #53, #57, #58, #59 have been closed by maintainer",
     "Check if PRs #40, #42 have been closed (they should be stale)",
-    "Check if any of PRs #51, #54, #55, #56, #61, #62 have been merged",
+    "Check if any of PRs #51, #54, #55, #56, #61, #62, #63, #64 have been merged",
     "All NuGet packages are up to date as of 2026-06-20"
   ]
 }
