@@ -35,6 +35,30 @@ public class LinuxSynchronizationTests
     }
 
     [TestMethod]
+    public void LinuxSemaphore_Add_Increments_By_Count()
+    {
+        using var semaphore = new LinuxSemaphore();
+
+        semaphore.Add(3);
+        Assert.AreEqual(LinuxPoll.Event.Readable, LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+
+        semaphore.Decrement();
+        Assert.AreEqual(LinuxPoll.Event.Readable, LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+        semaphore.Decrement();
+        Assert.AreEqual(LinuxPoll.Event.Readable, LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+        semaphore.Decrement();
+        Assert.IsNull(LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+    }
+
+    [TestMethod]
+    public void LinuxSemaphore_Add_Zero_Does_Nothing()
+    {
+        using var semaphore = new LinuxSemaphore();
+        semaphore.Add(0);
+        Assert.IsNull(LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+    }
+
+    [TestMethod]
     public void LinuxSemaphoreSlim_Add_Remove_Tracks_Count_Transitions()
     {
         using var semaphore = new LinuxSemaphoreSlim();
