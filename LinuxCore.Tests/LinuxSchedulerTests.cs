@@ -1,7 +1,6 @@
 using System;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -15,27 +14,19 @@ public class LinuxSchedulerTests
     [TestMethod]
     public void LinuxScheduler_Constants_Match_Current_Platform_Headers()
     {
-        (string Name, LinuxScheduler.Policy Managed, string Symbol)[] constants =
+        NativeConstantAssert.EnumValuesMatch<LinuxScheduler.Policy>(
         [
-            (nameof(LinuxScheduler.Policy.Other), LinuxScheduler.Policy.Other, "SCHED_NORMAL"),
-            (nameof(LinuxScheduler.Policy.FIFO), LinuxScheduler.Policy.FIFO, "SCHED_FIFO"),
-            (nameof(LinuxScheduler.Policy.RoundRobin), LinuxScheduler.Policy.RoundRobin, "SCHED_RR"),
-            (nameof(LinuxScheduler.Policy.Batch), LinuxScheduler.Policy.Batch, "SCHED_BATCH"),
-            (nameof(LinuxScheduler.Policy.ISO), LinuxScheduler.Policy.ISO, "SCHED_ISO"),
-            (nameof(LinuxScheduler.Policy.Idle), LinuxScheduler.Policy.Idle, "SCHED_IDLE"),
-            (nameof(LinuxScheduler.Policy.Deadline), LinuxScheduler.Policy.Deadline, "SCHED_DEADLINE"),
-            (nameof(LinuxScheduler.Policy.Extensible), LinuxScheduler.Policy.Extensible, "SCHED_EXT")
-        ];
-        Assert.AreSequenceEqual(Enum.GetNames<LinuxScheduler.Policy>(), constants.Select(static constant => constant.Name), SequenceOrder.InAnyOrder);
-
-        var nativeValues = CScript.EvaluateDefinedInt32s([.. constants.Select(static constant => constant.Symbol)], "linux/sched.h");
-        for (var i = 0; i < constants.Length; ++i)
-        {
-            if (nativeValues[i] is { } nativeValue)
-                Assert.AreEqual((int)constants[i].Managed, nativeValue, constants[i].Name);
-            else
-                Assert.IsTrue(constants[i].Managed is LinuxScheduler.Policy.ISO or LinuxScheduler.Policy.Extensible, constants[i].Name);
-        }
+            (nameof(LinuxScheduler.Policy.Other), "SCHED_NORMAL"),
+            (nameof(LinuxScheduler.Policy.FIFO), "SCHED_FIFO"),
+            (nameof(LinuxScheduler.Policy.RoundRobin), "SCHED_RR"),
+            (nameof(LinuxScheduler.Policy.Batch), "SCHED_BATCH"),
+            (nameof(LinuxScheduler.Policy.Idle), "SCHED_IDLE"),
+            (nameof(LinuxScheduler.Policy.Deadline), "SCHED_DEADLINE")
+        ],
+        [
+            (nameof(LinuxScheduler.Policy.ISO), "SCHED_ISO"),
+            (nameof(LinuxScheduler.Policy.Extensible), "SCHED_EXT")
+        ], "linux/sched.h");
         Assert.AreEqual(Sched.SCHED_RESET_ON_FORK, CScript.EvaluateInt32("SCHED_RESET_ON_FORK", "linux/sched.h"));
     }
 
