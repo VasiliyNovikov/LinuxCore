@@ -51,10 +51,10 @@ public sealed class LinuxCancellationToken : IDisposable
     public bool Wait(ReadOnlySpan<IFileObject> objects, ReadOnlySpan<LinuxPoll.Event> events)
     {
         var objectCount = objects.Length;
-        Span<LinuxPoll.Query> queries = stackalloc LinuxPoll.Query[objectCount];
+        Span<LinuxPoll.Query> buffer = stackalloc LinuxPoll.Query[objectCount + 1];
         for (var i = 0; i < objectCount; ++i)
-            queries[i] = new(objects[i].Descriptor, events[i]);
-        return Wait(queries);
+            buffer[i] = new(objects[i].Descriptor, events[i]);
+        return WaitHelper(buffer);
     }
 
     /// <summary>
@@ -62,20 +62,25 @@ public sealed class LinuxCancellationToken : IDisposable
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SkipLocalsInit]
-    public bool Wait(IFileObject @object, LinuxPoll.Event events) => Wait([new(@object.Descriptor, events)]);
+    public bool Wait(IFileObject @object, LinuxPoll.Event events)
+    {
+        Span<LinuxPoll.Query> buffer = stackalloc LinuxPoll.Query[2];
+        buffer[0] = new(@object.Descriptor, events);
+        return WaitHelper(buffer);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SkipLocalsInit]
-    private bool Wait(Span<LinuxPoll.Query> queries)
+    private bool WaitHelper(Span<LinuxPoll.Query> buffer)
     {
         if (_event is null)
-            return LinuxPoll.Wait(queries, Timeout.Infinite);
+            return LinuxPoll.Wait(buffer[..^1], Timeout.Infinite);
 
-        Span<LinuxPoll.Query> allQueries = [new(_event.Descriptor, NativePollEvent), .. queries];
-        if (!LinuxPoll.Wait(allQueries, Timeout.Infinite))
+        ref var eventQuery = ref buffer[^1];
+        eventQuery = new(_event.Descriptor, NativePollEvent);
+        if (!LinuxPoll.Wait(buffer, Timeout.Infinite))
             return false;
 
-        if ((allQueries[0].ReturnedEvents & NativePollEvent) == NativePollEvent)
+        if ((eventQuery.ReturnedEvents & NativePollEvent) == NativePollEvent)
             _cancellationToken.ThrowIfCancellationRequested();
 
         return true;
