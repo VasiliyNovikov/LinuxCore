@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-06-22T02:12:32Z",
-  "last_run_id": "27925274465",
+  "last_run": "2026-06-23T01:51:49Z",
+  "last_run_id": "27996597936",
   "infrastructure": {
     "mcp_http_approach": "WORKS (when policy check passes)",
     "mcp_server_url": "http://host.docker.internal:80/mcp/safeoutputs",
@@ -15,10 +15,11 @@
     "safeoutputs_create_pr": "create_pull_request returns {result:success, patch:{path,size,lines}} on success - branch push and PR creation happen AFTER run ends",
     "safeoutputs_branch_push_timing": "Branch push and PR creation are async - PR does not appear in GitHub during the run, only after the workflow completes",
     "issue_read_param": "issue_read requires 'issue_number' (not 'issueNumber') for get/get_comments",
-    "shell_injection_warning": "Do NOT use here-doc (<<'EOF') pattern when embedding Python with subprocess that references shell vars - use a file written with cat and separate python3 call instead. Also avoid shell expansion patterns in --data-binary with $() nested in other commands."
+    "shell_injection_warning": "Do NOT use here-doc (<<'EOF') pattern when embedding Python with subprocess that references shell vars - use a file written with cat and separate python3 call instead. Also avoid shell expansion patterns in --data-binary with $() nested in other commands.",
+    "mcp_github_list_tools": "tool name is 'list_issues' not 'list_issues'; issue tool is 'issue_read' (not 'get_issue'); PR tool is 'pull_request_read'"
   },
   "issue_backlog_cursor": 60,
-  "pr_backlog_cursor": 65,
+  "pr_backlog_cursor": 66,
   "monthly_summary": {
     "june_2026_issue": 52,
     "june_2026_status": "active"
@@ -36,33 +37,20 @@
     "issue_60": "2026-06-19 - explained CI fail-fast situation, noted #53 and #57 can be closed"
   },
   "fix_attempts": {
+    "pr_benchmarks_switcher": "open - Benchmarks: use BenchmarkSwitcher - branch repo-assist/improve-benchmarks-switcher-2026-06-23, PR TBD (from run 27996597936)",
+    "pr_dependabot": "open - Eng: add Dependabot config for NuGet and GitHub Actions - branch repo-assist/eng-dependabot-2026-06-23, PR TBD (from run 27996597936)",
     "pr_65": "open - Add LinuxSemaphore.Add(uint count) - branch repo-assist/improve-semaphore-add-2026-06-21-bf25554f7984dbc7, 93 tests pass",
     "pr_64": "open - Docs: XML docs for FileDescriptor, FileObject, LinuxFile, LinuxMemoryFile - branch repo-assist/docs-public-api-2026-06-20-94bc436b9f2067c7",
     "pr_63": "open - Tests: MonotonicNanoseconds, DeviceId, CloseOnExec setter - branch repo-assist/tests-clock-file-coverage-2026-06-20-b3312121445876d0",
     "pr_62": "open - Tests: synchronization coverage (6 new tests) - branch repo-assist/tests-synchronization-coverage-2026-06-19-e0a9e7d439bcd75e",
     "pr_61": "open - Fix LinuxPoll.Wait(TimeSpan) overflow, add Decrement() doc, add semaphore tests - branch repo-assist/fix-poll-overflow-semaphore-doc-2026-06-18-cd3043c2e8538a37",
-    "pr_56": "open - Perf: eliminate heap allocation in LinuxCancellationToken.Wait - branch repo-assist/perf-cancellation-token-wait-2026-06-15-e797f7f35943721a",
     "pr_55": "open - Add LinuxPipe: pipe2-backed unidirectional channel - branch repo-assist/improve-pipe-2026-06-14-4b8ba01f635d9853",
     "pr_54": "open - Add LinuxTimer: timerfd-backed timer for event-driven polling - branch repo-assist/improve-timerfd-2026-06-13-aeb3c1698bf1f40c",
     "pr_51": "open - Add CLOCK_MONOTONIC_RAW clock and LinuxClockBenchmarks - branch repo-assist/improve-clock-monotonic-raw-benchmarks-2026-06-12-6cb5aee6742ad066",
     "pr_42": "stale - superseded by PR #61 - Fix LinuxPoll.Wait overflow - should be closed",
     "pr_40": "stale - superseded by PR #61 - Tests: CancellationToken.None / SemaphoreSlim - should be closed"
   },
-  "pending_work": {
-    "description": "Run 27925274465 (2026-06-22) prepared two PRs but could NOT push (safeoutputs MCP blocked by 401 policy check). Redo this work in next run:",
-    "task1_global_json": {
-      "description": "Fix eng-global-json-clock-benchmarks branch: SDK 10.0.201 latestPatch -> 10.0.100 latestFeature, remove LinuxClockBenchmarks.cs, keep BenchmarkSwitcher in Program.cs",
-      "branch": "repo-assist/eng-global-json-clock-benchmarks-2026-04-11-a3cc57eddaacf5e7",
-      "action": "Checkout branch, rebase on master, fix global.json version, git rm LinuxClockBenchmarks.cs, amend commit, push_to_pull_request_branch (find PR number first), OR create new PR if no open PR found",
-      "pr_number": "UNKNOWN - not in prs.json (no open PR for this branch)"
-    },
-    "task2_dependabot": {
-      "description": "Add .github/dependabot.yml for NuGet + GitHub Actions weekly updates",
-      "branch": "repo-assist/eng-dependabot-2026-06-22",
-      "action": "Create branch from master, add .github/dependabot.yml, commit, create_pull_request",
-      "file_content": "version: 2\nupdates:\n  - package-ecosystem: nuget\n    directory: /\n    schedule:\n      interval: weekly\n    labels:\n      - dependencies\n  - package-ecosystem: github-actions\n    directory: /\n    schedule:\n      interval: weekly\n    labels:\n      - dependencies\n"
-    }
-  },
+  "pending_work": {},
   "stale_prs_to_close": [40, 42],
   "open_issues": [39, 41, 45, 52, 53, 57, 58, 59, 60],
   "issue_notes": {
@@ -77,12 +65,13 @@
     "60": "fail-fast CI change - pipeline.yml protected, maintainer needs to create PR manually. Repo Assist commented."
   },
   "pr_notes": {
+    "benchmarks_switcher": "Benchmarks: use BenchmarkSwitcher for flexible benchmark selection - created run 27996597936, PR TBD",
+    "dependabot": "Eng: add Dependabot config for NuGet and GitHub Actions - created run 27996597936, PR TBD",
     "65": "Add LinuxSemaphore.Add(uint count) for bulk token addition - open, draft",
     "64": "Docs: add XML documentation to FileDescriptor, FileObject, LinuxFile, LinuxMemoryFile - open, draft",
     "63": "Tests: add coverage for MonotonicNanoseconds, DeviceId, and CloseOnExec setter - open, draft",
     "62": "Tests: add synchronization coverage for poll timeout, pre-set event, and cancellation token - open, draft",
     "61": "Fix LinuxPoll.Wait(TimeSpan) overflow, add Decrement() doc, add semaphore tests - open, draft, supersedes #40 and #42",
-    "56": "Perf: eliminate heap allocation in LinuxCancellationToken.Wait - open, draft",
     "55": "Add LinuxPipe: pipe2-backed unidirectional channel - open, draft",
     "54": "Add LinuxTimer: timerfd-backed timer for event-driven polling - open, draft",
     "51": "Add CLOCK_MONOTONIC_RAW clock and LinuxClockBenchmarks - open, draft",
@@ -90,11 +79,11 @@
     "42": "STALE - superseded by PR #61"
   },
   "items_to_check_next_run": [
-    "PRIORITY: Redo Task6+Task4 from pending_work above (safeoutputs was blocked run 27925274465)",
+    "Find PR numbers for benchmarks-switcher and dependabot PRs created in run 27996597936",
     "Check if issues #39, #41, #45, #53, #57, #58, #59 have been closed by maintainer",
     "Check if PRs #40, #42 have been closed (they are stale)",
-    "Check if any of PRs #51, #54, #55, #56, #61, #62, #63, #64, #65 have been merged",
+    "Check if any of PRs #51, #54, #55, #61, #62, #63, #64, #65 have been merged",
     "All NuGet packages are up to date as of 2026-06-22 (BenchmarkDotNet 0.15.8, MSTest 4.2.3, SourceLink 10.0.300, NuGet.Versioning 7.6.0)",
-    "Update monthly summary issue #52 when safeoutputs MCP is available"
+    "PR#66 (io_uring WIP from maintainer) is open - consider contributing to it if stale"
   ]
 }
