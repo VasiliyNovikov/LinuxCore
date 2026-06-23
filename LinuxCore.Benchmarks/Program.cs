@@ -1,5 +1,3 @@
 ﻿using BenchmarkDotNet.Running;
 
-using LinuxCore.Benchmarks;
-
-BenchmarkRunner.Run<LinuxEventBenchmarks>();
+BenchmarkSwitcher.FromAssembly(typeof(LinuxCore.Benchmarks.LinuxEventBenchmarks).Assembly).Run(args);
