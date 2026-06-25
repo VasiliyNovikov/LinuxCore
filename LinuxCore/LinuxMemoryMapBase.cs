@@ -69,7 +69,7 @@ public abstract unsafe class LinuxMemoryMapBase : NativeObject
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Sync(LinuxMemoryMapSync sync)
+    public void Sync(LinuxMemoryMapSync sync = LinuxMemoryMapSync.Sync)
     {
         ThrowIfDisposed();
         MemoryMap.msync(_address, (nuint)_length, (int)sync).ThrowIfError();

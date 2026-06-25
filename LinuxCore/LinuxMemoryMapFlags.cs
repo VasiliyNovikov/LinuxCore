@@ -24,6 +24,7 @@ public enum LinuxMemoryMapFlags
     NonBlocking    = MAP_NONBLOCK,
     FixedNoReplace = MAP_FIXED_NOREPLACE,
     Uninitialized  = MAP_UNINITIALIZED,
-    Huge2M         = MAP_HUGE_2M,
-    Huge1G         = MAP_HUGE_1G
+    HugeTLB        = MAP_HUGETLB,
+    Huge2M         = MAP_HUGE_2M | MAP_HUGETLB,
+    Huge1G         = MAP_HUGE_1G | MAP_HUGETLB
 }
