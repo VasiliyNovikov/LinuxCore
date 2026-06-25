@@ -9,6 +9,7 @@ A thin, AOT-compatible .NET wrapper around Linux libc APIs. Provides ergonomic, 
 
 - **File I/O** — `LinuxFile` for `open`/`read`/`write`/`seek`/`fstat` with `Span<byte>` support
 - **Memory Files** — `LinuxMemoryFile` for `memfd_create` and memfd seals via `fcntl`
+- **Memory Maps** — `LinuxMemoryMap`/`LinuxReadOnlyMemoryMap` for `mmap`/`munmap` with `Span<byte>`/`Memory<byte>` access
 - **Events & Semaphores** — `LinuxEvent` and `LinuxSemaphore` backed by `eventfd`
 - **Polling** — `LinuxPoll` for `poll()`-based readiness notification
 - **Clocks** — `LinuxClock` for nanosecond-precision monotonic, boottime, CPU-time, and wall-clock (`CLOCK_REALTIME`) timestamps and high-precision sleeps
