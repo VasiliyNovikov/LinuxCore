@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-using LinuxCore.Interop;
+using static LinuxCore.Interop.MemoryMap;
 
 namespace LinuxCore;
 
@@ -9,7 +9,7 @@ namespace LinuxCore;
 [Flags]
 public enum LinuxMemoryMapSync
 {
-    Sync       = MemoryMap.MS_SYNC,
-    Async      = MemoryMap.MS_ASYNC,
-    Invalidate = MemoryMap.MS_INVALIDATE
+    Sync       = MS_SYNC,
+    Async      = MS_ASYNC,
+    Invalidate = MS_INVALIDATE
 }

@@ -2,7 +2,7 @@ using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
 
-using LinuxCore.Interop;
+using static LinuxCore.Interop.MemoryMap;
 
 namespace LinuxCore;
 
@@ -48,7 +48,7 @@ public abstract unsafe class LinuxMemoryMapBase : NativeObject
     {
         ArgumentOutOfRangeException.ThrowIfNegative(length);
         var manager = new MappedMemoryManager(this);
-        var address = MemoryMap.mmap(null, (nuint)length, protection, flags, descriptor, offset).ThrowIfError();
+        var address = mmap(null, (nuint)length, protection, flags, descriptor, offset).ThrowIfError();
         _address = (byte*)address;
         _length = length;
 
@@ -58,7 +58,7 @@ public abstract unsafe class LinuxMemoryMapBase : NativeObject
         }
         catch
         {
-            ReleaseUnmanagedResources();
+            Dispose();
             throw;
         }
     }
@@ -72,10 +72,10 @@ public abstract unsafe class LinuxMemoryMapBase : NativeObject
     public void Sync(LinuxMemoryMapSync sync = LinuxMemoryMapSync.Sync)
     {
         ThrowIfDisposed();
-        MemoryMap.msync(_address, (nuint)_length, (int)sync).ThrowIfError();
+        msync(_address, (nuint)_length, (int)sync).ThrowIfError();
     }
 
-    protected override void ReleaseUnmanagedResources() => MemoryMap.munmap(_address, (nuint)_length);
+    protected override void ReleaseUnmanagedResources() => munmap(_address, (nuint)_length);
 
     private sealed class MappedMemoryManager(LinuxMemoryMapBase owner) : MemoryManager<byte>
     {
