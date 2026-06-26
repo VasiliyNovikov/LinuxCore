@@ -12,6 +12,12 @@ jobs:
     strategy:
       matrix:
         include:
+          - name: ubuntu-26.04-x64
+            os: ubuntu-26.04
+            aot_runtime: linux-x64
+          - name: ubuntu-26.04-arm64
+            os: ubuntu-26.04-arm
+            aot_runtime: linux-arm64
           - name: ubuntu-24.04-x64
             os: ubuntu-24.04
             aot_runtime: linux-x64
@@ -24,6 +30,9 @@ jobs:
           - name: ubuntu-22.04-arm64
             os: ubuntu-22.04-arm
             aot_runtime: linux-arm64
+          - name: ubuntu-slim-x64
+            os: ubuntu-slim
+            aot_runtime: linux-x64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
