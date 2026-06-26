@@ -8,10 +8,7 @@ namespace LinuxCore;
 public static unsafe class SystemCall
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static LinuxResult Invoke(SystemCallNumber number) 
-    {
-        return Result(syscall(number));
-    }
+    public static LinuxResult Invoke(SystemCallNumber number) => Result(syscall(number));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LinuxResult<TResult> Invoke<TResult>(SystemCallNumber number) 
@@ -143,6 +140,9 @@ public static unsafe class SystemCall
     public static class NonBlocking
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static LinuxResult Invoke(SystemCallNumber number) => Result(syscall_noblock(number));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static LinuxResult Invoke<T>(SystemCallNumber number, T arg) 
             where T : unmanaged
         {
@@ -266,13 +266,22 @@ public static unsafe class SystemCall
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static nint Param<T>(T param) where T : unmanaged
     {
-        return sizeof(T) switch
+        return param switch
         {
-            1 => Unsafe.BitCast<T, byte>(param),
-            2 => Unsafe.BitCast<T, ushort>(param),
-            4 => Unsafe.BitCast<T, int>(param),
-            8 => (nint)Unsafe.BitCast<T, long>(param),
-            _ => throw new ArgumentException($"Unsupported parameter size: {sizeof(T)}", nameof(param))
+            sbyte @sbyte => @sbyte,
+            short @short => @short,
+            int @int => @int,
+            nint @nint => @nint,
+            long @long => (nint)@long,
+            FileDescriptor fd => Unsafe.BitCast<FileDescriptor, int>(fd),  
+            _ => sizeof(T) switch
+            {
+                1 => Unsafe.BitCast<T, byte>(param),
+                2 => Unsafe.BitCast<T, ushort>(param),
+                4 => (nint)Unsafe.BitCast<T, uint>(param),
+                8 => (nint)Unsafe.BitCast<T, ulong>(param),
+                _ => throw new ArgumentException($"Unsupported parameter size: {sizeof(T)}", nameof(param))
+            }
         };
     }
 
