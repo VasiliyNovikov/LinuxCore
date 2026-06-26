@@ -129,4 +129,14 @@ public class LinuxSynchronizationTests
         Assert.ThrowsExactly<OperationCanceledException>(() => token.Wait(@event, LinuxPoll.Event.Readable));
         thread.Join();
     }
+
+    [TestMethod]
+    public void LinuxCancellationToken_None_Wait_Returns_When_Object_Is_Ready()
+    {
+        using var @event = new LinuxEvent();
+        @event.Set();
+
+        Assert.IsTrue(LinuxCancellationToken.None.Wait(@event, LinuxPoll.Event.Readable));
+        @event.Wait();
+    }
 }
