@@ -40,6 +40,20 @@ public class LinuxMemoryMapTests
     }
 
     [TestMethod]
+    public void LinuxMemoryMap_Sync_SyncAndAsync_ThrowsLinuxException()
+    {
+        using var map = new LinuxMemoryMap(4);
+
+        map.Sync(LinuxMemoryMapSync.Sync);
+        map.Sync(LinuxMemoryMapSync.Async);
+        map.Sync(LinuxMemoryMapSync.Sync | LinuxMemoryMapSync.Invalidate);
+        map.Sync(LinuxMemoryMapSync.Async | LinuxMemoryMapSync.Invalidate);
+
+        var e = Assert.ThrowsExactly<LinuxException>(() => map.Sync(LinuxMemoryMapSync.Sync | LinuxMemoryMapSync.Async));
+        Assert.AreEqual(LinuxErrorNumber.InvalidArgument, e.ErrorNumber);
+    }
+
+    [TestMethod]
     public void LinuxMemoryMap_Memory_Span_AfterDispose_ThrowsObjectDisposedException()
     {
         Memory<byte> memory;
