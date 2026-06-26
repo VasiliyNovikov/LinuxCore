@@ -31,5 +31,10 @@ var pageSize = SystemConfiguration.Get(SystemConfigurationName.PageSize);
 if (pageSize <= 0)
     throw new InvalidOperationException("Expected a positive page size.");
 
+using var map = new LinuxMemoryMap(16);
+"mmap"u8.CopyTo(map.Span);
+if (!map.Span[..4].SequenceEqual("mmap"u8))
+    throw new InvalidOperationException("Failed to round-trip an anonymous memory map.");
+
 var currentUser = LinuxUser.Current ?? throw new InvalidOperationException("Expected the current user to be resolvable.");
 Console.WriteLine($"LinuxCore AOT smoke passed for {currentUser.Name} with page size {pageSize}.");
