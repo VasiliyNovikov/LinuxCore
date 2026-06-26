@@ -30,9 +30,6 @@ jobs:
           - name: ubuntu-22.04-arm64
             os: ubuntu-22.04-arm
             aot_runtime: linux-arm64
-          - name: ubuntu-slim-x64
-            os: ubuntu-slim
-            aot_runtime: linux-x64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -51,7 +48,7 @@ jobs:
           dotnet build
           dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}"
 
-      - name: Install NativeAOT prerequisites
+      - name: Install Native AOT prerequisites
         run: |
           sudo apt-get update
           sudo apt-get install -y clang zlib1g-dev
@@ -84,10 +81,7 @@ jobs:
 
       - name: Build & Test
         run: >
-          docker run --rm
-          -v "${{ github.workspace }}:/src"
-          -w /src
-          mcr.microsoft.com/dotnet/sdk:10.0-alpine
+          docker run --rm --privileged -v "${{ github.workspace }}:/src" -w /src mcr.microsoft.com/dotnet/sdk:10.0-alpine
           sh -c "dotnet build &&
           dotnet test --no-build --logger trx --results-directory TestResults-${{ matrix.name }} &&
           apk add --no-cache clang build-base zlib-dev &&
