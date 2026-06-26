@@ -24,21 +24,21 @@ internal static unsafe class Sched
 
     // int sched_setscheduler(pid_t pid, int policy, const struct sched_param *param);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static LinuxResult<long> sched_setscheduler(int pid, int policy, in sched_param param)
+    public static LinuxResult sched_setscheduler(int pid, int policy, in sched_param param)
     {
         fixed (sched_param* p = &param)
-            return SysCall.syscall_noblock(SysCallNumber.Instance.SchedSetScheduler, pid, policy, p);
+            return SystemCall.NonBlocking.Invoke(SystemCallTable.Current.SchedSetScheduler, pid, policy, (nint)p);
     }
 
     // int sched_getscheduler(pid_t pid);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static LinuxResult<long> sched_getscheduler(int pid) => SysCall.syscall_noblock(SysCallNumber.Instance.SchedGetScheduler, pid);
+    public static LinuxResult<int> sched_getscheduler(int pid) => SystemCall.NonBlocking.Invoke<int, int>(SystemCallTable.Current.SchedGetScheduler, pid);
 
     // int sched_getparam(pid_t pid, struct sched_param *param);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static LinuxResult<long> sched_getparam(int pid, out sched_param param)
+    public static LinuxResult sched_getparam(int pid, out sched_param param)
     {
         fixed (sched_param* p = &param)
-            return SysCall.syscall_noblock(SysCallNumber.Instance.SchedGetParam, pid, p);
+            return SystemCall.NonBlocking.Invoke(SystemCallTable.Current.SchedGetParam, pid, (nint)p);
     }
 }
