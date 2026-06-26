@@ -40,6 +40,19 @@ public class LinuxMemoryMapTests
     }
 
     [TestMethod]
+    public void LinuxReadOnlyMemoryMap_FileBacked_RoundTrips_From_File()
+    {
+        using var file = new LinuxMemoryFile("readonly-mapped-file");
+
+        var expected = "readonly-map"u8;
+        Assert.AreEqual(expected.Length, file.Write(expected));
+
+        using var map = new LinuxReadOnlyMemoryMap(file.Descriptor, expected.Length);
+
+        Assert.IsTrue(map.Span.SequenceEqual(expected));
+    }
+
+    [TestMethod]
     public void LinuxMemoryMap_Sync_SyncAndAsync_ThrowsLinuxException()
     {
         using var map = new LinuxMemoryMap(4);
