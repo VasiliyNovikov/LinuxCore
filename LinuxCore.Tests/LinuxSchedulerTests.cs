@@ -9,9 +9,11 @@ namespace LinuxCore.Tests;
 [TestClass]
 public class LinuxSchedulerTests
 {
+    private const string ProcSelfSchedPath = "/proc/self/sched";
+
     private static (LinuxScheduler.Policy Policy, int Priority) ReadProcSched()
     {
-        var lines = File.ReadAllLines("/proc/self/sched");
+        var lines = File.ReadAllLines(ProcSelfSchedPath);
         var policy = (LinuxScheduler.Policy)(-1);
         var prio = -1;
         foreach (var line in lines)
@@ -40,7 +42,8 @@ public class LinuxSchedulerTests
     public void LinuxScheduler_Get_Returns_Other_For_Normal_Process()
     {
         Assert.AreEqual((LinuxScheduler.Policy.Other, 0), LinuxScheduler.Get());
-        Assert.AreEqual((LinuxScheduler.Policy.Other, 0), ReadProcSched());
+        if (File.Exists(ProcSelfSchedPath))
+            Assert.AreEqual((LinuxScheduler.Policy.Other, 0), ReadProcSched());
     }
 
     [TestMethod]
@@ -75,7 +78,8 @@ public class LinuxSchedulerTests
         {
             LinuxScheduler.Set(LinuxScheduler.Policy.Batch, 0);
             Assert.AreEqual((LinuxScheduler.Policy.Batch, 0), LinuxScheduler.Get());
-            Assert.AreEqual((LinuxScheduler.Policy.Batch, 0), ReadProcSched());
+            if (File.Exists(ProcSelfSchedPath))
+                Assert.AreEqual((LinuxScheduler.Policy.Batch, 0), ReadProcSched());
         }
         finally
         {
