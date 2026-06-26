@@ -18,7 +18,7 @@ All projects target **net10.0** and use `LangVersion=preview`. Warnings are trea
 
 The GitHub Actions pipeline (`.github/workflows/pipeline.yml`) has three jobs:
 
-- **`validate`** — builds and tests on a matrix of Ubuntu runners: `ubuntu-24.04` (x64 + arm64) and `ubuntu-22.04` (x64 + arm64), then runs a NativeAOT smoke publish/run of `LinuxCore.AotSmokeTest`. Uploads TRX test results as artifacts.
+- **`validate`** — builds and tests on a matrix of Ubuntu runners: `ubuntu-26.04` (x64 + arm64), `ubuntu-24.04` (x64 + arm64), `ubuntu-22.04` (x64 + arm64) and ubuntu-slim, then runs a NativeAOT smoke publish/run of `LinuxCore.AotSmokeTest`. Uploads TRX test results as artifacts.
 - **`validate-alpine`** — builds and tests under musl/Alpine Linux via Docker (`mcr.microsoft.com/dotnet/sdk:10.0-alpine`) on x64 and arm64 runners, and also runs the NativeAOT smoke app there. Uploads TRX test results as artifacts.
 - **`publish`** — publishes to NuGet, gated on both `validate` and `validate-alpine` succeeding. Runs when `PUBLISH` is `'true'` on any branch, or `'auto'` on the `master` branch.
 
