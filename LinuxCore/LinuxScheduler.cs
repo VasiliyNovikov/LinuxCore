@@ -40,7 +40,7 @@ public static class LinuxScheduler
     /// </summary>
     public static (Policy Policy, int Priority) Get(int pid)
     {
-        var rawPolicy = (int)sched_getscheduler(pid).ThrowIfError();
+        var rawPolicy = sched_getscheduler(pid).ThrowIfError();
         var policy = (Policy)(rawPolicy & ~SCHED_RESET_ON_FORK);
         sched_getparam(pid, out var param).ThrowIfError();
         return (policy, param.sched_priority);
