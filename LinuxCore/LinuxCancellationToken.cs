@@ -47,30 +47,42 @@ public sealed class LinuxCancellationToken : IDisposable
     /// Waits until one of the requested file objects becomes ready or the wrapped token is canceled.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SkipLocalsInit]
     public bool Wait(ReadOnlySpan<IFileObject> objects, ReadOnlySpan<LinuxPoll.Event> events)
     {
         var objectCount = objects.Length;
-        Span<LinuxPoll.Query> queries = stackalloc LinuxPoll.Query[objectCount + 1];
+        Span<LinuxPoll.Query> buffer = stackalloc LinuxPoll.Query[objectCount + 1];
         for (var i = 0; i < objectCount; ++i)
-            queries[i] = new(objects[i].Descriptor, events[i]);
-        if (_event is null)
-            queries = queries[..objectCount];
-        else
-            queries[objectCount] = new(_event.Descriptor, NativePollEvent);
-
-        if (LinuxPoll.Wait(queries, Timeout.Infinite))
-        {
-            if (_event is not null && (queries[objectCount].ReturnedEvents & NativePollEvent) == NativePollEvent)
-                _cancellationToken.ThrowIfCancellationRequested();
-            return true;
-        }
-
-        return false;
+            buffer[i] = new(objects[i].Descriptor, events[i]);
+        return WaitHelper(buffer);
     }
 
     /// <summary>
     /// Waits until the requested file object becomes ready or the wrapped token is canceled.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Wait(IFileObject @object, LinuxPoll.Event events) => Wait([@object], [events]);
+    [SkipLocalsInit]
+    public bool Wait(IFileObject @object, LinuxPoll.Event events)
+    {
+        Span<LinuxPoll.Query> buffer = stackalloc LinuxPoll.Query[2];
+        buffer[0] = new(@object.Descriptor, events);
+        return WaitHelper(buffer);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool WaitHelper(Span<LinuxPoll.Query> buffer)
+    {
+        if (_event is null)
+            return LinuxPoll.Wait(buffer[..^1], Timeout.Infinite);
+
+        ref var eventQuery = ref buffer[^1];
+        eventQuery = new(_event.Descriptor, NativePollEvent);
+        if (!LinuxPoll.Wait(buffer, Timeout.Infinite))
+            return false;
+
+        if ((eventQuery.ReturnedEvents & NativePollEvent) == NativePollEvent)
+            _cancellationToken.ThrowIfCancellationRequested();
+
+        return true;
+    }
 }
