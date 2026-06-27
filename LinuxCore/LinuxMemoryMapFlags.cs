@@ -5,6 +5,9 @@ using static LinuxCore.Interop.MemoryMap;
 
 namespace LinuxCore;
 
+/// <summary>
+/// Flags controlling the visibility, placement, and behaviour of <c>mmap(2)</c> mappings.
+/// </summary>
 [SuppressMessage("Microsoft.Formatting", "IDE0055: Fix formatting", Justification = "Intentional enum value alignment")]
 [Flags]
 public enum LinuxMemoryMapFlags

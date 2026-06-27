@@ -5,8 +5,13 @@ using static LinuxCore.Interop.SysCall;
 
 namespace LinuxCore;
 
+/// <summary>
+/// Provides a type-safe wrapper for invoking Linux system calls via <c>syscall(2)</c>.
+/// Use <see cref="NonBlocking"/> for calls that are guaranteed not to block the current thread.
+/// </summary>
 public static unsafe class SystemCall
 {
+    /// <summary>Invokes a system call with no arguments.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LinuxResult Invoke(SystemCallNumber number) => Result(syscall(number));
 
@@ -137,6 +142,10 @@ public static unsafe class SystemCall
         return Result<TResult>(syscall(number, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5), Param(arg6)));
     }
 
+    /// <summary>
+    /// Provides variants of <see cref="SystemCall.Invoke"/> that use <c>[SuppressGCTransition]</c>
+    /// for syscalls guaranteed not to block, reducing the overhead of the GC transition.
+    /// </summary>
     public static class NonBlocking
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
