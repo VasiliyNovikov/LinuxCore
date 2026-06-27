@@ -1,27 +1,28 @@
 {
-  "last_run": "2026-06-26T01:56:16Z",
-  "last_run_id": "28212140037",
+  "last_run": "2026-06-27T02:00:00Z",
+  "last_run_id": "28274897253",
   "infrastructure": {
     "mcp_http_approach": "WORKS (when policy check passes)",
     "mcp_server_url": "http://host.docker.internal:80/mcp/safeoutputs",
     "mcp_auth_source": "/home/runner/.copilot/mcp-config.json mcpServers.safeoutputs.headers.Authorization",
-    "mcp_protocol": "HTTP SSE without Bearer prefix (Authorization: <token> not Authorization: Bearer <token>)",
-    "mcp_notes": "Do NOT use 'Bearer' prefix for Authorization header - use the token directly",
+    "mcp_protocol": "HTTP SSE without Bearer prefix. Accept: application/json, text/event-stream (REQUIRED - 400 error if only text/event-stream)",
+    "mcp_notes": "Do NOT use 'Bearer' prefix for Authorization header. Accept header MUST include both application/json and text/event-stream",
     "github_mcp_url": "http://host.docker.internal:80/mcp/github",
     "github_mcp_tools": "issue_read(method: get/get_comments, param: issue_number), pull_request_read(pullNumber, method: get), list_issues, list_pull_requests, search_pull_requests, search_issues",
     "dotnet_path": "/usr/bin/dotnet (v10.0.301)",
-    "rebase_note": "For rebasing old PR branches: git checkout <branch> && git rebase origin/master",
+    "rebase_note": "For rebasing old PR branches: git checkout origin/<branch> -b <branch> && git rebase origin/master",
     "push_to_pr_branch": "push_to_pull_request_branch requires 'message', 'branch', 'pull_request_number' params, 'force' is optional",
     "safeoutputs_create_pr": "create_pull_request returns {result:success, patch:{path,size,lines}} on success - branch push and PR creation happen AFTER run ends",
     "safeoutputs_branch_push_timing": "Branch push and PR creation are async - PR does not appear in GitHub during the run, only after the workflow completes",
     "issue_read_param": "issue_read requires 'issue_number' (not 'issueNumber') for get/get_comments",
-    "shell_injection_warning": "Do NOT use here-doc (<<'EOF') pattern when embedding Python with subprocess that references shell vars - use a file written with cat and separate python3 call instead. Also avoid shell expansion patterns in --data-binary with $() nested in other commands.",
+    "shell_injection_warning": "Do NOT use here-doc (<<'EOF') pattern when embedding Python with subprocess that references shell vars",
     "mcp_github_list_tools": "tool name is 'list_issues' not 'list_issues'; issue tool is 'issue_read' (not 'get_issue'); PR tool is 'pull_request_read'",
     "git_rebase_editor": "Use GIT_EDITOR=true git rebase --continue to avoid interactive editor during rebase",
-    "rebase_conflict_note": "When rebasing multiple branches in a loop, if one fails with conflict, git is left in a conflicted state. Must run 'git rebase --abort' before trying the next branch. The 'needs merge' error on subsequent branches is from the lingering state, not actual conflicts."
+    "rebase_conflict_note": "When rebasing with conflict, git rebase --abort first before retrying",
+    "success_response_format": "push_to_pull_request_branch success is in nested JSON: text field contains {result:success,...}"
   },
   "issue_backlog_cursor": 69,
-  "pr_backlog_cursor": 71,
+  "pr_backlog_cursor": 73,
   "monthly_summary": {
     "june_2026_issue": 52,
     "june_2026_status": "active"
@@ -29,7 +30,7 @@
   "comments_made": {
     "pr_44": "2026-05-08 - code review: 2 minor style issues",
     "pr_38": "2026-05-08 - noted superseded by PR #44",
-    "pr_71": "2026-06-26 - identified MS_SYNC = 0x0 bug (should be 0x4) in mmap interop",
+    "pr_71": "2026-06-26 - identified MS_SYNC = 0x0 bug (now fixed in merged commit 04d4e1a)",
     "issue_39": "2026-06-14 - noted runs now succeeding, suggested close",
     "issue_41": "2026-06-14 - status update on PR #51 for benchmarks, global.json optional",
     "issue_45": "2026-06-21 - junk issue with placeholder body, duplicate of #41, suggested close",
@@ -43,37 +44,23 @@
     "issue_69": "2026-06-24 - noted duplicate of #67 BenchmarkSwitcher"
   },
   "fix_attempts": {
-    "pr_70": "open - Benchmarks: use BenchmarkSwitcher - branch repo-assist/improve-benchmarks-switcher-2026-06-23-aa594485081b08de",
-    "pr_65": "open - Add LinuxSemaphore.Add(uint count) - rebased 2026-06-26",
-    "pr_64": "open - Docs: XML docs for FileDescriptor, FileObject, LinuxFile, LinuxMemoryFile - rebased 2026-06-26",
-    "pr_63": "open - Tests: MonotonicNanoseconds, DeviceId, CloseOnExec setter - rebased 2026-06-26",
-    "pr_62": "open - Tests: synchronization coverage (6 new tests) - rebased 2026-06-26 with conflict resolved",
-    "pr_61": "open - Fix LinuxPoll.Wait(TimeSpan) overflow, add Decrement() doc, add semaphore tests - rebased 2026-06-26 with conflict resolved, 97 tests pass",
-    "pr_55": "open - Add LinuxPipe: pipe2-backed unidirectional channel - rebased 2026-06-26",
-    "pr_54": "open - Add LinuxTimer: timerfd-backed timer for event-driven polling - rebased 2026-06-26",
-    "pr_51": "open - Add CLOCK_MONOTONIC_RAW clock and LinuxClockBenchmarks - rebased 2026-06-26",
+    "pr_72": "open - Fix: add missing SystemCall.NonBlocking.Invoke<TResult>() overload + SystemCall tests - created 2026-06-27",
+    "pr_73": "open - Docs: add XML documentation to new public API types (SystemCall, MemoryMap) - created 2026-06-27",
+    "pr_70": "open - Benchmarks: use BenchmarkSwitcher - rebased 2026-06-27",
+    "pr_65": "open - Add LinuxSemaphore.Add(uint count) - rebased 2026-06-27",
+    "pr_64": "open - Docs: XML docs for FileDescriptor, FileObject, LinuxFile, LinuxMemoryFile - rebased 2026-06-27",
+    "pr_63": "open - Tests: MonotonicNanoseconds, DeviceId, CloseOnExec setter - rebased 2026-06-27",
+    "pr_62": "open - Tests: synchronization coverage (6 new tests) - rebased 2026-06-27 with conflict resolved",
+    "pr_61": "open - Fix LinuxPoll.Wait(TimeSpan) overflow, add Decrement() doc, add semaphore tests - rebased 2026-06-27 with conflict resolved",
+    "pr_55": "open - Add LinuxPipe: pipe2-backed unidirectional channel - rebased 2026-06-27",
+    "pr_54": "open - Add LinuxTimer: timerfd-backed timer for event-driven polling - rebased 2026-06-27",
+    "pr_51": "open - Add CLOCK_MONOTONIC_RAW clock and LinuxClockBenchmarks - rebased 2026-06-27",
     "pr_42": "stale - superseded by PR #61 - Fix LinuxPoll.Wait overflow - should be closed",
     "pr_40": "stale - superseded by PR #61 - Tests: CancellationToken.None / SemaphoreSlim - should be closed"
   },
   "pending_work": {},
-  "stale_prs_to_close": [
-    40,
-    42
-  ],
-  "open_issues": [
-    39,
-    41,
-    45,
-    52,
-    53,
-    57,
-    58,
-    59,
-    60,
-    67,
-    68,
-    69
-  ],
+  "stale_prs_to_close": [40, 42],
+  "open_issues": [39, 41, 45, 52, 53, 57, 58, 59, 60, 67, 68, 69],
   "issue_notes": {
     "39": "Old workflow failure issue - Repo Assist commented 2026-06-14, should close",
     "41": "Eng branch issue - addressed by PR #51. Should close.",
@@ -89,23 +76,25 @@
     "69": "Duplicate of #67 - BenchmarkSwitcher issue - Repo Assist commented 2026-06-24"
   },
   "pr_notes": {
-    "71": "New human PR: Memory-mapped files - has MS_SYNC = 0x0 bug, Repo Assist commented 2026-06-26",
-    "70": "Benchmarks: use BenchmarkSwitcher for flexible benchmark selection - open, draft",
-    "65": "Add LinuxSemaphore.Add(uint count) for bulk token addition - open, draft, rebased 2026-06-26",
-    "64": "Docs: add XML documentation to FileDescriptor, FileObject, LinuxFile, LinuxMemoryFile - open, draft, rebased 2026-06-26",
-    "63": "Tests: add coverage for MonotonicNanoseconds, DeviceId, and CloseOnExec setter - open, draft, rebased 2026-06-26",
-    "62": "Tests: add synchronization coverage for poll timeout, pre-set event, and cancellation token - open, draft, rebased 2026-06-26",
-    "61": "Fix LinuxPoll.Wait(TimeSpan) overflow, add Decrement() doc, add semaphore tests - open, draft, rebased 2026-06-26",
-    "55": "Add LinuxPipe: pipe2-backed unidirectional channel - open, draft, rebased 2026-06-26",
-    "54": "Add LinuxTimer: timerfd-backed timer for event-driven polling - open, draft, rebased 2026-06-26",
-    "51": "Add CLOCK_MONOTONIC_RAW clock and LinuxClockBenchmarks - open, draft, rebased 2026-06-26",
+    "73": "New: Docs: XML documentation to SystemCall, MemoryMap API types - created 2026-06-27",
+    "72": "New: Fix missing SystemCall.NonBlocking.Invoke<TResult>() overload + tests - created 2026-06-27",
+    "71": "Human PR: Memory-mapped files - merged as commit 04d4e1a (MS_SYNC bug fixed)",
+    "70": "Benchmarks: use BenchmarkSwitcher for flexible benchmark selection - open, draft, rebased 2026-06-27",
+    "65": "Add LinuxSemaphore.Add(uint count) for bulk token addition - open, draft, rebased 2026-06-27",
+    "64": "Docs: add XML documentation to FileDescriptor, FileObject, LinuxFile, LinuxMemoryFile - open, draft, rebased 2026-06-27",
+    "63": "Tests: add coverage for MonotonicNanoseconds, DeviceId, and CloseOnExec setter - open, draft, rebased 2026-06-27",
+    "62": "Tests: add synchronization coverage for poll timeout, pre-set event, and cancellation token - open, draft, rebased 2026-06-27",
+    "61": "Fix LinuxPoll.Wait(TimeSpan) overflow, add Decrement() doc, add semaphore tests - open, draft, rebased 2026-06-27",
+    "55": "Add LinuxPipe: pipe2-backed unidirectional channel - open, draft, rebased 2026-06-27",
+    "54": "Add LinuxTimer: timerfd-backed timer for event-driven polling - open, draft, rebased 2026-06-27",
+    "51": "Add CLOCK_MONOTONIC_RAW clock and LinuxClockBenchmarks - open, draft, rebased 2026-06-27",
     "40": "STALE - superseded by PR #61",
     "42": "STALE - superseded by PR #61"
   },
   "items_to_check_next_run": [
-    "Check if PR #71 maintainer has fixed MS_SYNC bug",
+    "Check if PRs #72, #73 (new from this run) were created successfully",
     "Check if issues #39, #41, #45, #53, #57, #58, #59, #60, #67, #68, #69 have been closed by maintainer",
     "Check if PRs #40, #42 have been closed (they are stale)",
-    "Check if any of PRs #51, #54, #55, #61, #62, #63, #64, #65, #70 have been merged"
+    "Check if any of PRs #51, #54, #55, #61, #62, #63, #64, #65, #70, #72, #73 have been merged"
   ]
 }
