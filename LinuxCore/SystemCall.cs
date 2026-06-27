@@ -143,6 +143,13 @@ public static unsafe class SystemCall
         public static LinuxResult Invoke(SystemCallNumber number) => Result(syscall_noblock(number));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static LinuxResult<TResult> Invoke<TResult>(SystemCallNumber number)
+            where TResult : unmanaged
+        {
+            return Result<TResult>(syscall_noblock(number));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static LinuxResult Invoke<T>(SystemCallNumber number, T arg) 
             where T : unmanaged
         {
