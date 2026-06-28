@@ -169,6 +169,24 @@ public class LinuxClockTests
         Assert.AreEqual(duration.TotalMilliseconds, sw.Elapsed.TotalMilliseconds, precision.TotalMilliseconds);
     }
 
+    [TestMethod]
+    public void LinuxClock_MonotonicNanoseconds_Is_Positive()
+    {
+        var ns = LinuxClock.MonotonicNanoseconds;
+
+        Assert.IsTrue(ns > 0L, $"MonotonicNanoseconds {ns} should be positive");
+    }
+
+    [TestMethod]
+    public void LinuxClock_Monotonic_And_MonotonicNanoseconds_Are_Consistent()
+    {
+        var ns = LinuxClock.MonotonicNanoseconds;
+        var time = LinuxClock.Monotonic;
+
+        var timeNs = time.Ticks * TimeSpan.NanosecondsPerTick;
+        Assert.AreEqual(ns, timeNs, 10_000_000.0); // 10ms in nanoseconds
+    }
+
     private static void BurnCpu()
     {
         var sw = Stopwatch.StartNew();
