@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Runtime.InteropServices;
+using System.Text;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -149,5 +150,68 @@ public class LinuxMemoryMapTests
 
         var e = Assert.ThrowsExactly<LinuxException>(() => new LinuxMemoryMap(file.Descriptor, 4, flags: LinuxMemoryMapFlags.SharedValidate | LinuxMemoryMapFlags.Anonymous));
         Assert.AreEqual(LinuxErrorNumber.InvalidArgument, e.ErrorNumber);
+    }
+
+    [TestMethod]
+    public void LinuxMemoryMap_Sync_AfterDispose_ThrowsObjectDisposedException()
+    {
+        var map = new LinuxMemoryMap(4);
+        map.Dispose();
+
+        Assert.ThrowsExactly<ObjectDisposedException>(() => map.Sync());
+    }
+
+    [TestMethod]
+    public void LinuxReadOnlyMemoryMap_Anonymous_Span_ReadsZeroBytes()
+    {
+        using var map = new LinuxReadOnlyMemoryMap(8);
+
+        var span = map.Span;
+        Assert.AreEqual(8, span.Length);
+        foreach (var b in span)
+            Assert.AreEqual(0, b);
+    }
+
+    [TestMethod]
+    public void LinuxReadOnlyMemoryMap_Memory_AfterDispose_ThrowsObjectDisposedException()
+    {
+        ReadOnlyMemory<byte> memory;
+        using (var map = new LinuxReadOnlyMemoryMap(4))
+            memory = map.Memory;
+
+        Assert.ThrowsExactly<ObjectDisposedException>(() => _ = memory.Span);
+    }
+
+    [TestMethod]
+    public void LinuxMemoryMap_FileBacked_WithOffset_RoundTrips()
+    {
+        using var file = new LinuxMemoryFile("offset-map");
+
+        var pageSize = (int)SystemConfiguration.Get(SystemConfigurationName.PageSize);
+        var content = Encoding.ASCII.GetBytes("page-two-data");
+        var zeroes = new byte[pageSize];
+        Assert.AreEqual(pageSize, file.Write(zeroes));
+        Assert.AreEqual(content.Length, file.Write(content));
+
+        using var map = new LinuxMemoryMap(file.Descriptor, content.Length, offset: pageSize);
+        Assert.IsTrue(map.Span[..content.Length].SequenceEqual(content));
+    }
+
+    [TestMethod]
+    public void LinuxReadOnlyMemoryMap_FileBacked_ReflectsFileChanges()
+    {
+        using var file = new LinuxMemoryFile("shared-changes");
+
+        var initial = "initial-data"u8;
+        Assert.AreEqual(initial.Length, file.Write(initial));
+
+        using var map = new LinuxReadOnlyMemoryMap(file.Descriptor, initial.Length);
+        Assert.IsTrue(map.Span.SequenceEqual(initial));
+
+        var updated = "updated-data"u8;
+        file.Position = 0;
+        Assert.AreEqual(updated.Length, file.Write(updated));
+
+        Assert.IsTrue(map.Span.SequenceEqual(updated));
     }
 }
