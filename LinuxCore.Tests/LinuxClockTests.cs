@@ -175,4 +175,39 @@ public class LinuxClockTests
         while (sw.Elapsed < TimeSpan.FromMilliseconds(20))
             Thread.SpinWait(1000);
     }
+
+    [TestMethod]
+    public void LinuxClock_MonotonicRawNanoseconds_Is_Positive()
+    {
+        var ns = LinuxClock.MonotonicRawNanoseconds;
+
+        Assert.IsTrue(ns > 0L, $"MonotonicRawNanoseconds {ns} should be positive");
+    }
+
+    [TestMethod]
+    public void LinuxClock_MonotonicRaw_Is_Positive()
+    {
+        var time = LinuxClock.MonotonicRaw;
+
+        Assert.IsTrue(time > TimeSpan.Zero, $"MonotonicRaw {time} should be positive");
+    }
+
+    [TestMethod]
+    public void LinuxClock_MonotonicRaw_And_MonotonicRawNanoseconds_Are_Consistent()
+    {
+        var ns = LinuxClock.MonotonicRawNanoseconds;
+        var time = LinuxClock.MonotonicRaw;
+
+        var timeNs = time.Ticks * TimeSpan.NanosecondsPerTick;
+        Assert.AreEqual(ns, timeNs, 10_000_000.0); // 10ms in nanoseconds
+    }
+
+    [TestMethod]
+    public void LinuxClock_MonotonicRaw_Advances_Monotonically()
+    {
+        var ns1 = LinuxClock.MonotonicRawNanoseconds;
+        var ns2 = LinuxClock.MonotonicRawNanoseconds;
+
+        Assert.IsTrue(ns2 >= ns1, $"MonotonicRaw went backwards: {ns1} -> {ns2}");
+    }
 }

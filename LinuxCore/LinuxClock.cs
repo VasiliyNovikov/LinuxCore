@@ -28,6 +28,28 @@ public static class LinuxClock
     }
 
     /// <summary>
+    /// Gets the current time from <c>CLOCK_MONOTONIC_RAW</c>, a hardware-based monotonic clock
+    /// that is not subject to NTP adjustments or frequency steering.
+    /// Useful for profiling and latency measurements that must not be affected by NTP slew.
+    /// </summary>
+    public static long MonotonicRawNanoseconds
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => GetClockNanoseconds(CLOCK_MONOTONIC_RAW);
+    }
+
+    /// <summary>
+    /// Gets the current time from <c>CLOCK_MONOTONIC_RAW</c>, a hardware-based monotonic clock
+    /// that is not subject to NTP adjustments or frequency steering.
+    /// Useful for profiling and latency measurements that must not be affected by NTP slew.
+    /// </summary>
+    public static TimeSpan MonotonicRaw
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => GetClock(CLOCK_MONOTONIC_RAW);
+    }
+
+    /// <summary>
     /// Gets the current wall-clock time as a <see cref="DateTimeOffset"/> (UTC) from <c>CLOCK_REALTIME</c>.
     /// </summary>
     public static DateTimeOffset Realtime
