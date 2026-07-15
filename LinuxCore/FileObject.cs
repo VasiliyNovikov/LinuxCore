@@ -4,10 +4,21 @@ using static LinuxCore.Interop.File;
 
 namespace LinuxCore;
 
+/// <summary>
+/// Provides shared operations and optional cleanup ownership for a Linux file descriptor.
+/// </summary>
+/// <remarks>
+/// Operations intentionally use the raw descriptor without per-operation lifetime leasing or
+/// reference counting. This keeps descriptor operations allocation-free, but callers must keep the
+/// instance strongly reachable and prevent concurrent disposal or external closure while an operation
+/// is in progress. Operations after disposal are unsupported because Linux may have recycled the
+/// numeric descriptor.
+/// </remarks>
 public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDescriptor = true) : NativeObject, IFileObject
 {
     private bool? _isNonBlocking;
 
+    /// <inheritdoc />
     public FileDescriptor Descriptor
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
