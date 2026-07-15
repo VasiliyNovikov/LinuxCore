@@ -25,14 +25,73 @@ internal static unsafe partial class Time
         }
     }
 
+    [StructLayout(LayoutKind.Explicit, Size = 16)]
+    internal readonly struct arm_timespec64
+    {
+        [FieldOffset(0)]
+        public readonly long tv_sec;
+
+        [FieldOffset(8)]
+        public readonly int tv_nsec;
+
+        [FieldOffset(12)]
+        private readonly int __pad;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public arm_timespec64(long seconds, long nanoseconds)
+        {
+            tv_sec = seconds;
+            tv_nsec = checked((int)nanoseconds);
+            __pad = 0;
+        }
+    }
+
     // int clock_gettime(clockid_t clockid, struct timespec *tp);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "clock_gettime")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial LinuxResult clock_gettime(int clockid, timespec* tp);
+    private static partial int clock_gettime_raw(int clockid, timespec* tp);
+
+    // int __clock_gettime64(clockid_t clockid, struct __timespec64 *tp);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "__clock_gettime64")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    private static partial int clock_gettime64_raw(int clockid, arm_timespec64* tp);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult clock_gettime(int clockid, timespec* tp)
+    {
+        if (!NativeAbi.IsArm32)
+            return new(clock_gettime_raw(clockid, tp));
+
+        Unsafe.SkipInit(out arm_timespec64 nativeTime);
+        var result = clock_gettime64_raw(clockid, &nativeTime);
+        if (result == 0)
+            *tp = new timespec(nativeTime.tv_sec, nativeTime.tv_nsec);
+        return new(result);
+    }
 
     // int clock_nanosleep(clockid_t clockid, int flags, const struct timespec *request, struct timespec *remain);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "clock_nanosleep")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial LinuxErrorNumber clock_nanosleep(int clockid, int flags, timespec* request, timespec* remain);
+    private static partial int clock_nanosleep_raw(int clockid, int flags, timespec* request, timespec* remain);
+
+    // int __clock_nanosleep_time64(clockid_t clockid, int flags, const struct __timespec64 *request, struct __timespec64 *remain);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "__clock_nanosleep_time64")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static partial int clock_nanosleep64_raw(int clockid, int flags, arm_timespec64* request, arm_timespec64* remain);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxErrorNumber clock_nanosleep(int clockid, int flags, timespec* request, timespec* remain)
+    {
+        if (!NativeAbi.IsArm32)
+            return (LinuxErrorNumber)clock_nanosleep_raw(clockid, flags, request, remain);
+
+        var nativeRequest = new arm_timespec64(request->tv_sec, request->tv_nsec);
+        Unsafe.SkipInit(out arm_timespec64 nativeRemaining);
+        var result = (LinuxErrorNumber)clock_nanosleep64_raw(clockid, flags, &nativeRequest, &nativeRemaining);
+        if (result == LinuxErrorNumber.InterruptedSystemCall)
+            *remain = new timespec(nativeRemaining.tv_sec, nativeRemaining.tv_nsec);
+        return result;
+    }
 }

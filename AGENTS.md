@@ -13,14 +13,17 @@ dotnet run -c Release --project LinuxCore.Benchmarks                  # benchmar
 ```
 
 All projects target **net10.0** and use `LangVersion=preview`. Warnings are treated as errors (`TreatWarningsAsErrors=true`). Documentation XML is generated for the main library.
+Architecture flag tests require `cc`, libc development headers, and Linux UAPI headers because they compile current-platform constants during the test run.
 
 ## CI
 
-The GitHub Actions pipeline (`.github/workflows/pipeline.yml`) has three jobs:
+The GitHub Actions pipeline (`.github/workflows/pipeline.yml`) has five jobs:
 
 - **`validate`** — builds and tests on a matrix of Ubuntu runners: `ubuntu-26.04` (x64 + arm64), `ubuntu-24.04` (x64 + arm64) and `ubuntu-22.04` (x64 + arm64), then runs a NativeAOT smoke publish/run of `LinuxCore.AotSmokeTest`. Uploads TRX test results as artifacts.
 - **`validate-alpine`** — builds and tests under musl/Alpine Linux via Docker (`mcr.microsoft.com/dotnet/sdk:10.0-alpine`) on x64 and arm64 runners, and also runs the NativeAOT smoke app there. Uploads TRX test results as artifacts.
-- **`publish`** — publishes to NuGet, gated on both `validate` and `validate-alpine` succeeding. Runs when `PUBLISH` is `'true'` on any branch, or `'auto'` on the `master` branch.
+- **`validate-emulated-architectures`** — builds a portable embedded-MTP test runner on the native host, then runs the full suite as native AArch32 processes on Arm64 runners for Arm32 glibc and musl, and under QEMU for ppc64le. Native-header oracles compile inside each target container through a direct `posix_spawnp` test helper. All matrix entries gate publishing.
+- **`validate-riscv64`** — builds portable test output on native x64, then runs the full suite directly under QEMU with a checksum-pinned community RISC-V64 runtime and gates publishing. Microsoft does not publish a RISC-V64 .NET 10 runtime or support QEMU execution. PPC64LE and RISC-V64 require and exercise the `SCM_RIGHTS` truncation workaround; every discovered test must pass.
+- **`publish`** — publishes to NuGet, gated on all required validation jobs succeeding. Runs when `PUBLISH` is `'true'` on any branch, or `'auto'` on the `master` branch.
 
 ## Architecture
 
@@ -59,6 +62,11 @@ For non-FD security objects:
 ### Struct layout
 - Public value types that cross the P/Invoke boundary are decorated with `[StructLayout(LayoutKind.Sequential)]`.
 
+### Architecture-dependent flags
+- Public `LinuxFileFlags` and `LinuxMemoryMapFlags` values are stable managed tokens, not native constants on every architecture.
+- Translate file and mapping flags only at managed/native boundaries through `NativeLinuxFileFlags`, `NativeLinuxMemoryMapFlags`; reverse-translate native `F_GETFL` results before exposing them publicly.
+- Update current-platform native-header oracle tests and emulated architecture tests whenever an architecture-dependent flag is added.
+
 ### Package management
 Central package versions are in `Directory.Packages.props`. Add new dependencies there, not in individual `.csproj` files.
 
@@ -73,6 +81,9 @@ Central package versions are in `Directory.Packages.props`. Add new dependencies
 
 ### File object ownership
 - `FileObject` constructor accepts `ownsDescriptor` (default `true`). When `false`, the finalizer/Dispose will not close the file descriptor — use this when wrapping externally-managed descriptors.
+- `FileDescriptor` deliberately remains an allocation-free, non-owning value type. Copying it or reading `FileObject.Descriptor` neither duplicates the descriptor nor retains its lifetime; use `Clone()` for an independent descriptor.
+- `FileObject` owns configured cleanup but deliberately does not provide SafeHandle-style per-operation lifetime leases. Callers must keep the owner strongly reachable and prevent concurrent disposal or external closure while wrapper operations or raw descriptors are in use. Do not add hot-path descriptor leasing or replace the value type with a handle object without an explicit API and performance decision.
+- For `ownsDescriptor: false`, the external owner must keep the descriptor open for every wrapper operation. Closed or stale descriptor values are unsafe because Linux can recycle the numeric descriptor for an unrelated resource.
 
 ### Tests
 - Framework: **MSTest** (`[TestClass]` / `[TestMethod]`).

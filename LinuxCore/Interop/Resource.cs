@@ -32,9 +32,31 @@ internal static partial class Resource
 
     // int getrlimit(int resource, struct rlimit *rlim);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "getrlimit")]
-    public static partial LinuxResult getrlimit(int resource, out rlimit rlim);
+    private static partial int getrlimit_raw(int resource, out rlimit rlim);
+
+    // int getrlimit64(int resource, struct rlimit64 *rlim);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "getrlimit64")]
+    private static partial int getrlimit64_raw(int resource, out rlimit rlim);
+
+    public static LinuxResult getrlimit(int resource, out rlimit rlim)
+    {
+        return new(NativeAbi.IsArm32Glibc
+            ? getrlimit64_raw(resource, out rlim)
+            : getrlimit_raw(resource, out rlim));
+    }
 
     // int setrlimit(int resource, const struct rlimit *rlim);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "setrlimit")]
-    public static partial LinuxResult setrlimit(int resource, in rlimit rlim);
+    private static partial int setrlimit_raw(int resource, in rlimit rlim);
+
+    // int setrlimit64(int resource, const struct rlimit64 *rlim);
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "setrlimit64")]
+    private static partial int setrlimit64_raw(int resource, in rlimit rlim);
+
+    public static LinuxResult setrlimit(int resource, in rlimit rlim)
+    {
+        return new(NativeAbi.IsArm32Glibc
+            ? setrlimit64_raw(resource, in rlim)
+            : setrlimit_raw(resource, in rlim));
+    }
 }

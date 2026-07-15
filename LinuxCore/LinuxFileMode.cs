@@ -8,7 +8,7 @@ namespace LinuxCore;
 public enum LinuxFileMode
 {
     None         = 0x0000, // No permissions
-    OtherExecute = 0x0001,  // S_IXOTH: Execute/Search by others
+    OtherExecute = 0x0001, // S_IXOTH: Execute/Search by others
     OtherWrite   = 0x0002, // S_IWOTH: Write by others
     OtherRead    = 0x0004, // S_IROTH: Read by others
     GroupExecute = 0x0008, // S_IXGRP: Execute/Search by group

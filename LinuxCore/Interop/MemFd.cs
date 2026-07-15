@@ -13,5 +13,8 @@ internal static partial class MemFd
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "memfd_create", StringMarshalling = StringMarshalling.Utf8)]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial LinuxResult<FileDescriptor> memfd_create(string name, LinuxMemoryFileFlags flags);
+    private static partial int memfd_create_raw(string name, LinuxMemoryFileFlags flags);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<FileDescriptor> memfd_create(string name, LinuxMemoryFileFlags flags) => new(new(memfd_create_raw(name, flags)));
 }

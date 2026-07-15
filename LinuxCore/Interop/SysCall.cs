@@ -8,64 +8,64 @@ internal static partial class SysCall
 {
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial nint syscall(SystemCallNumber number);
+    public static partial nint syscall(nint number);
 
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial nint syscall(SystemCallNumber number, nint arg1);
+    public static partial nint syscall(nint number, nint arg1);
 
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial nint syscall(SystemCallNumber number, nint arg1, nint arg2);
+    public static partial nint syscall(nint number, nint arg1, nint arg2);
 
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial nint syscall(SystemCallNumber number, nint arg1, nint arg2, nint arg3);
+    public static partial nint syscall(nint number, nint arg1, nint arg2, nint arg3);
 
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial nint syscall(SystemCallNumber number, nint arg1, nint arg2, nint arg3, nint arg4);
+    public static partial nint syscall(nint number, nint arg1, nint arg2, nint arg3, nint arg4);
 
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial nint syscall(SystemCallNumber number, nint arg1, nint arg2, nint arg3, nint arg4, nint arg5);
+    public static partial nint syscall(nint number, nint arg1, nint arg2, nint arg3, nint arg4, nint arg5);
 
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial nint syscall(SystemCallNumber number, nint arg1, nint arg2, nint arg3, nint arg4, nint arg5, nint arg6);
-
-    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SuppressGCTransition]
-    public static partial nint syscall_noblock(SystemCallNumber number);
+    public static partial nint syscall(nint number, nint arg1, nint arg2, nint arg3, nint arg4, nint arg5, nint arg6);
 
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial nint syscall_noblock(SystemCallNumber number, nint arg1);
+    public static partial nint syscall_noblock(nint number);
 
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial nint syscall_noblock(SystemCallNumber number, nint arg1, nint arg2);
+    public static partial nint syscall_noblock(nint number, nint arg1);
 
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial nint syscall_noblock(SystemCallNumber number, nint arg1, nint arg2, nint arg3);
+    public static partial nint syscall_noblock(nint number, nint arg1, nint arg2);
 
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial nint syscall_noblock(SystemCallNumber number, nint arg1, nint arg2, nint arg3, nint arg4);
+    public static partial nint syscall_noblock(nint number, nint arg1, nint arg2, nint arg3);
 
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial nint syscall_noblock(SystemCallNumber number, nint arg1, nint arg2, nint arg3, nint arg4, nint arg5);
+    public static partial nint syscall_noblock(nint number, nint arg1, nint arg2, nint arg3, nint arg4);
 
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial nint syscall_noblock(SystemCallNumber number, nint arg1, nint arg2, nint arg3, nint arg4, nint arg5, nint arg6);
+    public static partial nint syscall_noblock(nint number, nint arg1, nint arg2, nint arg3, nint arg4, nint arg5);
+
+    [LibraryImport(LinuxLibraries.LibC, EntryPoint = "syscall")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressGCTransition]
+    public static partial nint syscall_noblock(nint number, nint arg1, nint arg2, nint arg3, nint arg4, nint arg5, nint arg6);
 }

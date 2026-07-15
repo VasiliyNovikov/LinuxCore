@@ -5,6 +5,9 @@ using static LinuxCore.Interop.MemoryMap;
 
 namespace LinuxCore;
 
+/// <summary>
+/// Defines stable managed memory-map flag tokens translated to native values for the current architecture.
+/// </summary>
 [SuppressMessage("Microsoft.Formatting", "IDE0055: Fix formatting", Justification = "Intentional enum value alignment")]
 [Flags]
 public enum LinuxMemoryMapFlags

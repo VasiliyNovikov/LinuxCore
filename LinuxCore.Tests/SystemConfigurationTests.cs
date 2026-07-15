@@ -11,6 +11,7 @@ public class SystemConfigurationTests
         var pageSize = SystemConfiguration.Get(SystemConfigurationName.PageSize);
         Assert.IsGreaterThan(0L, pageSize);
         Assert.AreEqual(0L, pageSize & (pageSize - 1)); // power of two
+        Assert.AreEqual(CScript.EvaluateInt64("sysconf(_SC_PAGESIZE)", "unistd.h"), pageSize);
     }
 
     [TestMethod]

@@ -9,6 +9,9 @@ public readonly struct LinuxResult
 {
     private readonly int _value;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal LinuxResult(int value) => _value = value;
+
     public bool IsError
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,6 +30,9 @@ public readonly struct LinuxResult
 public readonly unsafe struct LinuxResult<T> where T : unmanaged
 {
     private readonly T _value;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal LinuxResult(T value) => _value = value;
 
     // JIT is expected to optimize this switch away
     public bool IsError

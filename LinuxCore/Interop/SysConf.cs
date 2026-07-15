@@ -9,5 +9,8 @@ internal static partial class SysConf
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "sysconf")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial long sysconf(SystemConfigurationName name);
+    private static partial nint sysconf_raw(SystemConfigurationName name);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static long sysconf(SystemConfigurationName name) => sysconf_raw(name);
 }

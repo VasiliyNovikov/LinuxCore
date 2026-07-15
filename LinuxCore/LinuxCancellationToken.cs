@@ -46,6 +46,10 @@ public sealed class LinuxCancellationToken : IDisposable
     /// <summary>
     /// Waits until one of the requested file objects becomes ready or the wrapped token is canceled.
     /// </summary>
+    /// <remarks>
+    /// This instance and every object must remain strongly reachable and undisposed, and their
+    /// descriptors must remain open until this method returns.
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SkipLocalsInit]
     public bool Wait(ReadOnlySpan<IFileObject> objects, ReadOnlySpan<LinuxPoll.Event> events)
@@ -60,6 +64,10 @@ public sealed class LinuxCancellationToken : IDisposable
     /// <summary>
     /// Waits until the requested file object becomes ready or the wrapped token is canceled.
     /// </summary>
+    /// <remarks>
+    /// This instance and the object must remain strongly reachable and undisposed, and their
+    /// descriptors must remain open until this method returns.
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SkipLocalsInit]
     public bool Wait(IFileObject @object, LinuxPoll.Event events)

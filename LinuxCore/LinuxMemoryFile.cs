@@ -7,6 +7,14 @@ namespace LinuxCore;
 
 public sealed class LinuxMemoryFile : LinuxFile
 {
+    /// <summary>
+    /// Wraps an existing descriptor as a memory file.
+    /// </summary>
+    /// <param name="descriptor">The descriptor to wrap. It is not duplicated.</param>
+    /// <param name="ownsDescriptor">
+    /// Whether disposal closes <paramref name="descriptor"/>. When <see langword="false"/>, the external
+    /// owner must keep the descriptor open and prevent concurrent closure while this object is in use.
+    /// </param>
     public LinuxMemoryFile(FileDescriptor descriptor, bool ownsDescriptor = true)
         : base(descriptor, ownsDescriptor)
     {

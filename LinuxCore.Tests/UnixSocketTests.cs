@@ -1,14 +1,43 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using ProcFsCore;
 
 namespace LinuxCore.Tests;
 
 [TestClass]
 public class UnixSocketTests
 {
+    [TestMethod]
+    public void UnixSocket_IOControl_Fionread_Returns_Available_Bytes()
+    {
+        var socketPath = CreateSocketPath();
+        try
+        {
+            using var listener = new UnixSocket();
+            listener.Bind(UnixSocketAddress.FromPath(socketPath));
+            listener.Listen(1);
+
+            using var client = new UnixSocket();
+            client.Connect(UnixSocketAddress.FromPath(socketPath));
+            using var accepted = listener.Accept();
+            Assert.AreEqual(4, client.Send("test"u8));
+
+            using var control = new IOControlFile(accepted.Descriptor);
+            var fionread = checked((ulong)CScript.EvaluateInt64("FIONREAD", "sys/ioctl.h"));
+            Assert.AreEqual(4, control.GetInt32(fionread));
+        }
+        finally
+        {
+            DeleteSocketPath(socketPath);
+        }
+    }
+
     [TestMethod]
     public void UnixSocket_Create_Sets_CloseOnExec()
     {
@@ -302,28 +331,46 @@ public class UnixSocketTests
         receiver.Bind(address);
         sender.Connect(address);
 
-        using var memfd = new LinuxMemoryFile("test-fd-passing");
-        var payload = "fd-content"u8;
-        memfd.Write(payload);
+        using var first = new LinuxMemoryFile("test-fd-passing-first");
+        using var second = new LinuxMemoryFile("test-fd-passing-second");
+        var firstPayload = "first-fd-content"u8;
+        var secondPayload = "second-fd-content"u8;
+        first.Write(firstPayload);
+        second.Write(secondPayload);
 
         var body = "hello"u8;
-        Assert.AreEqual(body.Length, sender.SendFileDescriptors(body, [memfd.Descriptor]));
+        Assert.AreEqual(body.Length, sender.SendFileDescriptors(body, [first.Descriptor, second.Descriptor]));
 
         Span<byte> recvBuffer = stackalloc byte[body.Length];
-        Span<FileDescriptor> recvFds = stackalloc FileDescriptor[1];
-        Assert.AreEqual(body.Length, receiver.ReceiveFileDescriptors(recvBuffer, recvFds, out var fdCount, out var msgFlags));
-        Assert.AreEqual(1, fdCount);
-        Assert.AreEqual(LinuxSocketMessageFlags.None, msgFlags & LinuxSocketMessageFlags.ControlTruncated);
-        CollectionAssert.AreEqual(body.ToArray(), recvBuffer.ToArray());
-        var recvFd = recvFds[0];
-        Assert.AreNotEqual(memfd.Descriptor, recvFd);
+        Span<FileDescriptor> recvFds = stackalloc FileDescriptor[2];
+        var fdCount = 0;
+        try
+        {
+            Assert.AreEqual(body.Length, receiver.ReceiveFileDescriptors(recvBuffer, recvFds, out fdCount, out var msgFlags));
+            Assert.AreEqual(2, fdCount);
+            Assert.AreEqual(LinuxSocketMessageFlags.None, msgFlags & LinuxSocketMessageFlags.ControlTruncated);
+            CollectionAssert.AreEqual(body.ToArray(), recvBuffer.ToArray());
+            Assert.AreNotEqual(first.Descriptor, recvFds[0]);
+            Assert.AreNotEqual(second.Descriptor, recvFds[1]);
 
-        using var recvFile = new LinuxMemoryFile(recvFd);
-        Assert.IsTrue(recvFile.CloseOnExec);
-        recvFile.Position = 0;
-        Span<byte> recvPayload = stackalloc byte[payload.Length];
-        Assert.AreEqual(payload.Length, recvFile.Read(recvPayload));
-        CollectionAssert.AreEqual(payload.ToArray(), recvPayload.ToArray());
+            using var receivedFirst = new LinuxMemoryFile(recvFds[0], false);
+            using var receivedSecond = new LinuxMemoryFile(recvFds[1], false);
+            Assert.IsTrue(receivedFirst.CloseOnExec);
+            Assert.IsTrue(receivedSecond.CloseOnExec);
+            receivedFirst.Position = 0;
+            receivedSecond.Position = 0;
+            Span<byte> receivedFirstPayload = stackalloc byte[firstPayload.Length];
+            Span<byte> receivedSecondPayload = stackalloc byte[secondPayload.Length];
+            Assert.AreEqual(firstPayload.Length, receivedFirst.Read(receivedFirstPayload));
+            Assert.AreEqual(secondPayload.Length, receivedSecond.Read(receivedSecondPayload));
+            CollectionAssert.AreEqual(firstPayload.ToArray(), receivedFirstPayload.ToArray());
+            CollectionAssert.AreEqual(secondPayload.ToArray(), receivedSecondPayload.ToArray());
+        }
+        finally
+        {
+            for (var i = 0; i < fdCount; i++)
+                recvFds[i].Close();
+        }
     }
 
     [TestMethod]
@@ -358,7 +405,121 @@ public class UnixSocketTests
         CollectionAssert.AreEqual(payload.ToArray(), recvPayload.ToArray());
     }
 
+    [TestMethod]
+    public void UnixSocket_ReceiveFileDescriptors_Closes_Descriptors_Beyond_Capacity()
+    {
+        var address = UnixSocketAddress.FromAbstractName(CreateAbstractPath());
+        var firstName = $"test-fd-first-{Guid.NewGuid():N}";
+        var secondName = $"test-fd-second-{Guid.NewGuid():N}";
+
+        using var sender = new UnixSocket(LinuxSocketType.Datagram);
+        using var receiver = new UnixSocket(LinuxSocketType.Datagram);
+        receiver.Bind(address);
+        sender.Connect(address);
+        using var first = new LinuxMemoryFile(firstName);
+        using var second = new LinuxMemoryFile(secondName);
+
+        Assert.AreEqual(1, CountOpenDescriptors(firstName));
+        Assert.AreEqual(1, CountOpenDescriptors(secondName));
+        Assert.AreEqual(1, sender.SendFileDescriptors([1], [first.Descriptor, second.Descriptor]));
+
+        FileDescriptor receivedDescriptor = default;
+        Span<FileDescriptor> receivedDescriptors = stackalloc FileDescriptor[1];
+        Span<byte> receiveBuffer = stackalloc byte[1];
+        var ownsReceivedDescriptor = false;
+        try
+        {
+            var receivedCount = receiver.ReceiveFileDescriptors(receiveBuffer, receivedDescriptors, out var receivedDescriptorCount, out var messageFlags);
+            if (receivedDescriptorCount > 0)
+            {
+                receivedDescriptor = receivedDescriptors[0];
+                ownsReceivedDescriptor = true;
+            }
+
+            Assert.AreEqual(1, receivedCount);
+            Assert.AreEqual(1, receivedDescriptorCount);
+            Assert.AreNotEqual(LinuxSocketMessageFlags.None, messageFlags & LinuxSocketMessageFlags.ControlTruncated);
+            Assert.AreEqual(2, CountOpenDescriptors(firstName));
+            Assert.AreEqual(1, CountOpenDescriptors(secondName));
+            using var receivedFile = new LinuxMemoryFile(receivedDescriptor, false);
+            Assert.IsTrue(receivedFile.CloseOnExec);
+        }
+        finally
+        {
+            if (ownsReceivedDescriptor)
+                receivedDescriptor.Close();
+        }
+
+        Assert.AreEqual(1, CountOpenDescriptors(firstName));
+        Assert.AreEqual(1, CountOpenDescriptors(secondName));
+    }
+
+    [TestMethod]
+    public void UnixSocket_TryReceiveMessage_Bounds_FileDescriptors_To_Destination()
+    {
+        var address = UnixSocketAddress.FromAbstractName(CreateAbstractPath());
+        var firstName = $"test-fd-raw-first-{Guid.NewGuid():N}";
+        var secondName = $"test-fd-raw-second-{Guid.NewGuid():N}";
+
+        using var sender = new UnixSocket(LinuxSocketType.Datagram);
+        using var receiver = new UnixSocket(LinuxSocketType.Datagram);
+        receiver.Bind(address);
+        sender.Connect(address);
+        using var first = new LinuxMemoryFile(firstName);
+        using var second = new LinuxMemoryFile(secondName);
+
+        Assert.AreEqual(1, sender.SendFileDescriptors([1], [first.Descriptor, second.Descriptor]));
+        Span<byte> receiveBuffer = stackalloc byte[1];
+        Span<FileDescriptor> receivedDescriptors = stackalloc FileDescriptor[1];
+        var receivedDescriptorCount = 0;
+        try
+        {
+            LinuxSocketBase receiverBase = receiver;
+            Assert.IsTrue(receiverBase.TryReceiveMessage(receiveBuffer, LinuxSocketOptionLevel.Socket, LinuxControlMessageType.ScmRights, MemoryMarshal.AsBytes(receivedDescriptors), out var receivedCount, out var receivedControlCount, out var messageFlags, LinuxSocketMessageFlags.CmsgCloseOnExec));
+            receivedDescriptorCount = receivedControlCount / sizeof(int);
+
+            Assert.AreEqual((nuint)1, receivedCount);
+            Assert.AreEqual(1, receivedDescriptorCount);
+            Assert.AreNotEqual(LinuxSocketMessageFlags.None, messageFlags & LinuxSocketMessageFlags.ControlTruncated);
+            Assert.AreEqual(2, CountOpenDescriptors(firstName));
+            Assert.AreEqual(1, CountOpenDescriptors(secondName));
+        }
+        finally
+        {
+            for (var i = 0; i < receivedDescriptorCount; ++i)
+                receivedDescriptors[i].Close();
+        }
+
+        Assert.AreEqual(1, CountOpenDescriptors(firstName));
+        Assert.AreEqual(1, CountOpenDescriptors(secondName));
+    }
+
+    [TestMethod]
+    public void UnixSocket_ReceiveFileDescriptors_Zero_Capacity_Closes_All_Descriptors()
+    {
+        var address = UnixSocketAddress.FromAbstractName(CreateAbstractPath());
+        var firstName = $"test-fd-zero-first-{Guid.NewGuid():N}";
+        var secondName = $"test-fd-zero-second-{Guid.NewGuid():N}";
+
+        using var sender = new UnixSocket(LinuxSocketType.Datagram);
+        using var receiver = new UnixSocket(LinuxSocketType.Datagram);
+        receiver.Bind(address);
+        sender.Connect(address);
+        using var first = new LinuxMemoryFile(firstName);
+        using var second = new LinuxMemoryFile(secondName);
+
+        Assert.AreEqual(1, sender.SendFileDescriptors([1], [first.Descriptor, second.Descriptor]));
+        Span<byte> receiveBuffer = stackalloc byte[1];
+        Assert.AreEqual(1, receiver.ReceiveFileDescriptors(receiveBuffer, [], out var receivedDescriptorCount, out var messageFlags));
+        Assert.AreEqual(0, receivedDescriptorCount);
+        Assert.AreNotEqual(LinuxSocketMessageFlags.None, messageFlags & LinuxSocketMessageFlags.ControlTruncated);
+        Assert.AreEqual(1, CountOpenDescriptors(firstName));
+        Assert.AreEqual(1, CountOpenDescriptors(secondName));
+    }
+
     private static string CreateAbstractPath() => Encoding.ASCII.GetString([0x80, 0xFF, 0x00, .. Guid.NewGuid().ToByteArray()]);
+
+    private static int CountOpenDescriptors(string memoryFileName) => ProcFs.Default.CurrentProcess.OpenFiles.Count(link => link.Path?.Contains(memoryFileName, StringComparison.Ordinal) == true);
 
     private static string CreateSocketPath() => $"/tmp/linuxcore-{Guid.NewGuid():N}.sock";
 
@@ -373,5 +534,15 @@ public class UnixSocketTests
     {
         if (File.Exists(path))
             File.Delete(path);
+    }
+
+    private sealed class IOControlFile(FileDescriptor descriptor) : FileObject(descriptor, ownsDescriptor: false)
+    {
+        public int GetInt32(ulong request)
+        {
+            var value = 0;
+            IOControl(request, ref value);
+            return value;
+        }
     }
 }

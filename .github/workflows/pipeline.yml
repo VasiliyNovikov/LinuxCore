@@ -1,4 +1,6 @@
 name: Validate & Publish
+permissions:
+  contents: read
 on:
   push:
     branches:
@@ -10,6 +12,7 @@ on:
 jobs:
   validate:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - name: ubuntu-26.04-x64
@@ -43,15 +46,17 @@ jobs:
             Directory.Packages.props
             **/*.csproj
 
+      - name: Install build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang linux-libc-dev zlib1g-dev
+
       - name: Build & Test
+        env:
+          LINUXCORE_EXPECTED_QEMU_LINUX_USER: false
         run: |
           dotnet build
           dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}"
-
-      - name: Install Native AOT prerequisites
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang zlib1g-dev
 
       - name: NativeAOT Smoke
         run: |
@@ -67,6 +72,7 @@ jobs:
 
   validate-alpine:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - name: alpine-x64
@@ -81,10 +87,10 @@ jobs:
 
       - name: Build & Test
         run: >
-          docker run --rm --privileged -v "${{ github.workspace }}:/src" -w /src mcr.microsoft.com/dotnet/sdk:10.0-alpine
-          sh -c "dotnet build &&
+          docker run --rm --privileged -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=false -v "${{ github.workspace }}:/src" -w /src mcr.microsoft.com/dotnet/sdk:10.0-alpine
+          sh -c "apk add --no-cache build-base clang linux-headers zlib-dev &&
+          dotnet build &&
           dotnet test --no-build --logger trx --results-directory TestResults-${{ matrix.name }} &&
-          apk add --no-cache clang build-base zlib-dev &&
           dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true --self-contained true -o /tmp/aot-smoke &&
           /tmp/aot-smoke/LinuxCore.AotSmokeTest"
 
@@ -95,11 +101,261 @@ jobs:
           path: TestResults-${{ matrix.name }}
         if: ${{ always() }}
 
+  validate-emulated-architectures:
+    name: validate-emulated-architectures (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: arm32-glibc
+            os: ubuntu-24.04-arm
+            use_qemu: false
+            platform: linux/arm/v7
+            image: mcr.microsoft.com/dotnet/sdk:10.0.302-noble@sha256:ed034a8bf0b24ded0cbbac07e17825d8e9ebfe21e308191d0f7421eaf5ad4664
+            shell: /bin/bash
+            architecture: Arm
+            pointer_size: 4
+            libc_pattern: GLIBC|GNU libc
+            setup: apt-get update && apt-get install -y --no-install-recommends clang gcc libc6-dev linux-libc-dev zlib1g-dev
+            memlock: 65536
+            aot_runtime: linux-arm
+          - name: arm32-musl
+            os: ubuntu-24.04-arm
+            use_qemu: false
+            platform: linux/arm/v7
+            image: mcr.microsoft.com/dotnet/sdk:10.0.302-alpine3.23@sha256:d8ee39817ca03a3757288e83c37ed73cc969a286c603b827c7cbe33add1c2d1c
+            shell: /bin/sh
+            architecture: Arm
+            pointer_size: 4
+            libc_pattern: musl
+            setup: apk add --no-cache build-base clang linux-headers zlib-dev
+            memlock: 65536
+            aot_runtime: linux-musl-arm
+          - name: ppc64le-glibc
+            os: ubuntu-24.04
+            use_qemu: true
+            platform: linux/ppc64le
+            qemu_platform: ppc64le
+            image: registry.access.redhat.com/ubi9/dotnet-100:9.8-1784718241@sha256:09e77bde23ffd851410ac3d3c35e8937609a1d401aac2844912ed63818232d7d
+            shell: /bin/bash
+            architecture: Ppc64le
+            pointer_size: 8
+            libc_pattern: GLIBC|GNU libc
+            setup: microdnf install -y gcc glibc-devel kernel-headers
+            memlock: 0
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prove native AArch32 execution path
+        if: ${{ matrix.architecture == 'Arm' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          case "$(docker info --format '{{.Architecture}}')" in
+            aarch64|arm64) ;;
+            *) exit 1 ;;
+          esac
+
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends binutils-arm-linux-gnueabihf
+          printf '%s\n' \
+            '.syntax unified' \
+            '.arm' \
+            '.global _start' \
+            '.type _start, %function' \
+            '_start:' \
+            '    mov r0, #73' \
+            '    mov r7, #1' \
+            '    svc #0' \
+            > "${RUNNER_TEMP}/aarch32-probe.s"
+          arm-linux-gnueabihf-as -march=armv7-a -o "${RUNNER_TEMP}/aarch32-probe.o" "${RUNNER_TEMP}/aarch32-probe.s"
+          arm-linux-gnueabihf-ld -static -o "${RUNNER_TEMP}/aarch32-probe" "${RUNNER_TEMP}/aarch32-probe.o"
+          readelf -h "${RUNNER_TEMP}/aarch32-probe" | grep -Eq 'Class:[[:space:]]+ELF32'
+          readelf -h "${RUNNER_TEMP}/aarch32-probe" | grep -Eq 'Machine:[[:space:]]+ARM'
+
+          sudo mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc 2>/dev/null || true
+          test -e /proc/sys/fs/binfmt_misc/status
+          printf '0\n' | sudo tee /proc/sys/fs/binfmt_misc/status
+          read -r binfmt_status < /proc/sys/fs/binfmt_misc/status
+          test "$binfmt_status" = disabled
+
+          set +e
+          "${RUNNER_TEMP}/aarch32-probe"
+          probe_status=$?
+          set -e
+          test "$probe_status" -eq 73
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+          cache: true
+          cache-dependency-path: |
+            Directory.Packages.props
+            **/*.csproj
+
+      - name: Build and discover portable tests on host
+        id: portable_tests
+        shell: bash
+        env:
+          DOTNET_CLI_UI_LANGUAGE: en
+          LC_ALL: C.UTF-8
+        run: |
+          set -euo pipefail
+          dotnet build LinuxCore.Tests/LinuxCore.Tests.csproj -p:BuildPortableMtpRunner=true
+          test_dll="LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll"
+          discovery_output=$(dotnet "$test_dll" --list-tests --no-banner --no-ansi --no-progress)
+          printf '%s\n' "$discovery_output"
+          if [[ "$discovery_output" =~ Test\ discovery\ summary:\ found\ ([1-9][0-9]*)\ test\(s\) ]]; then
+            printf 'count=%s\n' "${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          else
+            exit 1
+          fi
+
+      - name: Set up QEMU
+        if: ${{ matrix.use_qemu }}
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8
+        with:
+          image: docker.io/tonistiigi/binfmt:qemu-v10.0.4@sha256:8f58e6214f4cc9dc83ce8f5acad1ece508eb6b20e696a8c1e9f274481982c541
+          platforms: ${{ matrix.qemu_platform }}
+          cache-image: false
+
+      - name: Prepare writable caches
+        run: |
+          mkdir -p "${RUNNER_TEMP}/dotnet-home-${{ matrix.name }}"
+
+      - name: Build & Test
+        run: |
+          docker run --rm --platform "${{ matrix.platform }}" --user 0 --ulimit memlock=${{ matrix.memlock }}:${{ matrix.memlock }} \
+            -v "${{ github.workspace }}:/src" -v "${RUNNER_TEMP}/dotnet-home-${{ matrix.name }}:/tmp/dotnet-home" \
+            -w /src -e DOTNET_CLI_HOME=/tmp/dotnet-home -e DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+            -e LINUXCORE_EXPECTED_ARCHITECTURE=${{ matrix.architecture }} \
+            -e LINUXCORE_EXPECTED_POINTER_SIZE=${{ matrix.pointer_size }} \
+            -e LINUXCORE_EXPECTED_TESTS=${{ steps.portable_tests.outputs.count }} \
+            -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=${{ matrix.use_qemu }} \
+            "${{ matrix.image }}" "${{ matrix.shell }}" -lc '
+              set -eu
+              ${{ matrix.setup }}
+              uname -a
+              libc_output=$(ldd --version 2>&1 || true)
+              printf "%s\n" "$libc_output"
+              printf "%s\n" "$libc_output" | grep -Eqi "${{ matrix.libc_pattern }}"
+
+              suite_status=0
+              dotnet /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --report-trx --results-directory "/src/TestResults-${{ matrix.name }}" --minimum-expected-tests "$LINUXCORE_EXPECTED_TESTS" --no-banner || suite_status=$?
+              if [ "${{ matrix.architecture }}" = Arm ]; then
+                dotnet publish /src/LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true --self-contained true -o /tmp/aot-smoke
+                /tmp/aot-smoke/LinuxCore.AotSmokeTest
+              fi
+              test "$suite_status" -eq 0
+            '
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.name }}
+          path: TestResults-${{ matrix.name }}
+        if: ${{ always() }}
+
+  validate-riscv64:
+    name: validate-riscv64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+          cache: true
+          cache-dependency-path: |
+            Directory.Packages.props
+            **/*.csproj
+
+      - name: Build and discover portable tests on native x64
+        id: portable_tests
+        shell: bash
+        env:
+          DOTNET_CLI_UI_LANGUAGE: en
+          LC_ALL: C.UTF-8
+        run: |
+          set -euo pipefail
+          dotnet build LinuxCore.Tests/LinuxCore.Tests.csproj -p:BuildPortableMtpRunner=true
+          test_dll="LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll"
+          discovery_output=$(dotnet "$test_dll" --list-tests --no-banner --no-ansi --no-progress)
+          printf '%s\n' "$discovery_output"
+          if [[ "$discovery_output" =~ Test\ discovery\ summary:\ found\ ([1-9][0-9]*)\ test\(s\) ]]; then
+            printf 'count=%s\n' "${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          else
+            exit 1
+          fi
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8
+        with:
+          image: docker.io/tonistiigi/binfmt:qemu-v10.0.4@sha256:8f58e6214f4cc9dc83ce8f5acad1ece508eb6b20e696a8c1e9f274481982c541
+          platforms: riscv64
+          cache-image: false
+
+      - name: Cache community RISC-V64 SDK
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/dotnet-sdk-10.0.109-linux-riscv64.tar.gz
+          key: dotnet-riscv64-10.0.109-e003c230
+
+      - name: Download and verify community SDK
+        run: |
+          sdk_archive="${RUNNER_TEMP}/dotnet-sdk-10.0.109-linux-riscv64.tar.gz"
+          if [ ! -f "$sdk_archive" ]; then
+            curl --fail --location --retry 5 --output "$sdk_archive" \
+              https://github.com/filipnavara/dotnet-riscv/releases/download/10.0.109/dotnet-sdk-10.0.109-linux-riscv64.tar.gz
+          fi
+          printf '%s  %s\n' e003c23007b0d69933b206be0ea9be46438a34896f14a1886d6eec1d7b5f2057 "$sdk_archive" | sha256sum --check
+          mkdir -p "${RUNNER_TEMP}/dotnet-riscv64" "${RUNNER_TEMP}/dotnet-home-riscv64"
+          tar -xzf "$sdk_archive" -C "${RUNNER_TEMP}/dotnet-riscv64"
+
+      - name: Run RISC-V64 full suite
+        run: |
+          docker run --rm --platform linux/riscv64 --user 0 \
+            -v "${{ github.workspace }}:/src" -v "${RUNNER_TEMP}/dotnet-riscv64:/opt/dotnet:ro" \
+            -v "${RUNNER_TEMP}/dotnet-home-riscv64:/tmp/dotnet-home" -w /src \
+            -e PATH=/opt/dotnet:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+            -e DOTNET_ROOT=/opt/dotnet -e DOTNET_CLI_HOME=/tmp/dotnet-home -e DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+            -e LINUXCORE_EXPECTED_ARCHITECTURE=RiscV64 -e LINUXCORE_EXPECTED_POINTER_SIZE=8 \
+            -e LINUXCORE_EXPECTED_TESTS=${{ steps.portable_tests.outputs.count }} \
+            -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=true \
+            riscv64/debian:trixie-20260713-slim@sha256:28fe9dd593680a3082556269e07313f9f9dd536e0641108d0635741de55db2ed \
+            /bin/bash -lc '
+              set -eu
+              rm -f /etc/apt/sources.list.d/debian.sources
+              printf "%s\n" "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20260713T000000Z trixie main" > /etc/apt/sources.list
+              apt-get -o Acquire::Check-Valid-Until=false update
+              apt-get install -y --no-install-recommends ca-certificates gcc coreutils libc-bin libc6-dev libgcc-s1 libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libunwind8 linux-libc-dev tzdata zlib1g
+              uname -a
+              ldd --version
+              /opt/dotnet/dotnet /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --report-trx --results-directory /src/TestResults-riscv64 --minimum-expected-tests "$LINUXCORE_EXPECTED_TESTS" --no-banner
+            '
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-riscv64
+          path: TestResults-riscv64
+        if: ${{ always() }}
+
   publish:
     if: ${{ success() && (vars.PUBLISH == 'true' || vars.PUBLISH == 'auto' && github.ref_name == 'master') }}
     needs:
       - validate
       - validate-alpine
+      - validate-emulated-architectures
+      - validate-riscv64
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

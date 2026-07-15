@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 
 namespace LinuxCore.Tests;
 
@@ -7,18 +6,10 @@ internal static class Script
 {
     public static string Run(params ReadOnlySpan<string> command)
     {
-        var psi = new ProcessStartInfo(command[0], [.. command[1..]])
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        using var process = Process.Start(psi)!;
-        var output = process.StandardOutput.ReadToEnd().Trim();
-        process.WaitForExit();
-        return process.ExitCode == 0
-            ? output
-            : throw new ScriptException(process.ExitCode, process.StandardError.ReadToEnd().Trim());
+        var result = NativeProcess.Run(command);
+        return result.ExitCode == 0
+            ? result.StandardOutput.Trim()
+            : throw new ScriptException(result.ExitCode, result.StandardError.Trim());
     }
 }
 

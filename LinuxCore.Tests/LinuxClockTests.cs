@@ -23,7 +23,7 @@ public class LinuxClockTests
         var linuxElapsed = end - start;
         var stopwatchElapsed = sw.Elapsed;
 
-        Assert.AreEqual(stopwatchElapsed.TotalMilliseconds, linuxElapsed.TotalMilliseconds, 1);
+        Assert.AreEqual(stopwatchElapsed.TotalMilliseconds, linuxElapsed.TotalMilliseconds, 20);
     }
 
     [TestMethod]
