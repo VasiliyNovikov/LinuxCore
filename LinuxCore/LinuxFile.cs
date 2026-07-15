@@ -5,6 +5,14 @@ using static LinuxCore.Interop.File;
 
 namespace LinuxCore;
 
+/// <summary>
+/// Provides file operations over a Linux file descriptor.
+/// </summary>
+/// <param name="descriptor">The descriptor to wrap. It is not duplicated.</param>
+/// <param name="ownsDescriptor">
+/// Whether disposal closes <paramref name="descriptor"/>. When <see langword="false"/>, the external
+/// owner must keep the descriptor open and prevent concurrent closure while this object is in use.
+/// </param>
 public unsafe class LinuxFile(FileDescriptor descriptor, bool ownsDescriptor = true)
     : FileObject(descriptor, ownsDescriptor)
 {

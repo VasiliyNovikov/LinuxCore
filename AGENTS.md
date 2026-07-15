@@ -73,6 +73,9 @@ Central package versions are in `Directory.Packages.props`. Add new dependencies
 
 ### File object ownership
 - `FileObject` constructor accepts `ownsDescriptor` (default `true`). When `false`, the finalizer/Dispose will not close the file descriptor — use this when wrapping externally-managed descriptors.
+- `FileDescriptor` deliberately remains an allocation-free, non-owning value type. Copying it or reading `FileObject.Descriptor` neither duplicates the descriptor nor retains its lifetime; use `Clone()` for an independent descriptor.
+- `FileObject` owns configured cleanup but deliberately does not provide SafeHandle-style per-operation lifetime leases. Callers must keep the owner strongly reachable and prevent concurrent disposal or external closure while wrapper operations or raw descriptors are in use. Do not add hot-path descriptor leasing or replace the value type with a handle object without an explicit API and performance decision.
+- For `ownsDescriptor: false`, the external owner must keep the descriptor open for every wrapper operation. Closed or stale descriptor values are unsafe because Linux can recycle the numeric descriptor for an unrelated resource.
 
 ### Tests
 - Framework: **MSTest** (`[TestClass]` / `[TestMethod]`).

@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+
 using static LinuxCore.Interop.Socket;
 
 namespace LinuxCore;
@@ -18,6 +19,14 @@ public sealed unsafe class UnixSocket : LinuxSocketBase
         }
     }
 
+    /// <summary>
+    /// Wraps an existing Unix socket descriptor.
+    /// </summary>
+    /// <param name="descriptor">The socket descriptor to wrap. It is not duplicated.</param>
+    /// <param name="ownsDescriptor">
+    /// Whether disposal closes <paramref name="descriptor"/>. When <see langword="false"/>, the external
+    /// owner must keep the descriptor open and prevent concurrent closure while this object is in use.
+    /// </param>
     public UnixSocket(FileDescriptor descriptor, bool ownsDescriptor = true)
         : base(descriptor, ownsDescriptor)
     {

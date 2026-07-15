@@ -6,6 +6,14 @@ using static LinuxCore.Interop.Socket;
 
 namespace LinuxCore;
 
+/// <summary>
+/// Provides shared socket operations over a Linux file descriptor.
+/// </summary>
+/// <param name="descriptor">The socket descriptor to wrap. It is not duplicated.</param>
+/// <param name="ownsDescriptor">
+/// Whether disposal closes <paramref name="descriptor"/>. When <see langword="false"/>, the external
+/// owner must keep the descriptor open and prevent concurrent closure while this object is in use.
+/// </param>
 public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool ownsDescriptor = true) : FileObject(descriptor, ownsDescriptor)
 {
     protected LinuxSocketBase(LinuxAddressFamily domain, LinuxSocketType type, ProtocolType protocol)
