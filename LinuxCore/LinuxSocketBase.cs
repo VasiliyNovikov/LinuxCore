@@ -192,17 +192,20 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
         }
     }
 
+    /// <remarks>
+    /// This method returns only the first matching control message. It does not close resources from
+    /// nonmatching messages; use <see cref="UnixSocket.ReceiveFileDescriptors"/> to receive <c>SCM_RIGHTS</c>.
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SkipLocalsInit]
     public int ReceiveMessage(Span<byte> buffer, LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType, Span<byte> controlBuffer, out int receivedControlCount, out LinuxSocketMessageFlags receivedMessageFlags, LinuxSocketMessageFlags flags = default)
     {
-        var controlLen = ControlMessageSpace(controlBuffer);
-        var controlPtr = stackalloc byte[controlLen];
+        var controlPtr = stackalloc byte[ControlMessageSpace(controlBuffer)];
         fixed (byte* bufferPtr = buffer)
         {
             msghdr msg;
             iovec iov;
-            BuildMessageHeader(bufferPtr, (nuint)buffer.Length, controlPtr, (nuint)controlLen, &msg, &iov);
+            BuildMessageHeader(bufferPtr, (nuint)buffer.Length, controlPtr, (nuint)ControlMessageLength(controlBuffer), &msg, &iov);
             var result = (int)recvmsg(Descriptor, &msg, (int)flags).ThrowIfError();
             receivedMessageFlags = (LinuxSocketMessageFlags)msg.msg_flags;
             receivedControlCount = ParseControlMessage(controlMessageLevel, controlMessageType, &msg, controlBuffer);
@@ -210,18 +213,21 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
         }
     }
 
+    /// <remarks>
+    /// This method returns only the first matching control message. It does not close resources from
+    /// nonmatching messages; use <see cref="UnixSocket.ReceiveFileDescriptors"/> to receive <c>SCM_RIGHTS</c>.
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SkipLocalsInit]
     public bool TryReceiveMessage(Span<byte> buffer, LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType, Span<byte> controlBuffer, out nuint receivedCount, out int receivedControlCount, out LinuxSocketMessageFlags receivedMessageFlags, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
     {
         flags |= LinuxSocketMessageFlags.DontWait;
-        var controlLen = ControlMessageSpace(controlBuffer);
-        var controlPtr = stackalloc byte[controlLen];
+        var controlPtr = stackalloc byte[ControlMessageSpace(controlBuffer)];
         fixed (byte* bufferPtr = buffer)
         {
             msghdr msg;
             iovec iov;
-            BuildMessageHeader(bufferPtr, (nuint)buffer.Length, controlPtr, (nuint)controlLen, &msg, &iov);
+            BuildMessageHeader(bufferPtr, (nuint)buffer.Length, controlPtr, (nuint)ControlMessageLength(controlBuffer), &msg, &iov);
             if (TryComplete(recvmsg_noblock(Descriptor, &msg, (int)flags), out receivedCount))
             {
                 receivedMessageFlags = (LinuxSocketMessageFlags)msg.msg_flags;
@@ -307,6 +313,9 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int ControlMessageAlign(int len) => (len + (sizeof(nuint) - 1)) & ~(sizeof(nuint) - 1);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int ControlMessageLength(ReadOnlySpan<byte> cmsgData) => sizeof(cmsghdr) + cmsgData.Length;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int ControlMessageSpace(ReadOnlySpan<byte> cmsgData) => sizeof(cmsghdr) + ControlMessageAlign(cmsgData.Length);
