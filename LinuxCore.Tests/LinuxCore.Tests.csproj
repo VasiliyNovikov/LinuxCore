@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="MSTest" />
+    <PackageReference Include="ProcFsCore" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LinuxCore\LinuxCore.csproj" />
