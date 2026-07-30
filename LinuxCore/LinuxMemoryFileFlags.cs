@@ -5,6 +5,10 @@ using static LinuxCore.Interop.MemFd;
 
 namespace LinuxCore;
 
+/// <summary>
+/// Creation flags for <see cref="LinuxMemoryFile"/>, passed to <c>memfd_create(2)</c>.
+/// <see cref="CloseOnExec"/> is always added automatically.
+/// </summary>
 [SuppressMessage("Microsoft.Formatting", "IDE0055: Fix formatting", Justification = "Intentional enum value alignment")]
 [Flags]
 public enum LinuxMemoryFileFlags : uint

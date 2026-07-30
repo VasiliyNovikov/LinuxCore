@@ -6,6 +6,11 @@ using static LinuxCore.Interop.MemoryMap;
 
 namespace LinuxCore;
 
+/// <summary>
+/// Base class for memory-mapped regions created via <c>mmap(2)</c>.
+/// Derived classes provide read-only (<see cref="LinuxReadOnlyMemoryMap"/>) and
+/// read-write (<see cref="LinuxMemoryMap"/>) views.
+/// </summary>
 public abstract unsafe class LinuxMemoryMapBase : NativeObject
 {
     private readonly byte* _address;
@@ -31,12 +36,14 @@ public abstract unsafe class LinuxMemoryMapBase : NativeObject
         }
     }
 
+    /// <summary>Gets a read-only view of the mapped region.</summary>
     public ReadOnlySpan<byte> Span
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => UnsafeSpan;
     }
 
+    /// <summary>Gets a read-only <see cref="System.Memory{T}"/> view of the mapped region.</summary>
     public ReadOnlyMemory<byte> Memory
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -68,6 +75,8 @@ public abstract unsafe class LinuxMemoryMapBase : NativeObject
     {
     }
 
+    /// <summary>Flushes changes in the mapped region back to the underlying file via <c>msync(2)</c>.</summary>
+    /// <param name="sync">Specifies whether to flush synchronously, asynchronously, or with invalidation.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Sync(LinuxMemoryMapSync sync = LinuxMemoryMapSync.Sync)
     {

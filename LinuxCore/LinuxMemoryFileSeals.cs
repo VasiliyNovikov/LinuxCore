@@ -5,6 +5,10 @@ using static LinuxCore.Interop.File;
 
 namespace LinuxCore;
 
+/// <summary>
+/// File seals for <see cref="LinuxMemoryFile"/>, applied via <c>fcntl(F_ADD_SEALS)</c>.
+/// Seals permanently restrict allowed operations on the memory file.
+/// </summary>
 [SuppressMessage("Microsoft.Formatting", "IDE0055: Fix formatting", Justification = "Intentional enum value alignment")]
 [Flags]
 public enum LinuxMemoryFileSeals
