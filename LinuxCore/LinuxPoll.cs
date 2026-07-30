@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 using static LinuxCore.Interop.Poll;
 
@@ -12,6 +13,10 @@ namespace LinuxCore;
 /// </summary>
 public static unsafe class LinuxPoll
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int ToMilliseconds(TimeSpan timeout) =>
+        (int)Math.Clamp(timeout.TotalMilliseconds, Timeout.Infinite, int.MaxValue);
+
     /// <summary>
     /// Waits for one or more file descriptors to become ready.
     /// </summary>
@@ -35,7 +40,7 @@ public static unsafe class LinuxPoll
     /// Waits for one or more file descriptors to become ready.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Wait(Span<Query> queries, TimeSpan timeout) => Wait(queries, (int)timeout.TotalMilliseconds);
+    public static bool Wait(Span<Query> queries, TimeSpan timeout) => Wait(queries, ToMilliseconds(timeout));
 
     /// <summary>
     /// Waits for a single file descriptor to become ready and returns the resulting events.
@@ -53,7 +58,7 @@ public static unsafe class LinuxPoll
     /// Waits for a single file descriptor to become ready and returns the resulting events.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Event? Wait(FileDescriptor descriptor, Event @event, TimeSpan timeout) => Wait(descriptor, @event, (int)timeout.TotalMilliseconds);
+    public static Event? Wait(FileDescriptor descriptor, Event @event, TimeSpan timeout) => Wait(descriptor, @event, ToMilliseconds(timeout));
 
     /// <summary>
     /// Represents a single file descriptor poll request.
