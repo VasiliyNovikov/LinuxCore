@@ -17,6 +17,18 @@ public sealed class LinuxSemaphore(uint initialValue = 0)
     public void Increment() => WriteOne();
 
     /// <summary>
+    /// Increments the semaphore by <paramref name="count"/> tokens in a single operation.
+    /// This is more efficient than calling <see cref="Increment"/> multiple times.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Add(uint count)
+    {
+        if (count == 0)
+            return;
+        WriteValue(count);
+    }
+
+    /// <summary>
     /// Decrements the semaphore by one, blocking until a token is available.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
