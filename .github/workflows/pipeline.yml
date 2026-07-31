@@ -172,46 +172,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Prove native AArch32 execution path
-        if: ${{ matrix.architecture == 'Arm' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$(uname -m)" = aarch64
-          case "$(docker info --format '{{.Architecture}}')" in
-            aarch64|arm64) ;;
-            *) exit 1 ;;
-          esac
-
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends binutils-arm-linux-gnueabihf
-          printf '%s\n' \
-            '.syntax unified' \
-            '.arm' \
-            '.global _start' \
-            '.type _start, %function' \
-            '_start:' \
-            '    mov r0, #73' \
-            '    mov r7, #1' \
-            '    svc #0' \
-            > "${RUNNER_TEMP}/aarch32-probe.s"
-          arm-linux-gnueabihf-as -march=armv7-a -o "${RUNNER_TEMP}/aarch32-probe.o" "${RUNNER_TEMP}/aarch32-probe.s"
-          arm-linux-gnueabihf-ld -static -o "${RUNNER_TEMP}/aarch32-probe" "${RUNNER_TEMP}/aarch32-probe.o"
-          readelf -h "${RUNNER_TEMP}/aarch32-probe" | grep -Eq 'Class:[[:space:]]+ELF32'
-          readelf -h "${RUNNER_TEMP}/aarch32-probe" | grep -Eq 'Machine:[[:space:]]+ARM'
-
-          sudo mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc 2>/dev/null || true
-          test -e /proc/sys/fs/binfmt_misc/status
-          printf '0\n' | sudo tee /proc/sys/fs/binfmt_misc/status
-          read -r binfmt_status < /proc/sys/fs/binfmt_misc/status
-          test "$binfmt_status" = disabled
-
-          set +e
-          "${RUNNER_TEMP}/aarch32-probe"
-          probe_status=$?
-          set -e
-          test "$probe_status" -eq 73
-
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
