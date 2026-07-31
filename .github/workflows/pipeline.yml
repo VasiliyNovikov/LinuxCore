@@ -60,7 +60,7 @@ jobs:
 
       - name: NativeAOT Smoke
         run: |
-          dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true --self-contained true -o "artifacts/aot-smoke/${{ matrix.name }}"
+          dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true -o "artifacts/aot-smoke/${{ matrix.name }}"
           "./artifacts/aot-smoke/${{ matrix.name }}/LinuxCore.AotSmokeTest"
 
       - name: Upload Test Results
@@ -91,7 +91,7 @@ jobs:
           sh -c "apk add --no-cache build-base clang linux-headers zlib-dev &&
           dotnet build &&
           dotnet test --no-build --logger trx --results-directory TestResults-${{ matrix.name }} &&
-          dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true --self-contained true -o /tmp/aot-smoke &&
+          dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true -o /tmp/aot-smoke &&
           /tmp/aot-smoke/LinuxCore.AotSmokeTest"
 
       - name: Upload Test Results
@@ -207,15 +207,11 @@ jobs:
           platforms: ${{ matrix.qemu_platform }}
           cache-image: false
 
-      - name: Prepare writable caches
-        run: |
-          mkdir -p "${RUNNER_TEMP}/dotnet-home-${{ matrix.name }}"
-
       - name: Build & Test
         run: |
           docker run --rm --platform "${{ matrix.platform }}" --user 0 --ulimit "memlock=${{ matrix.memlock }}:${{ matrix.memlock }}" \
-            -v "${{ github.workspace }}:/src" -v "${RUNNER_TEMP}/dotnet-home-${{ matrix.name }}:/tmp/dotnet-home" \
-            -w /src -e DOTNET_CLI_HOME=/tmp/dotnet-home -e DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+            -v "${{ github.workspace }}:/src" \
+            -w /src -e DOTNET_CLI_TELEMETRY_OPTOUT=1 \
             -e LINUXCORE_EXPECTED_ARCHITECTURE=${{ matrix.architecture }} \
             -e LINUXCORE_EXPECTED_POINTER_SIZE=${{ matrix.pointer_size }} \
             -e LINUXCORE_EXPECTED_TESTS=${{ steps.portable_tests.outputs.count }} \
@@ -231,7 +227,7 @@ jobs:
             suite_status=0
             dotnet /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --report-trx --results-directory "/src/TestResults-${{ matrix.name }}" --minimum-expected-tests "$LINUXCORE_EXPECTED_TESTS" --no-banner || suite_status=$?
             if [ "${{ matrix.architecture }}" = Arm ]; then
-              dotnet publish /src/LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true --self-contained true -o /tmp/aot-smoke
+              dotnet publish /src/LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true -o /tmp/aot-smoke
               /tmp/aot-smoke/LinuxCore.AotSmokeTest
             fi
             test "$suite_status" -eq 0
