@@ -8,6 +8,7 @@ namespace LinuxCore.Tests;
 internal static class CScript
 {
     public static int EvaluateInt32(string expression, params string[] headers) => checked((int)EvaluateInt64(expression, headers));
+    public static nint EvaluateNInt(string expression, params string[] headers) => checked((nint)EvaluateInt64(expression, headers));
 
     public static unsafe long EvaluateInt64(string expression, params string[] headers)
     {
@@ -16,7 +17,14 @@ internal static class CScript
         var libraryPath = $"{temporaryPath}.so";
         try
         {
-            var source = new StringBuilder("#define _GNU_SOURCE\n#define _FILE_OFFSET_BITS 64\n#define _TIME_BITS 64\n#include <stdint.h>\n");
+            var source = new StringBuilder("""
+                                           #define _GNU_SOURCE
+                                           #define _FILE_OFFSET_BITS 64
+                                           #define _TIME_BITS 64
+                                           #include <stdint.h>
+                                           #include <stddef.h>
+
+                                           """);
             foreach (var header in headers)
                 source.Append("#include <").Append(header).Append(">\n");
             source.Append("int64_t compute(void) { return (int64_t)(").Append(expression).Append("); }\n");
