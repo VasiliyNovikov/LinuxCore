@@ -248,15 +248,8 @@ public class LinuxFileTests
         var path = Path.GetTempFileName();
         try
         {
-            try
-            {
-                using var file = new LinuxFile(path, LinuxFileFlags.ReadWrite | LinuxFileFlags.Direct);
-                Assert.AreEqual(LinuxFileFlags.Direct, file.Flags & LinuxFileFlags.Direct);
-            }
-            catch (LinuxException exception) when (exception.ErrorNumber == LinuxErrorNumber.InvalidArgument)
-            {
-                Assert.Inconclusive($"The temporary filesystem does not support O_DIRECT: {exception.Message}");
-            }
+            using var file = new LinuxFile(path, LinuxFileFlags.ReadWrite | LinuxFileFlags.Direct);
+            Assert.AreEqual(LinuxFileFlags.Direct, file.Flags & LinuxFileFlags.Direct);
         }
         finally
         {
@@ -265,18 +258,11 @@ public class LinuxFileTests
     }
 
     [TestMethod]
-    public void Linux_File_TmpFile_Creates_And_Writes_When_Supported()
+    public void Linux_File_TmpFile_Creates_And_Writes()
     {
-        try
-        {
-            using var file = new LinuxFile(Path.GetTempPath(), LinuxFileFlags.ReadWrite | LinuxFileFlags.TmpFile, LinuxFileMode.UserRead | LinuxFileMode.UserWrite);
-            Assert.AreEqual(LinuxFileFlags.Directory, file.Flags & LinuxFileFlags.Directory);
-            Assert.AreEqual(4, file.Write("test"u8));
-        }
-        catch (LinuxException exception) when (exception.ErrorNumber is LinuxErrorNumber.OperationNotSupported or LinuxErrorNumber.InvalidSystemCall or LinuxErrorNumber.PermissionDenied or LinuxErrorNumber.OperationNotPermitted or LinuxErrorNumber.ReadOnlyFileSystem or LinuxErrorNumber.IsADirectory or LinuxErrorNumber.NoSuchFileOrDirectory)
-        {
-            Assert.Inconclusive($"The temporary filesystem does not support O_TMPFILE: {exception.Message}");
-        }
+        using var file = new LinuxFile(Path.GetTempPath(), LinuxFileFlags.ReadWrite | LinuxFileFlags.TmpFile, LinuxFileMode.UserRead | LinuxFileMode.UserWrite);
+        Assert.AreEqual(LinuxFileFlags.Directory, file.Flags & LinuxFileFlags.Directory);
+        Assert.AreEqual(4, file.Write("test"u8));
     }
 
     [TestMethod]
