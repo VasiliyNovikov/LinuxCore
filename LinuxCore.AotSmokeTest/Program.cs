@@ -75,16 +75,15 @@ if (descriptorSender.SendFileDescriptors([1], [file.Descriptor]) != 1)
     throw new InvalidOperationException("Failed to send a file descriptor.");
 Span<byte> descriptorPayload = stackalloc byte[1];
 Span<FileDescriptor> receivedDescriptors = stackalloc FileDescriptor[1];
-var receivedDescriptorCount = 0;
 try
 {
-    if (descriptorReceiver.ReceiveFileDescriptors(descriptorPayload, receivedDescriptors, out receivedDescriptorCount, out _) != 1 || receivedDescriptorCount != 1)
+    if (descriptorReceiver.ReceiveFileDescriptors(descriptorPayload, receivedDescriptors, out var receivedDescriptorCount, out _) != 1 || receivedDescriptorCount != 1)
         throw new InvalidOperationException("Failed to receive a file descriptor.");
 }
 finally
 {
-    for (var i = 0; i < receivedDescriptorCount; i++)
-        receivedDescriptors[i].Close();
+    foreach (var descriptor in receivedDescriptors)
+        descriptor.Close();
 }
 
 var currentUser = LinuxUser.Current ?? throw new InvalidOperationException("Expected the current user to be resolvable.");
