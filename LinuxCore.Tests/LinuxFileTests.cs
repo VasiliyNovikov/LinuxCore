@@ -268,31 +268,23 @@ public class LinuxFileTests
     [TestMethod]
     public void Linux_File_Flag_Translation_Matches_Current_Platform_Headers()
     {
-        const LinuxFileFlags managedFlags = LinuxFileFlags.ReadWrite | LinuxFileFlags.Append | LinuxFileFlags.NonBlock | LinuxFileFlags.Direct | LinuxFileFlags.LargeFile | LinuxFileFlags.Directory | LinuxFileFlags.NoFollow | LinuxFileFlags.CloseOnExec | LinuxFileFlags.TmpFile;
-        var readWrite = CScript.EvaluateInt32("O_RDWR", "asm/fcntl.h");
-        var append = CScript.EvaluateInt32("O_APPEND", "asm/fcntl.h");
-        var nonBlock = CScript.EvaluateInt32("O_NONBLOCK", "asm/fcntl.h");
-        var direct = CScript.EvaluateInt32("O_DIRECT", "asm/fcntl.h");
-        var largeFile = CScript.EvaluateInt32("O_LARGEFILE", "asm/fcntl.h");
-        var directory = CScript.EvaluateInt32("O_DIRECTORY", "asm/fcntl.h");
-        var noFollow = CScript.EvaluateInt32("O_NOFOLLOW", "asm/fcntl.h");
-        var closeOnExec = CScript.EvaluateInt32("O_CLOEXEC", "asm/fcntl.h");
-        var tmpFile = CScript.EvaluateInt32("O_TMPFILE", "asm/fcntl.h");
-
-        AssertFileFlag(LinuxFileFlags.Direct, direct);
-        AssertFileFlag(LinuxFileFlags.LargeFile, largeFile);
-        AssertFileFlag(LinuxFileFlags.Directory, directory);
-        AssertFileFlag(LinuxFileFlags.NoFollow, noFollow);
-        AssertFileFlag(LinuxFileFlags.TmpFile, tmpFile);
-
-        var nativeFlags = readWrite | append | nonBlock | direct | largeFile | directory | noFollow | closeOnExec | tmpFile;
-        Assert.AreEqual(nativeFlags, NativeLinuxFileFlags.ToNative(managedFlags));
-        Assert.AreEqual(managedFlags, NativeLinuxFileFlags.FromNative(nativeFlags));
+        AssertFileFlag(LinuxFileFlags.ReadOnly, "O_RDONLY");
+        AssertFileFlag(LinuxFileFlags.WriteOnly, "O_WRONLY");
+        AssertFileFlag(LinuxFileFlags.ReadWrite, "O_RDWR");
+        AssertFileFlag(LinuxFileFlags.Append, "O_APPEND");
+        AssertFileFlag(LinuxFileFlags.NonBlock, "O_NONBLOCK");
+        AssertFileFlag(LinuxFileFlags.Direct, "O_DIRECT");
+        AssertFileFlag(LinuxFileFlags.LargeFile, "O_LARGEFILE");
+        AssertFileFlag(LinuxFileFlags.Directory, "O_DIRECTORY");
+        AssertFileFlag(LinuxFileFlags.NoFollow, "O_NOFOLLOW");
+        AssertFileFlag(LinuxFileFlags.CloseOnExec, "O_CLOEXEC");
+        AssertFileFlag(LinuxFileFlags.TmpFile, "O_TMPFILE");
 
         return;
 
-        static void AssertFileFlag(LinuxFileFlags managed, int native)
+        static void AssertFileFlag(LinuxFileFlags managed, string nativeName)
         {
+            var native = CScript.EvaluateInt32(nativeName, "asm/fcntl.h");
             Assert.AreEqual(native, NativeLinuxFileFlags.ToNative(managed));
             Assert.AreEqual(managed, NativeLinuxFileFlags.FromNative(native));
         }
