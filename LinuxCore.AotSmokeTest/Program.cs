@@ -75,16 +75,10 @@ if (descriptorSender.SendFileDescriptors([1], [file.Descriptor]) != 1)
     throw new InvalidOperationException("Failed to send a file descriptor.");
 Span<byte> descriptorPayload = stackalloc byte[1];
 Span<FileDescriptor> receivedDescriptors = stackalloc FileDescriptor[1];
-try
-{
-    if (descriptorReceiver.ReceiveFileDescriptors(descriptorPayload, receivedDescriptors, out var receivedDescriptorCount, out _) != 1 || receivedDescriptorCount != 1)
-        throw new InvalidOperationException("Failed to receive a file descriptor.");
-}
-finally
-{
-    foreach (var descriptor in receivedDescriptors)
-        descriptor.Close();
-}
+if (descriptorReceiver.ReceiveFileDescriptors(descriptorPayload, receivedDescriptors, out var receivedDescriptorCount, out _) != 1 || receivedDescriptorCount != 1)
+    throw new InvalidOperationException("Failed to receive a file descriptor.");
+foreach (var descriptor in receivedDescriptors)
+    descriptor.Close();
 
 var currentUser = LinuxUser.Current ?? throw new InvalidOperationException("Expected the current user to be resolvable.");
 Console.WriteLine($"LinuxCore AOT smoke passed for {currentUser.Name} with page size {pageSize}.");
