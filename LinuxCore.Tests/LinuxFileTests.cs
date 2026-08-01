@@ -229,7 +229,7 @@ public class LinuxFileTests
         try
         {
             using var directoryFile = new LinuxFile(directory.FullName, LinuxFileFlags.ReadOnly | LinuxFileFlags.Directory);
-            Assert.AreNotEqual(LinuxFileFlags.ReadOnly, directoryFile.Flags & LinuxFileFlags.Directory);
+            Assert.AreEqual(LinuxFileFlags.Directory, directoryFile.Flags & LinuxFileFlags.Directory);
 
             var regularFile = Path.Combine(directory.FullName, "file");
             File.WriteAllText(regularFile, "file");
@@ -251,7 +251,7 @@ public class LinuxFileTests
             try
             {
                 using var file = new LinuxFile(path, LinuxFileFlags.ReadWrite | LinuxFileFlags.Direct);
-                Assert.AreNotEqual(LinuxFileFlags.ReadOnly, file.Flags & LinuxFileFlags.Direct);
+                Assert.AreEqual(LinuxFileFlags.Direct, file.Flags & LinuxFileFlags.Direct);
             }
             catch (LinuxException exception) when (exception.ErrorNumber == LinuxErrorNumber.InvalidArgument)
             {
@@ -270,7 +270,7 @@ public class LinuxFileTests
         try
         {
             using var file = new LinuxFile(Path.GetTempPath(), LinuxFileFlags.ReadWrite | LinuxFileFlags.TmpFile, LinuxFileMode.UserRead | LinuxFileMode.UserWrite);
-            Assert.AreNotEqual(LinuxFileFlags.ReadOnly, file.Flags & LinuxFileFlags.Directory);
+            Assert.AreEqual(LinuxFileFlags.Directory, file.Flags & LinuxFileFlags.Directory);
             Assert.AreEqual(4, file.Write("test"u8));
         }
         catch (LinuxException exception) when (exception.ErrorNumber is LinuxErrorNumber.OperationNotSupported or LinuxErrorNumber.InvalidSystemCall or LinuxErrorNumber.PermissionDenied or LinuxErrorNumber.OperationNotPermitted or LinuxErrorNumber.ReadOnlyFileSystem or LinuxErrorNumber.IsADirectory or LinuxErrorNumber.NoSuchFileOrDirectory)
