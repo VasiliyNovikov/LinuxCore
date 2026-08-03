@@ -17,27 +17,21 @@ jobs:
         include:
           - name: ubuntu-26.04-x64
             os: ubuntu-26.04
-            aot-runtime: linux-x64
             architecture: x64
           - name: ubuntu-26.04-arm64
             os: ubuntu-26.04-arm
-            aot-runtime: linux-arm64
             architecture: arm64
           - name: ubuntu-24.04-x64
             os: ubuntu-24.04
-            aot-runtime: linux-x64
             architecture: x64
           - name: ubuntu-24.04-arm64
             os: ubuntu-24.04-arm
-            aot-runtime: linux-arm64
             architecture: arm64
           - name: ubuntu-22.04-x64
             os: ubuntu-22.04
-            aot-runtime: linux-x64
-            architecture: a64
+            architecture: x64
           - name: ubuntu-22.04-arm64
             os: ubuntu-22.04-arm
-            aot-runtime: linux-arm64
             architecture: arm64
     runs-on: ${{ matrix.os }}
     steps:
@@ -70,7 +64,7 @@ jobs:
 
       - name: NativeAOT Smoke
         run: |
-          dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot-runtime }} -p:PublishAot=true -o "artifacts/aot-smoke/${{ matrix.name }}"
+          dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r "linux-${{ matrix.architecture }}" -p:PublishAot=true -o "artifacts/aot-smoke/${{ matrix.name }}"
           "./artifacts/aot-smoke/${{ matrix.name }}/LinuxCore.AotSmokeTest"
 
       - name: Upload Test Results
