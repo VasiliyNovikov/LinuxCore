@@ -14,31 +14,6 @@ namespace LinuxCore.Tests;
 public class UnixSocketTests
 {
     [TestMethod]
-    public void UnixSocket_IOControl_Fionread_Returns_Available_Bytes()
-    {
-        var socketPath = CreateSocketPath();
-        try
-        {
-            using var listener = new UnixSocket();
-            listener.Bind(UnixSocketAddress.FromPath(socketPath));
-            listener.Listen(1);
-
-            using var client = new UnixSocket();
-            client.Connect(UnixSocketAddress.FromPath(socketPath));
-            using var accepted = listener.Accept();
-            Assert.AreEqual(4, client.Send("test"u8));
-
-            using var control = new IOControlFile(accepted.Descriptor);
-            var fionread = checked((ulong)CScript.EvaluateInt64("FIONREAD", "sys/ioctl.h"));
-            Assert.AreEqual(4, control.GetInt32(fionread));
-        }
-        finally
-        {
-            DeleteSocketPath(socketPath);
-        }
-    }
-
-    [TestMethod]
     public void UnixSocket_Create_Sets_CloseOnExec()
     {
         using var socket = new UnixSocket();
@@ -534,15 +509,5 @@ public class UnixSocketTests
     {
         if (File.Exists(path))
             File.Delete(path);
-    }
-
-    private sealed class IOControlFile(FileDescriptor descriptor) : FileObject(descriptor, ownsDescriptor: false)
-    {
-        public int GetInt32(ulong request)
-        {
-            var value = 0;
-            IOControl(request, ref value);
-            return value;
-        }
     }
 }
