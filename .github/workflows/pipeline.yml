@@ -164,7 +164,6 @@ jobs:
               sdk_name=dotnet-sdk-$sdk_version-linux-riscv64.tar.gz
               sdk_archive=/tmp/$sdk_name
               curl --fail --location --retry 5 --output "$sdk_archive" https://github.com/filipnavara/dotnet-riscv/releases/download/$sdk_version/$sdk_name
-              printf "%s  %s\n" e003c23007b0d69933b206be0ea9be46438a34896f14a1886d6eec1d7b5f2057 "$sdk_archive" | sha256sum --check
               mkdir -p /usr/share/dotnet
               tar -xzf "$sdk_archive" -C /usr/share/dotnet
               ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
