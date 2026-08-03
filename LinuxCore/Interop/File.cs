@@ -182,7 +182,7 @@ internal static unsafe partial class File
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LinuxResult<long> lseek(FileDescriptor fd, long offset, LinuxSeekOrigin whence)
     {
-        return new(NativeAbi.Is64Bit
+        return new(NativeAbi.Is64Bit || NativeAbi.LibCImplementation == LibCImplementation.Musl
             ? lseek_raw(fd.Value, offset, whence)
             : lseek64_raw(fd.Value, offset, whence));
     }

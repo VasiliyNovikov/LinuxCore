@@ -40,7 +40,7 @@ internal static partial class Resource
 
     public static LinuxResult getrlimit(int resource, out rlimit rlim)
     {
-        return new(NativeAbi.Is64Bit
+        return new(NativeAbi.Is64Bit || NativeAbi.LibCImplementation == LibCImplementation.Musl
             ? getrlimit_raw(resource, out rlim)
             : getrlimit64_raw(resource, out rlim));
     }
@@ -55,7 +55,7 @@ internal static partial class Resource
 
     public static LinuxResult setrlimit(int resource, in rlimit rlim)
     {
-        return new(NativeAbi.Is64Bit
+        return new(NativeAbi.Is64Bit || NativeAbi.LibCImplementation == LibCImplementation.Musl
             ? setrlimit_raw(resource, in rlim)
             : setrlimit64_raw(resource, in rlim));
     }

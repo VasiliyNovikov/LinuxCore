@@ -41,7 +41,7 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: latest
-          dotnet-channel: '10.0'
+          dotnet-channel: 10.0
           cache: true
           cache-dependency-path: |
             Directory.Packages.props
@@ -56,7 +56,6 @@ jobs:
         env:
           LINUXCORE_EXPECTED_QEMU_LINUX_USER: false
           LINUXCORE_EXPECTED_ARCHITECTURE: ${{ matrix.architecture }}
-          LINUXCORE_EXPECTED_POINTER_SIZE: 8
           LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION: glibc
         run: |
           dotnet build
@@ -85,7 +84,6 @@ jobs:
             platform: linux/amd64
             image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
             architecture: x64
-            pointer-size: 8
             libc-implementation: musl
             setup: apk add --no-cache build-base clang linux-headers zlib-dev
             aot-runtime: linux-musl-x64
@@ -94,7 +92,6 @@ jobs:
             platform: linux/arm64
             image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
             architecture: arm64
-            pointer-size: 8
             libc-implementation: musl
             setup: apk add --no-cache build-base clang linux-headers zlib-dev
             aot-runtime: linux-musl-arm64
@@ -103,7 +100,6 @@ jobs:
             platform: linux/arm/v7
             image: mcr.microsoft.com/dotnet/sdk:10.0-resolute
             architecture: arm
-            pointer-size: 4
             libc-implementation: glibc
             setup: apt-get update && apt-get install -y --no-install-recommends clang gcc libc6-dev linux-libc-dev zlib1g-dev
             aot-runtime: linux-arm
@@ -112,22 +108,18 @@ jobs:
             platform: linux/arm/v7
             image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
             architecture: arm
-            pointer-size: 4
             libc-implementation: musl
             setup: apk add --no-cache build-base clang linux-headers zlib-dev
             aot-runtime: linux-musl-arm
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
 
       - name: Build & Test
         run: |
           docker run --rm --platform "${{ matrix.platform }}" \
             -v "${{ github.workspace }}:/src" -w /src \
             -e LINUXCORE_EXPECTED_ARCHITECTURE=${{ matrix.architecture }} \
-            -e LINUXCORE_EXPECTED_POINTER_SIZE=${{ matrix.pointer-size }} \
             -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=false \
             -e LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION=${{ matrix.libc-implementation }} \
             "${{ matrix.image }}" /bin/sh -lc '
@@ -180,14 +172,12 @@ jobs:
             memlock: 65536
     steps:
       - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: latest
-          dotnet-channel: '10.0'
+          dotnet-channel: 10.0
           cache: true
           cache-dependency-path: |
             Directory.Packages.props
@@ -195,9 +185,6 @@ jobs:
 
       - name: Build and discover portable tests on host
         id: portable_tests
-        env:
-          DOTNET_CLI_UI_LANGUAGE: en
-          LC_ALL: C.UTF-8
         run: |
           set -euo pipefail
           dotnet build LinuxCore.Tests/LinuxCore.Tests.csproj -p:BuildPortableMtpRunner=true
@@ -214,7 +201,6 @@ jobs:
         uses: docker/setup-qemu-action@v4
         with:
           platforms: ${{ matrix.architecture }}
-          cache-image: false
 
       - name: Build & Test
         run: |
@@ -222,7 +208,6 @@ jobs:
             -v "${{ github.workspace }}:/src" \
             -w /src -e DOTNET_CLI_TELEMETRY_OPTOUT=1 \
             -e LINUXCORE_EXPECTED_ARCHITECTURE=${{ matrix.architecture }} \
-            -e LINUXCORE_EXPECTED_POINTER_SIZE=8 \
             -e LINUXCORE_EXPECTED_TESTS=${{ steps.portable_tests.outputs.count }} \
             -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=true \
             -e LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION=glibc \
@@ -256,7 +241,7 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: latest
-          dotnet-channel: '10.0'
+          dotnet-channel: 10.0
           cache: true
           cache-dependency-path: |
             Directory.Packages.props

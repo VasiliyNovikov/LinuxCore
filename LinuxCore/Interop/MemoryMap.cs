@@ -49,7 +49,7 @@ internal static unsafe partial class MemoryMap
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LinuxResult<nint> mmap(void* addr, nuint length, LinuxMemoryProtection prot, int flags, FileDescriptor fd, long offset)
     {
-        return new(NativeAbi.Is64Bit
+        return new(NativeAbi.Is64Bit || NativeAbi.LibCImplementation == LibCImplementation.Musl
             ? mmap_raw(addr, length, prot, flags, fd.Value, offset)
             : mmap64_raw(addr, length, prot, flags, fd.Value, offset));
     }
