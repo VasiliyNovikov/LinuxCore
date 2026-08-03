@@ -203,7 +203,7 @@ jobs:
 
       - name: Build & Test
         run: |
-          docker run --rm --platform "linux/${{ matrix.architecture }}" \
+          docker run --rm --platform "linux/${{ matrix.architecture }}" --user 0 \
             -v "${{ github.workspace }}:/src" -w /src \
             -e DOTNET_CLI_TELEMETRY_OPTOUT=1 \
             -e LINUXCORE_EXPECTED_ARCHITECTURE=${{ matrix.architecture }} \
