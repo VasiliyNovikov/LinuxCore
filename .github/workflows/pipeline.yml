@@ -18,21 +18,27 @@ jobs:
           - name: ubuntu-26.04-x64
             os: ubuntu-26.04
             aot_runtime: linux-x64
+            architecture: X64
           - name: ubuntu-26.04-arm64
             os: ubuntu-26.04-arm
             aot_runtime: linux-arm64
+            architecture: Arm64
           - name: ubuntu-24.04-x64
             os: ubuntu-24.04
             aot_runtime: linux-x64
+            architecture: X64
           - name: ubuntu-24.04-arm64
             os: ubuntu-24.04-arm
             aot_runtime: linux-arm64
+            architecture: Arm64
           - name: ubuntu-22.04-x64
             os: ubuntu-22.04
             aot_runtime: linux-x64
+            architecture: X64
           - name: ubuntu-22.04-arm64
             os: ubuntu-22.04-arm
             aot_runtime: linux-arm64
+            architecture: Arm64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -55,6 +61,8 @@ jobs:
       - name: Build & Test
         env:
           LINUXCORE_EXPECTED_QEMU_LINUX_USER: false
+          LINUXCORE_EXPECTED_ARCHITECTURE: ${{ matrix.architecture }}
+          LINUXCORE_EXPECTED_POINTER_SIZE: 8
         run: |
           dotnet build
           dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}"
