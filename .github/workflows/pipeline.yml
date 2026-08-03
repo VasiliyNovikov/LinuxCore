@@ -139,7 +139,7 @@ jobs:
             use_qemu: true
             platform: linux/ppc64le
             qemu_platform: ppc64le
-            image: registry.access.redhat.com/ubi9/dotnet-100:latest
+            image: registry.access.redhat.com/dotnet/sdk:10.0
             shell: /bin/bash
             architecture: Ppc64le
             pointer_size: 8
