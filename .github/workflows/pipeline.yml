@@ -35,12 +35,13 @@ jobs:
             aot_runtime: linux-arm64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: latest
+          dotnet-channel: '10.0'
           cache: true
           cache-dependency-path: |
             Directory.Packages.props
@@ -64,7 +65,7 @@ jobs:
           "./artifacts/aot-smoke/${{ matrix.name }}/LinuxCore.AotSmokeTest"
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ matrix.name }}
           path: TestResults-${{ matrix.name }}
@@ -83,7 +84,7 @@ jobs:
             aot_runtime: linux-musl-arm64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build & Test
         run: >
@@ -95,7 +96,7 @@ jobs:
           /tmp/aot-smoke/LinuxCore.AotSmokeTest"
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ matrix.name }}
           path: TestResults-${{ matrix.name }}
@@ -113,7 +114,7 @@ jobs:
             os: ubuntu-24.04-arm
             use_qemu: false
             platform: linux/arm/v7
-            image: mcr.microsoft.com/dotnet/sdk:10.0.302-noble@sha256:ed034a8bf0b24ded0cbbac07e17825d8e9ebfe21e308191d0f7421eaf5ad4664
+            image: mcr.microsoft.com/dotnet/sdk:10.0-resolute
             shell: /bin/bash
             architecture: Arm
             pointer_size: 4
@@ -125,7 +126,7 @@ jobs:
             os: ubuntu-24.04-arm
             use_qemu: false
             platform: linux/arm/v7
-            image: mcr.microsoft.com/dotnet/sdk:10.0.302-alpine3.23@sha256:d8ee39817ca03a3757288e83c37ed73cc969a286c603b827c7cbe33add1c2d1c
+            image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
             shell: /bin/sh
             architecture: Arm
             pointer_size: 4
@@ -138,7 +139,7 @@ jobs:
             use_qemu: true
             platform: linux/ppc64le
             qemu_platform: ppc64le
-            image: registry.access.redhat.com/ubi9/dotnet-100:9.8-1784718241@sha256:09e77bde23ffd851410ac3d3c35e8937609a1d401aac2844912ed63818232d7d
+            image: registry.access.redhat.com/ubi9/dotnet-100:latest
             shell: /bin/bash
             architecture: Ppc64le
             pointer_size: 8
@@ -150,15 +151,13 @@ jobs:
             use_qemu: true
             platform: linux/riscv64
             qemu_platform: riscv64
-            image: riscv64/debian:trixie-20260713-slim@sha256:28fe9dd593680a3082556269e07313f9f9dd536e0641108d0635741de55db2ed
+            image: debian:stable-slim
             shell: /bin/bash
             architecture: RiscV64
             pointer_size: 8
             libc_pattern: GLIBC|GNU libc
             setup: |
-              rm -f /etc/apt/sources.list.d/debian.sources
-              printf "%s\n" "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20260713T000000Z trixie main" > /etc/apt/sources.list
-              apt-get -o Acquire::Check-Valid-Until=false update
+              apt-get update
               apt-get install -y --no-install-recommends ca-certificates curl gcc coreutils libc-bin libc6-dev libgcc-s1 libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libunwind8 linux-libc-dev tzdata zlib1g
               sdk_archive=/tmp/dotnet-sdk-10.0.109-linux-riscv64.tar.gz
               curl --fail --location --retry 5 --output "$sdk_archive" https://github.com/filipnavara/dotnet-riscv/releases/download/10.0.109/dotnet-sdk-10.0.109-linux-riscv64.tar.gz
@@ -168,14 +167,15 @@ jobs:
               ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
             memlock: 65536
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: latest
+          dotnet-channel: '10.0'
           cache: true
           cache-dependency-path: |
             Directory.Packages.props
@@ -201,9 +201,8 @@ jobs:
 
       - name: Set up QEMU
         if: ${{ matrix.use_qemu }}
-        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8
+        uses: docker/setup-qemu-action@v4
         with:
-          image: docker.io/tonistiigi/binfmt:qemu-v10.0.4@sha256:8f58e6214f4cc9dc83ce8f5acad1ece508eb6b20e696a8c1e9f274481982c541
           platforms: ${{ matrix.qemu_platform }}
           cache-image: false
 
@@ -234,7 +233,7 @@ jobs:
           '
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ matrix.name }}
           path: TestResults-${{ matrix.name }}
@@ -248,12 +247,13 @@ jobs:
       - validate-emulated-architectures
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: latest
+          dotnet-channel: '10.0'
           cache: true
           cache-dependency-path: |
             Directory.Packages.props
