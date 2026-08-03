@@ -71,29 +71,78 @@ jobs:
           path: TestResults-${{ matrix.name }}
         if: ${{ always() }}
 
-  validate-alpine:
+  validate-containerized-architectures:
+    name: validate-containerized-architectures (${{ matrix.name }})
     strategy:
       fail-fast: false
       matrix:
         include:
           - name: alpine-x64
             os: ubuntu-latest
+            platform: linux/amd64
+            image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
+            shell: /bin/sh
+            architecture: X64
+            pointer_size: 8
+            libc_pattern: musl
+            setup: apk add --no-cache build-base clang linux-headers zlib-dev
             aot_runtime: linux-musl-x64
           - name: alpine-arm64
             os: ubuntu-24.04-arm
+            platform: linux/arm64
+            image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
+            shell: /bin/sh
+            architecture: Arm64
+            pointer_size: 8
+            libc_pattern: musl
+            setup: apk add --no-cache build-base clang linux-headers zlib-dev
             aot_runtime: linux-musl-arm64
+          - name: arm32-glibc
+            os: ubuntu-24.04-arm
+            platform: linux/arm/v7
+            image: mcr.microsoft.com/dotnet/sdk:10.0-resolute
+            shell: /bin/bash
+            architecture: Arm
+            pointer_size: 4
+            libc_pattern: GLIBC|GNU libc
+            setup: apt-get update && apt-get install -y --no-install-recommends clang gcc libc6-dev linux-libc-dev zlib1g-dev
+            aot_runtime: linux-arm
+          - name: arm32-musl
+            os: ubuntu-24.04-arm
+            platform: linux/arm/v7
+            image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
+            shell: /bin/sh
+            architecture: Arm
+            pointer_size: 4
+            libc_pattern: musl
+            setup: apk add --no-cache build-base clang linux-headers zlib-dev
+            aot_runtime: linux-musl-arm
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Build & Test
-        run: >
-          docker run --rm --privileged -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=false -v "${{ github.workspace }}:/src" -w /src mcr.microsoft.com/dotnet/sdk:10.0-alpine
-          sh -c "apk add --no-cache build-base clang linux-headers zlib-dev &&
-          dotnet build &&
-          dotnet test --no-build --logger trx --results-directory TestResults-${{ matrix.name }} &&
-          dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true -o /tmp/aot-smoke &&
-          /tmp/aot-smoke/LinuxCore.AotSmokeTest"
+        run: |
+          docker run --rm --platform "${{ matrix.platform }}" \
+            -v "${{ github.workspace }}:/src" -w /src \
+            -e LINUXCORE_EXPECTED_ARCHITECTURE=${{ matrix.architecture }} \
+            -e LINUXCORE_EXPECTED_POINTER_SIZE=${{ matrix.pointer_size }} \
+            -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=false \
+            "${{ matrix.image }}" "${{ matrix.shell }}" -lc '
+            set -eu
+            ${{ matrix.setup }}
+            uname -a
+            libc_output=$(ldd --version 2>&1 || true)
+            printf "%s\n" "$libc_output"
+            printf "%s\n" "$libc_output" | grep -Eqi "${{ matrix.libc_pattern }}"
+
+            dotnet build
+            dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}"
+            dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true -o /tmp/aot-smoke
+            /tmp/aot-smoke/LinuxCore.AotSmokeTest
+          '
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v7
@@ -110,33 +159,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: arm32-glibc
-            os: ubuntu-24.04-arm
-            use_qemu: false
-            platform: linux/arm/v7
-            image: mcr.microsoft.com/dotnet/sdk:10.0-resolute
-            shell: /bin/bash
-            architecture: Arm
-            pointer_size: 4
-            libc_pattern: GLIBC|GNU libc
-            setup: apt-get update && apt-get install -y --no-install-recommends clang gcc libc6-dev linux-libc-dev zlib1g-dev
-            memlock: 65536
-            aot_runtime: linux-arm
-          - name: arm32-musl
-            os: ubuntu-24.04-arm
-            use_qemu: false
-            platform: linux/arm/v7
-            image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
-            shell: /bin/sh
-            architecture: Arm
-            pointer_size: 4
-            libc_pattern: musl
-            setup: apk add --no-cache build-base clang linux-headers zlib-dev
-            memlock: 65536
-            aot_runtime: linux-musl-arm
           - name: ppc64le-glibc
             os: ubuntu-24.04
-            use_qemu: true
             platform: linux/ppc64le
             qemu_platform: ppc64le
             image: registry.access.redhat.com/dotnet/sdk:10.0
@@ -148,7 +172,6 @@ jobs:
             memlock: 0
           - name: s390x-glibc
             os: ubuntu-24.04
-            use_qemu: true
             platform: linux/s390x
             qemu_platform: s390x
             image: registry.access.redhat.com/dotnet/sdk:10.0
@@ -160,7 +183,6 @@ jobs:
             memlock: 0
           - name: riscv64-glibc
             os: ubuntu-24.04
-            use_qemu: true
             platform: linux/riscv64
             qemu_platform: riscv64
             image: debian:stable-slim
@@ -212,7 +234,6 @@ jobs:
           fi
 
       - name: Set up QEMU
-        if: ${{ matrix.use_qemu }}
         uses: docker/setup-qemu-action@v4
         with:
           platforms: ${{ matrix.qemu_platform }}
@@ -226,7 +247,7 @@ jobs:
             -e LINUXCORE_EXPECTED_ARCHITECTURE=${{ matrix.architecture }} \
             -e LINUXCORE_EXPECTED_POINTER_SIZE=${{ matrix.pointer_size }} \
             -e LINUXCORE_EXPECTED_TESTS=${{ steps.portable_tests.outputs.count }} \
-            -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=${{ matrix.use_qemu }} \
+            -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=true \
             "${{ matrix.image }}" "${{ matrix.shell }}" -lc '
             set -eu
             ${{ matrix.setup }}
@@ -237,10 +258,6 @@ jobs:
 
             suite_status=0
             dotnet /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --report-trx --results-directory "/src/TestResults-${{ matrix.name }}" --minimum-expected-tests "$LINUXCORE_EXPECTED_TESTS" --no-banner || suite_status=$?
-            if [ "${{ matrix.architecture }}" = Arm ]; then
-              dotnet publish /src/LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true -o /tmp/aot-smoke
-              /tmp/aot-smoke/LinuxCore.AotSmokeTest
-            fi
             test "$suite_status" -eq 0
           '
 
@@ -255,7 +272,7 @@ jobs:
     if: ${{ success() && (vars.PUBLISH == 'true' || vars.PUBLISH == 'auto' && github.ref_name == 'master') }}
     needs:
       - validate
-      - validate-alpine
+      - validate-containerized-architectures
       - validate-emulated-architectures
     runs-on: ubuntu-latest
     steps:

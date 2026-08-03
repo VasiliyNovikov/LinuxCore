@@ -55,7 +55,7 @@ LinuxSecurityObject (Id + Name)
 - Generic `ReceiveMessage` methods return only the requested control-message type and do not close resources from nonmatching messages. On Unix sockets, use `ReceiveFileDescriptors` when an `SCM_RIGHTS` message may be present.
 - On QEMU linux-user, `ReceiveFileDescriptors` requires `SO_PASSPIDFD` and `SO_PASSSEC` to be disabled. Either option can cause host-side descriptors to be omitted during ancillary conversion and remain open. LinuxCore does not enable either option.
 - `LinuxFileFlags` and `LinuxMemoryMapFlags` values are stable managed tokens. LinuxCore translates architecture-dependent file flags on Arm and PowerPC, and mapping flags on PowerPC, before calling libc.
-- CI runs the full test suite on every target. Arm32 glibc and musl run as AArch32 processes on GitHub-hosted Arm64 runners without CI-installed QEMU; ppc64le and RISC-V64 run under QEMU. All targets gate publishing. The RISC-V64 matrix entry executes host-built portable test output with a checksum-pinned community runtime because Microsoft does not publish a supported .NET 10 RISC-V64 runtime or support QEMU execution.
+- CI runs the full test suite on every target. Alpine x64 and arm64 plus Arm32 glibc and musl build and test inside native SDK containers; ppc64le, s390x, and RISC-V64 run host-built portable test output under QEMU. All targets gate publishing. The RISC-V64 matrix entry uses a checksum-pinned community runtime because Microsoft does not publish a supported .NET 10 RISC-V64 runtime or support QEMU execution.
 - NativeAOT compatibility is exercised in CI on both glibc (Ubuntu) and musl (Alpine) runners via a small smoke app.
 
 ## License
