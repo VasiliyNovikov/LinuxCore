@@ -158,7 +158,7 @@ jobs:
             libc_pattern: GLIBC|GNU libc
             setup: microdnf install -y gcc glibc-devel kernel-headers
             memlock: 0
-          - name: riscv64
+          - name: riscv64-glibc
             os: ubuntu-24.04
             use_qemu: true
             platform: linux/riscv64
