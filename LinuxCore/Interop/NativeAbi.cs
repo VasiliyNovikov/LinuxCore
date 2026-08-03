@@ -9,11 +9,8 @@ internal static class NativeAbi
     private const string GlibcMarker = "gnu_get_libc_version";
     private static readonly string[] MuslMarkers = ["__freadahead", "__freadptr", "__freadptrinc", "__fseterr"];
 
-    public static readonly bool Is32Bit = IntPtr.Size == 4;
     public static readonly bool Is64Bit = IntPtr.Size == 8;
     public static readonly LibCImplementation LibCImplementation = GetLibCImplementation();
-    public static readonly bool IsGlibc = LibCImplementation == LibCImplementation.Glibc;
-    public static readonly bool IsMusl = LibCImplementation == LibCImplementation.Musl;
     public static readonly bool IsLikelyQemuLinuxUser = GetIsLikelyQemuLinuxUser();
 
     private static LibCImplementation GetLibCImplementation()

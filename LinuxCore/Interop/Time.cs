@@ -62,7 +62,7 @@ internal static unsafe partial class Time
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LinuxResult clock_gettime(int clockid, timespec* tp)
     {
-        if (NativeAbi.Is64Bit || NativeAbi.IsMusl)
+        if (NativeAbi.Is64Bit)
             return new(clock_gettime_raw(clockid, tp));
 
         Unsafe.SkipInit(out arm_timespec64 nativeTime);
@@ -85,7 +85,7 @@ internal static unsafe partial class Time
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LinuxErrorNumber clock_nanosleep(int clockid, int flags, timespec* request, timespec* remain)
     {
-        if (NativeAbi.Is64Bit || NativeAbi.IsMusl)
+        if (NativeAbi.Is64Bit)
             return (LinuxErrorNumber)clock_nanosleep_raw(clockid, flags, request, remain);
 
         var nativeRequest = new arm_timespec64(request->tv_sec, request->tv_nsec);
