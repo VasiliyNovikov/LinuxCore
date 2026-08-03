@@ -161,10 +161,13 @@ jobs:
             image: debian:stable-slim
             architecture: riscv64
             setup: |
+              sdk_version=10.0.109
+
               apt-get update
               apt-get install -y --no-install-recommends ca-certificates curl gcc coreutils libc-bin libc6-dev libgcc-s1 libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libunwind8 linux-libc-dev tzdata zlib1g
-              sdk_archive=/tmp/dotnet-sdk-10.0.109-linux-riscv64.tar.gz
-              curl --fail --location --retry 5 --output "$sdk_archive" https://github.com/filipnavara/dotnet-riscv/releases/download/10.0.109/dotnet-sdk-10.0.109-linux-riscv64.tar.gz
+              sdk_name=dotnet-sdk-$sdk_version-linux-riscv64.tar.gz
+              sdk_archive=/tmp/$sdk_name
+              curl --fail --location --retry 5 --output "$sdk_archive" https://github.com/filipnavara/dotnet-riscv/releases/download/$sdk_version/$sdk_name
               printf "%s  %s\n" e003c23007b0d69933b206be0ea9be46438a34896f14a1886d6eec1d7b5f2057 "$sdk_archive" | sha256sum --check
               mkdir -p /usr/share/dotnet
               tar -xzf "$sdk_archive" -C /usr/share/dotnet
@@ -188,8 +191,7 @@ jobs:
         run: |
           set -euo pipefail
           dotnet build LinuxCore.Tests/LinuxCore.Tests.csproj -p:BuildPortableMtpRunner=true
-          test_dll="LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll"
-          discovery_output=$(dotnet "$test_dll" --list-tests --no-banner --no-ansi --no-progress)
+          discovery_output=$(dotnet LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --list-tests --no-banner --no-ansi --progress off)
           printf '%s\n' "$discovery_output"
           if [[ "$discovery_output" =~ Test\ discovery\ summary:\ found\ ([1-9][0-9]*)\ test\(s\) ]]; then
             printf 'count=%s\n' "${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
