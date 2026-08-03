@@ -182,14 +182,21 @@ public class LinuxMemoryMapTests
     }
 
     [TestMethod]
-    public void LinuxMemoryMap_PowerPc_Locked_Respects_Memlock_Limit()
+    public void LinuxMemoryMap_Locked_Respects_Memlock_Limit()
     {
-        if (RuntimeInformation.ProcessArchitecture != Architecture.Ppc64le)
-            return;
-
         using var unlocked = new LinuxMemoryMap(4096);
-        var exception = Assert.ThrowsExactly<LinuxException>(() => new LinuxMemoryMap(4096, LinuxMemoryMapFlags.Private | LinuxMemoryMapFlags.Locked));
-        Assert.IsTrue(exception.ErrorNumber is LinuxErrorNumber.TryAgain or LinuxErrorNumber.OperationNotPermitted or LinuxErrorNumber.OutOfMemory, $"Unexpected MAP_LOCKED error: {exception.ErrorNumber}");
+        using var locked = new LinuxMemoryMap(4096, LinuxMemoryMapFlags.Private | LinuxMemoryMapFlags.Locked);
+        var (originalSoft, originalHard) = LinuxResourceLimit.Get(LinuxResourceLimit.Resource.MemoryLock);
+        try
+        {
+            LinuxResourceLimit.Set(LinuxResourceLimit.Resource.MemoryLock, 0, originalHard);
+            var exception = Assert.ThrowsExactly<LinuxException>(() => new LinuxMemoryMap(4096, LinuxMemoryMapFlags.Private | LinuxMemoryMapFlags.Locked));
+            Assert.IsTrue(exception.ErrorNumber is LinuxErrorNumber.TryAgain or LinuxErrorNumber.OperationNotPermitted or LinuxErrorNumber.OutOfMemory, $"Unexpected MAP_LOCKED error: {exception.ErrorNumber}");
+        }
+        finally
+        {
+            LinuxResourceLimit.Set(LinuxResourceLimit.Resource.MemoryLock, originalSoft, originalHard);
+        }
     }
 
     [TestMethod]
