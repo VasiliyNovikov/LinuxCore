@@ -6,17 +6,29 @@ namespace LinuxCore.Interop;
 
 internal static class NativeAbi
 {
+    private const string GlibcMarker = "gnu_get_libc_version";
+    private static readonly string[] MuslMarkers = ["__freadahead", "__freadptr", "__freadptrinc", "__fseterr"];
+
     public static readonly bool Is32Bit = IntPtr.Size == 4;
     public static readonly bool Is64Bit = IntPtr.Size == 8;
-    public static readonly bool IsGlibc = GetIsGlibc();
+    public static readonly LibCImplementation Implementation = GetLibCImplementation();
+    public static readonly bool IsGlibc = Implementation == LibCImplementation.Glibc;
+    public static readonly bool IsMusl = Implementation == LibCImplementation.Musl;
     public static readonly bool IsLikelyQemuLinuxUser = GetIsLikelyQemuLinuxUser();
 
-    private static bool GetIsGlibc()
+    private static LibCImplementation GetLibCImplementation()
     {
         var handle = NativeLibrary.Load(LinuxLibraries.LibC);
         try
         {
-            return NativeLibrary.TryGetExport(handle, "gnu_get_libc_version", out _);
+            if (NativeLibrary.TryGetExport(handle, GlibcMarker, out _))
+                return LibCImplementation.Glibc;
+
+            foreach (var marker in MuslMarkers)
+                if (!NativeLibrary.TryGetExport(handle, marker, out _))
+                    return LibCImplementation.Unknown;
+
+            return LibCImplementation.Musl;
         }
         finally
         {
