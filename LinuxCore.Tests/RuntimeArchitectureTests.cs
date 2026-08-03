@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Runtime.InteropServices;
 
 using LinuxCore.Interop;
@@ -15,7 +14,6 @@ public class RuntimeArchitectureTests
     public void Runtime_Architecture_Matches_PointerSize()
     {
         var expectedPointerSize = RuntimeInformation.ProcessArchitecture is Architecture.X86 or Architecture.Arm or Architecture.Armv6 ? 4 : 8;
-
         Assert.AreEqual(expectedPointerSize, IntPtr.Size);
     }
 
