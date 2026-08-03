@@ -12,7 +12,7 @@ namespace LinuxCore;
 
 public sealed unsafe class UnixSocket : LinuxSocketBase
 {
-    private const int ScmRightsControlBufferLength = 4 * 1024;
+    private const int ScmRightsControlBufferMaxLength = 4 * 1024;
 
     public UnixSocketAddress LocalAddress
     {
@@ -109,7 +109,7 @@ public sealed unsafe class UnixSocket : LinuxSocketBase
         if (!ShouldUseScmRightsWorkaround(controlMessageLevel, controlMessageType))
             return base.ReceiveMessageCore(buffer, controlMessageLevel, controlMessageType, controlBuffer, out receivedControlCount, out receivedMessageFlags, flags);
 
-        Span<byte> allDescriptors = stackalloc byte[ScmRightsControlBufferLength];
+        Span<byte> allDescriptors = stackalloc byte[ScmRightsControlBufferMaxLength];
         var result = base.ReceiveMessageCore(buffer, controlMessageLevel, controlMessageType, allDescriptors, out var allDescriptorBytesCount, out receivedMessageFlags, flags);
         receivedControlCount = CopyDescriptorsAndCloseExcess(allDescriptors, allDescriptorBytesCount, controlBuffer, ref receivedMessageFlags);
         return result;
@@ -123,7 +123,7 @@ public sealed unsafe class UnixSocket : LinuxSocketBase
         if (!ShouldUseScmRightsWorkaround(controlMessageLevel, controlMessageType))
             return base.TryReceiveMessageCore(buffer, controlMessageLevel, controlMessageType, controlBuffer, out receivedCount, out receivedControlCount, out receivedMessageFlags, flags);
 
-        Span<byte> allDescriptors = stackalloc byte[ScmRightsControlBufferLength];
+        Span<byte> allDescriptors = stackalloc byte[ScmRightsControlBufferMaxLength];
         if (base.TryReceiveMessageCore(buffer, controlMessageLevel, controlMessageType, allDescriptors, out receivedCount, out var allDescriptorBytesCount, out receivedMessageFlags, flags))
         {
             receivedControlCount = CopyDescriptorsAndCloseExcess(allDescriptors, allDescriptorBytesCount, controlBuffer, ref receivedMessageFlags);
