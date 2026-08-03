@@ -74,9 +74,9 @@ public class InteropAbiTests
             return;
 
         const string header = "time.h";
-        Assert.AreEqual(CScript.EvaluateInt32("sizeof(struct timespec)", header), Unsafe.SizeOf<Time.arm_timespec64>());
-        Assert.AreEqual(CScript.EvaluateNInt("offsetof(struct timespec, tv_sec)", header), Marshal.OffsetOf<Time.arm_timespec64>(nameof(Time.arm_timespec64.tv_sec)));
-        Assert.AreEqual(CScript.EvaluateNInt("offsetof(struct timespec, tv_nsec)", header), Marshal.OffsetOf<Time.arm_timespec64>(nameof(Time.arm_timespec64.tv_nsec)));
+        Assert.AreEqual(CScript.EvaluateInt32("sizeof(struct timespec)", header), Unsafe.SizeOf<Time.timespec64>());
+        Assert.AreEqual(CScript.EvaluateNInt("offsetof(struct timespec, tv_sec)", header), Marshal.OffsetOf<Time.timespec64>(nameof(Time.timespec64.tv_sec)));
+        Assert.AreEqual(CScript.EvaluateNInt("offsetof(struct timespec, tv_nsec)", header), Marshal.OffsetOf<Time.timespec64>(nameof(Time.timespec64.tv_nsec)));
         Assert.AreEqual(sizeof(int), CScript.EvaluateInt32("sizeof(((struct timespec*)0)->tv_nsec)", header));
     }
 
