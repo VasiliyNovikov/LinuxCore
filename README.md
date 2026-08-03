@@ -24,7 +24,7 @@ A thin, AOT-compatible .NET wrapper around Linux libc APIs. Provides ergonomic, 
 
 - Linux (the library is annotated with `[SupportedOSPlatform("linux")]`)
 - .NET 10+
-- glibc 2.28+ or musl 1.2.5+ for `statx`
+- glibc 2.28+ (2.34+ on 32-bit architectures) or musl 1.2.5+ for `statx` and time64 entry points
 
 ## Architecture
 
