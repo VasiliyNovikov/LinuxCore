@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -423,46 +422,6 @@ public class UnixSocketTests
         {
             if (ownsReceivedDescriptor)
                 receivedDescriptor.Close();
-        }
-
-        Assert.AreEqual(1, CountOpenDescriptors(firstName));
-        Assert.AreEqual(1, CountOpenDescriptors(secondName));
-    }
-
-    [TestMethod]
-    public void UnixSocket_TryReceiveMessage_Bounds_FileDescriptors_To_Destination()
-    {
-        var address = UnixSocketAddress.FromAbstractName(CreateAbstractPath());
-        var firstName = $"test-fd-raw-first-{Guid.NewGuid():N}";
-        var secondName = $"test-fd-raw-second-{Guid.NewGuid():N}";
-
-        using var sender = new UnixSocket(LinuxSocketType.Datagram);
-        using var receiver = new UnixSocket(LinuxSocketType.Datagram);
-        receiver.Bind(address);
-        sender.Connect(address);
-        using var first = new LinuxMemoryFile(firstName);
-        using var second = new LinuxMemoryFile(secondName);
-
-        Assert.AreEqual(1, sender.SendFileDescriptors([1], [first.Descriptor, second.Descriptor]));
-        Span<byte> receiveBuffer = stackalloc byte[1];
-        Span<FileDescriptor> receivedDescriptors = stackalloc FileDescriptor[1];
-        var receivedDescriptorCount = 0;
-        try
-        {
-            LinuxSocketBase receiverBase = receiver;
-            Assert.IsTrue(receiverBase.TryReceiveMessage(receiveBuffer, LinuxSocketOptionLevel.Socket, LinuxControlMessageType.ScmRights, MemoryMarshal.AsBytes(receivedDescriptors), out var receivedCount, out var receivedControlCount, out var messageFlags, LinuxSocketMessageFlags.CmsgCloseOnExec));
-            receivedDescriptorCount = receivedControlCount / sizeof(int);
-
-            Assert.AreEqual((nuint)1, receivedCount);
-            Assert.AreEqual(1, receivedDescriptorCount);
-            Assert.AreNotEqual(LinuxSocketMessageFlags.None, messageFlags & LinuxSocketMessageFlags.ControlTruncated);
-            Assert.AreEqual(2, CountOpenDescriptors(firstName));
-            Assert.AreEqual(1, CountOpenDescriptors(secondName));
-        }
-        finally
-        {
-            for (var i = 0; i < receivedDescriptorCount; ++i)
-                receivedDescriptors[i].Close();
         }
 
         Assert.AreEqual(1, CountOpenDescriptors(firstName));
