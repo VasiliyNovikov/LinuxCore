@@ -9,7 +9,6 @@ internal static class NativeLinuxMemoryMapFlags
     private const int StableMapLocked = 0x2000;
     private const int StableMapNoReserve = 0x4000;
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ToNative(LinuxMemoryMapFlags flags)
     {
