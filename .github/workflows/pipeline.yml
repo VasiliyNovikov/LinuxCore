@@ -41,7 +41,7 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: latest
-          dotnet-channel: 10.0
+          dotnet-channel: '10.0'
           cache: true
           cache-dependency-path: |
             Directory.Packages.props
@@ -177,7 +177,7 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: latest
-          dotnet-channel: 10.0
+          dotnet-channel: '10.0'
           cache: true
           cache-dependency-path: |
             Directory.Packages.props
@@ -241,7 +241,7 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: latest
-          dotnet-channel: 10.0
+          dotnet-channel: '10.0'
           cache: true
           cache-dependency-path: |
             Directory.Packages.props
