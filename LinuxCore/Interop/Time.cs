@@ -26,25 +26,13 @@ internal static unsafe partial class Time
         }
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 16)]
-    internal readonly struct timespec64
+    [StructLayout(LayoutKind.Sequential)]
+    [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal struct timespec64(long seconds, long nanoseconds)
     {
-        [FieldOffset(0)]
-        public readonly long tv_sec;
-
-        [FieldOffset(8)]
-        public readonly int tv_nsec;
-
-        [FieldOffset(12)]
-        private readonly int __pad;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public timespec64(long seconds, long nanoseconds)
-        {
-            tv_sec = seconds;
-            tv_nsec = checked((int)nanoseconds);
-            __pad = 0;
-        }
+        public readonly long tv_sec = seconds;
+        public readonly int tv_nsec = checked((int)nanoseconds);
+        public int pad = 0;
     }
 
     // int clock_gettime(clockid_t clockid, struct timespec *tp);
@@ -65,10 +53,10 @@ internal static unsafe partial class Time
         if (NativeAbi.Is64Bit)
             return new(clock_gettime_raw(clockid, tp));
 
-        Unsafe.SkipInit(out timespec64 nativeTime);
-        var result = clock_gettime64_raw(clockid, &nativeTime);
+        var tp64 = (timespec64*)tp;
+        var result = clock_gettime64_raw(clockid, tp64);
         if (result == 0)
-            *tp = new timespec(nativeTime.tv_sec, nativeTime.tv_nsec);
+            tp64->pad = 0;
         return new(result);
     }
 
@@ -88,11 +76,13 @@ internal static unsafe partial class Time
         if (NativeAbi.Is64Bit)
             return (LinuxErrorNumber)clock_nanosleep_raw(clockid, flags, request, remain);
 
-        var nativeRequest = new timespec64(request->tv_sec, request->tv_nsec);
-        Unsafe.SkipInit(out timespec64 nativeRemaining);
-        var result = (LinuxErrorNumber)clock_nanosleep64_raw(clockid, flags, &nativeRequest, &nativeRemaining);
+        var request64 = (timespec64*)request;
+        var remain64 = (timespec64*)remain;
+        if (request64->pad != 0)
+            throw new ArgumentException("request->tv_nsec is too big for 32-bit platform");
+        var result = (LinuxErrorNumber)clock_nanosleep64_raw(clockid, flags, request64, remain64);
         if (result == LinuxErrorNumber.InterruptedSystemCall)
-            *remain = new timespec(nativeRemaining.tv_sec, nativeRemaining.tv_nsec);
+            remain64->pad = 0;
         return result;
     }
 }
