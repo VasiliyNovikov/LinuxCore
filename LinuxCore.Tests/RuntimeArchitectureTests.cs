@@ -12,21 +12,20 @@ namespace LinuxCore.Tests;
 public class RuntimeArchitectureTests
 {
     [TestMethod]
+    public void Runtime_Architecture_Matches_PointerSize()
+    {
+        var expectedPointerSize = RuntimeInformation.ProcessArchitecture is Architecture.X86 or Architecture.Arm or Architecture.Armv6 ? 4 : 8;
+
+        Assert.AreEqual(expectedPointerSize, IntPtr.Size);
+    }
+
+    [TestMethod]
     public void Runtime_Matches_CI_Architecture_Marker()
     {
         if (Environment.GetEnvironmentVariable("LINUXCORE_EXPECTED_ARCHITECTURE") is { } expectedArchitecture)
             Assert.AreEqual(Enum.Parse<Architecture>(expectedArchitecture, true), RuntimeInformation.ProcessArchitecture);
         else
             Assert.Inconclusive("CI variable LINUXCORE_EXPECTED_ARCHITECTURE is missing");
-    }
-
-    [TestMethod]
-    public void Runtime_Matches_CI_PointerSize_Marker()
-    {
-        if (Environment.GetEnvironmentVariable("LINUXCORE_EXPECTED_POINTER_SIZE") is { } expectedPointerSize)
-            Assert.AreEqual(int.Parse(expectedPointerSize, NumberStyles.None, CultureInfo.InvariantCulture), IntPtr.Size);
-        else
-            Assert.Inconclusive("CI variable LINUXCORE_EXPECTED_POINTER_SIZE is missing");
     }
 
     [TestMethod]
