@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+
+using LinuxCore.Interop;
 
 using static LinuxCore.Interop.SysCall;
 
@@ -298,7 +299,7 @@ public static unsafe class SystemCall
         return sizeof(T) switch
         {
             4 => Unsafe.BitCast<int, LinuxResult<T>>((int)result),
-            8 when Environment.Is64BitProcess => Unsafe.BitCast<long, LinuxResult<T>>(result),
+            8 when NativeAbi.Is64Bit => Unsafe.BitCast<long, LinuxResult<T>>(result),
             _ => throw new ArgumentException($"Unsupported result size: {sizeof(T)}", nameof(result))
         };
     }

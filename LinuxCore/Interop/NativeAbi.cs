@@ -6,9 +6,9 @@ namespace LinuxCore.Interop;
 
 internal static class NativeAbi
 {
+    public static readonly bool Is32Bit = IntPtr.Size == 4;
+    public static readonly bool Is64Bit = IntPtr.Size == 8;
     public static readonly bool IsGlibc = GetIsGlibc();
-    public static readonly bool IsArm32 = RuntimeInformation.ProcessArchitecture is Architecture.Arm or Architecture.Armv6;
-    public static readonly bool IsArm32Glibc = IsArm32 && IsGlibc;
     public static readonly bool IsLikelyQemuLinuxUser = GetIsLikelyQemuLinuxUser();
 
     private static bool GetIsGlibc()

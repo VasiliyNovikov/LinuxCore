@@ -68,9 +68,9 @@ public class InteropAbiTests
     }
 
     [TestMethod]
-    public void Arm32_Time64_Layout_Matches_Current_Platform_Headers()
+    public void Time64_Layout_Matches_Current_Platform_Headers()
     {
-        if (!NativeAbi.IsArm32)
+        if (NativeAbi.Is64Bit)
             return;
 
         const string header = "time.h";
