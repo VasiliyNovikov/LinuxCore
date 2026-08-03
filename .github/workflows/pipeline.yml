@@ -18,27 +18,27 @@ jobs:
           - name: ubuntu-26.04-x64
             os: ubuntu-26.04
             aot-runtime: linux-x64
-            architecture: X64
+            architecture: x64
           - name: ubuntu-26.04-arm64
             os: ubuntu-26.04-arm
             aot-runtime: linux-arm64
-            architecture: Arm64
+            architecture: arm64
           - name: ubuntu-24.04-x64
             os: ubuntu-24.04
             aot-runtime: linux-x64
-            architecture: X64
+            architecture: x64
           - name: ubuntu-24.04-arm64
             os: ubuntu-24.04-arm
             aot-runtime: linux-arm64
-            architecture: Arm64
+            architecture: arm64
           - name: ubuntu-22.04-x64
             os: ubuntu-22.04
             aot-runtime: linux-x64
-            architecture: X64
+            architecture: a64
           - name: ubuntu-22.04-arm64
             os: ubuntu-22.04-arm
             aot-runtime: linux-arm64
-            architecture: Arm64
+            architecture: arm64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -63,7 +63,7 @@ jobs:
           LINUXCORE_EXPECTED_QEMU_LINUX_USER: false
           LINUXCORE_EXPECTED_ARCHITECTURE: ${{ matrix.architecture }}
           LINUXCORE_EXPECTED_POINTER_SIZE: 8
-          LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION: Glibc
+          LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION: glibc
         run: |
           dotnet build
           dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}"
@@ -90,36 +90,36 @@ jobs:
             os: ubuntu-latest
             platform: linux/amd64
             image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
-            architecture: X64
+            architecture: x64
             pointer-size: 8
-            libc-implementation: Musl
+            libc-implementation: musl
             setup: apk add --no-cache build-base clang linux-headers zlib-dev
             aot-runtime: linux-musl-x64
           - name: arm64-musl
             os: ubuntu-24.04-arm
             platform: linux/arm64
             image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
-            architecture: Arm64
+            architecture: arm64
             pointer-size: 8
-            libc-implementation: Musl
+            libc-implementation: musl
             setup: apk add --no-cache build-base clang linux-headers zlib-dev
             aot-runtime: linux-musl-arm64
           - name: arm32-glibc
             os: ubuntu-24.04-arm
             platform: linux/arm/v7
             image: mcr.microsoft.com/dotnet/sdk:10.0-resolute
-            architecture: Arm
+            architecture: arm
             pointer-size: 4
-            libc-implementation: Glibc
+            libc-implementation: glibc
             setup: apt-get update && apt-get install -y --no-install-recommends clang gcc libc6-dev linux-libc-dev zlib1g-dev
             aot-runtime: linux-arm
           - name: arm32-musl
             os: ubuntu-24.04-arm
             platform: linux/arm/v7
             image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
-            architecture: Arm
+            architecture: arm
             pointer-size: 4
-            libc-implementation: Musl
+            libc-implementation: musl
             setup: apk add --no-cache build-base clang linux-headers zlib-dev
             aot-runtime: linux-musl-arm
     runs-on: ${{ matrix.os }}
@@ -231,7 +231,7 @@ jobs:
             -e LINUXCORE_EXPECTED_POINTER_SIZE=8 \
             -e LINUXCORE_EXPECTED_TESTS=${{ steps.portable_tests.outputs.count }} \
             -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=true \
-            -e LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION=Glibc \
+            -e LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION=glibc \
             "${{ matrix.image }}" /bin/bash -lc '
             set -eu
             ${{ matrix.setup }}

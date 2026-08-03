@@ -19,16 +19,16 @@ public static unsafe class LinuxPoll
     public static bool Wait(Span<Query> queries, int timeoutMilliseconds)
     {
         fixed (Query* queriesPtr = queries)
-        {
-            var result = poll((pollfd*)queriesPtr, (nuint)queries.Length, timeoutMilliseconds);
-            if (!result.IsError)
-                return result > 0;
+            while (true)
+            {
+                var result = poll((pollfd*)queriesPtr, (nuint)queries.Length, timeoutMilliseconds);
+                if (!result.IsError)
+                    return result > 0;
 
-            var error = LinuxErrorNumber.Last;
-            return error == LinuxErrorNumber.InterruptedSystemCall
-                ? false
-                : throw new LinuxException(error);
-        }
+                var error = LinuxErrorNumber.Last;
+                if (error != LinuxErrorNumber.InterruptedSystemCall)
+                    throw new LinuxException(error);
+            }
     }
 
     /// <summary>
