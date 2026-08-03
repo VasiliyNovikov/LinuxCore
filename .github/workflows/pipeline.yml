@@ -1,6 +1,4 @@
 name: Validate & Publish
-permissions:
-  contents: read
 on:
   push:
     branches:
