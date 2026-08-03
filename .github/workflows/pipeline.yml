@@ -146,6 +146,18 @@ jobs:
             libc_pattern: GLIBC|GNU libc
             setup: microdnf install -y gcc glibc-devel kernel-headers
             memlock: 0
+          - name: s390x-glibc
+            os: ubuntu-24.04
+            use_qemu: true
+            platform: linux/s390x
+            qemu_platform: s390x
+            image: registry.access.redhat.com/dotnet/sdk:10.0
+            shell: /bin/bash
+            architecture: S390x
+            pointer_size: 8
+            libc_pattern: GLIBC|GNU libc
+            setup: microdnf install -y gcc glibc-devel kernel-headers
+            memlock: 0
           - name: riscv64
             os: ubuntu-24.04
             use_qemu: true
