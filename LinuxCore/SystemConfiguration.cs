@@ -13,7 +13,7 @@ public static class SystemConfiguration
     /// Gets the requested system configuration value.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long Get(SystemConfigurationName name)
+    public static nint Get(SystemConfigurationName name)
     {
         LinuxErrorNumber.Last = LinuxErrorNumber.OK;
         var result = sysconf(name);

@@ -12,5 +12,5 @@ internal static partial class SysConf
     private static partial nint sysconf_raw(SystemConfigurationName name);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long sysconf(SystemConfigurationName name) => sysconf_raw(name);
+    public static nint sysconf(SystemConfigurationName name) => sysconf_raw(name);
 }
