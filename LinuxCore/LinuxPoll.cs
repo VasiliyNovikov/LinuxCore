@@ -19,12 +19,12 @@ public static unsafe class LinuxPoll
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Wait(Span<Query> queries, int timeoutMilliseconds)
     {
-        var start = LinuxClock.Monotonic;
+        var start = LinuxClock.MonotonicNanoseconds;
         fixed (Query* queriesPtr = queries)
             while (true)
             {
                 if (timeoutMilliseconds != Timeout.Infinite)
-                    timeoutMilliseconds = Math.Max(timeoutMilliseconds - (int)(LinuxClock.Monotonic - start).TotalMilliseconds, 0);
+                    timeoutMilliseconds = (int)Math.Max(timeoutMilliseconds - (LinuxClock.MonotonicNanoseconds - start) / 1_000_000, 0);
                 var result = poll((pollfd*)queriesPtr, (nuint)queries.Length, timeoutMilliseconds);
                 if (!result.IsError)
                     return result > 0;
