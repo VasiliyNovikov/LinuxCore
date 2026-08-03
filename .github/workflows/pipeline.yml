@@ -17,27 +17,27 @@ jobs:
         include:
           - name: ubuntu-26.04-x64
             os: ubuntu-26.04
-            aot_runtime: linux-x64
+            aot-runtime: linux-x64
             architecture: X64
           - name: ubuntu-26.04-arm64
             os: ubuntu-26.04-arm
-            aot_runtime: linux-arm64
+            aot-runtime: linux-arm64
             architecture: Arm64
           - name: ubuntu-24.04-x64
             os: ubuntu-24.04
-            aot_runtime: linux-x64
+            aot-runtime: linux-x64
             architecture: X64
           - name: ubuntu-24.04-arm64
             os: ubuntu-24.04-arm
-            aot_runtime: linux-arm64
+            aot-runtime: linux-arm64
             architecture: Arm64
           - name: ubuntu-22.04-x64
             os: ubuntu-22.04
-            aot_runtime: linux-x64
+            aot-runtime: linux-x64
             architecture: X64
           - name: ubuntu-22.04-arm64
             os: ubuntu-22.04-arm
-            aot_runtime: linux-arm64
+            aot-runtime: linux-arm64
             architecture: Arm64
     runs-on: ${{ matrix.os }}
     steps:
@@ -63,13 +63,14 @@ jobs:
           LINUXCORE_EXPECTED_QEMU_LINUX_USER: false
           LINUXCORE_EXPECTED_ARCHITECTURE: ${{ matrix.architecture }}
           LINUXCORE_EXPECTED_POINTER_SIZE: 8
+          LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION: Glibc
         run: |
           dotnet build
           dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}"
 
       - name: NativeAOT Smoke
         run: |
-          dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true -o "artifacts/aot-smoke/${{ matrix.name }}"
+          dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot-runtime }} -p:PublishAot=true -o "artifacts/aot-smoke/${{ matrix.name }}"
           "./artifacts/aot-smoke/${{ matrix.name }}/LinuxCore.AotSmokeTest"
 
       - name: Upload Test Results
@@ -89,42 +90,38 @@ jobs:
             os: ubuntu-latest
             platform: linux/amd64
             image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
-            shell: /bin/sh
             architecture: X64
-            pointer_size: 8
-            libc_pattern: musl
+            pointer-size: 8
+            libc-implementation: Musl
             setup: apk add --no-cache build-base clang linux-headers zlib-dev
-            aot_runtime: linux-musl-x64
+            aot-runtime: linux-musl-x64
           - name: arm64-musl
             os: ubuntu-24.04-arm
             platform: linux/arm64
             image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
-            shell: /bin/sh
             architecture: Arm64
-            pointer_size: 8
-            libc_pattern: musl
+            pointer-size: 8
+            libc-implementation: Musl
             setup: apk add --no-cache build-base clang linux-headers zlib-dev
-            aot_runtime: linux-musl-arm64
+            aot-runtime: linux-musl-arm64
           - name: arm32-glibc
             os: ubuntu-24.04-arm
             platform: linux/arm/v7
             image: mcr.microsoft.com/dotnet/sdk:10.0-resolute
-            shell: /bin/bash
             architecture: Arm
-            pointer_size: 4
-            libc_pattern: GLIBC|GNU libc
+            pointer-size: 4
+            libc-implementation: Glibc
             setup: apt-get update && apt-get install -y --no-install-recommends clang gcc libc6-dev linux-libc-dev zlib1g-dev
-            aot_runtime: linux-arm
+            aot-runtime: linux-arm
           - name: arm32-musl
             os: ubuntu-24.04-arm
             platform: linux/arm/v7
             image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
-            shell: /bin/sh
             architecture: Arm
-            pointer_size: 4
-            libc_pattern: musl
+            pointer-size: 4
+            libc-implementation: Musl
             setup: apk add --no-cache build-base clang linux-headers zlib-dev
-            aot_runtime: linux-musl-arm
+            aot-runtime: linux-musl-arm
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -136,19 +133,16 @@ jobs:
           docker run --rm --platform "${{ matrix.platform }}" \
             -v "${{ github.workspace }}:/src" -w /src \
             -e LINUXCORE_EXPECTED_ARCHITECTURE=${{ matrix.architecture }} \
-            -e LINUXCORE_EXPECTED_POINTER_SIZE=${{ matrix.pointer_size }} \
+            -e LINUXCORE_EXPECTED_POINTER_SIZE=${{ matrix.pointer-size }} \
             -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=false \
-            "${{ matrix.image }}" "${{ matrix.shell }}" -lc '
+            -e LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION=${{ matrix.libc-implementation }} \
+            "${{ matrix.image }}" /bin/sh -lc '
             set -eu
             ${{ matrix.setup }}
-            uname -a
-            libc_output=$(ldd --version 2>&1 || true)
-            printf "%s\n" "$libc_output"
-            printf "%s\n" "$libc_output" | grep -Eqi "${{ matrix.libc_pattern }}"
 
             dotnet build
             dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}"
-            dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true -o /tmp/aot-smoke
+            dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot-runtime }} -p:PublishAot=true -o /tmp/aot-smoke
             /tmp/aot-smoke/LinuxCore.AotSmokeTest
           '
 
@@ -161,43 +155,25 @@ jobs:
 
   validate-emulated-architectures:
     name: validate-emulated-architectures (${{ matrix.name }})
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
         include:
           - name: ppc64le-glibc
-            os: ubuntu-24.04
-            platform: linux/ppc64le
-            qemu_platform: ppc64le
             image: registry.access.redhat.com/dotnet/sdk:10.0
-            shell: /bin/bash
-            architecture: Ppc64le
-            pointer_size: 8
-            libc_pattern: GLIBC|GNU libc
+            architecture: ppc64le
             setup: microdnf install -y gcc glibc-devel kernel-headers
             memlock: 0
           - name: s390x-glibc
-            os: ubuntu-24.04
-            platform: linux/s390x
-            qemu_platform: s390x
             image: registry.access.redhat.com/dotnet/sdk:10.0
-            shell: /bin/bash
-            architecture: S390x
-            pointer_size: 8
-            libc_pattern: GLIBC|GNU libc
+            architecture: s390x
             setup: microdnf install -y gcc glibc-devel kernel-headers
             memlock: 0
           - name: riscv64-glibc
-            os: ubuntu-24.04
-            platform: linux/riscv64
-            qemu_platform: riscv64
             image: debian:stable-slim
-            shell: /bin/bash
-            architecture: RiscV64
-            pointer_size: 8
-            libc_pattern: GLIBC|GNU libc
+            architecture: riscv64
             setup: |
               apt-get update
               apt-get install -y --no-install-recommends ca-certificates curl gcc coreutils libc-bin libc6-dev libgcc-s1 libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libunwind8 linux-libc-dev tzdata zlib1g
@@ -225,7 +201,6 @@ jobs:
 
       - name: Build and discover portable tests on host
         id: portable_tests
-        shell: bash
         env:
           DOTNET_CLI_UI_LANGUAGE: en
           LC_ALL: C.UTF-8
@@ -244,25 +219,22 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
         with:
-          platforms: ${{ matrix.qemu_platform }}
+          platforms: ${{ matrix.architecture }}
           cache-image: false
 
       - name: Build & Test
         run: |
-          docker run --rm --platform "${{ matrix.platform }}" --user 0 --ulimit "memlock=${{ matrix.memlock }}:${{ matrix.memlock }}" \
+          docker run --rm --platform "linux/${{ matrix.architecture }}" --user 0 --ulimit "memlock=${{ matrix.memlock }}:${{ matrix.memlock }}" \
             -v "${{ github.workspace }}:/src" \
             -w /src -e DOTNET_CLI_TELEMETRY_OPTOUT=1 \
             -e LINUXCORE_EXPECTED_ARCHITECTURE=${{ matrix.architecture }} \
-            -e LINUXCORE_EXPECTED_POINTER_SIZE=${{ matrix.pointer_size }} \
+            -e LINUXCORE_EXPECTED_POINTER_SIZE=8 \
             -e LINUXCORE_EXPECTED_TESTS=${{ steps.portable_tests.outputs.count }} \
             -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=true \
-            "${{ matrix.image }}" "${{ matrix.shell }}" -lc '
+            -e LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION=Glibc \
+            "${{ matrix.image }}" /bin/bash -lc '
             set -eu
             ${{ matrix.setup }}
-            uname -a
-            libc_output=$(ldd --version 2>&1 || true)
-            printf "%s\n" "$libc_output"
-            printf "%s\n" "$libc_output" | grep -Eqi "${{ matrix.libc_pattern }}"
 
             suite_status=0
             dotnet /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --report-trx --results-directory "/src/TestResults-${{ matrix.name }}" --minimum-expected-tests "$LINUXCORE_EXPECTED_TESTS" --no-banner || suite_status=$?

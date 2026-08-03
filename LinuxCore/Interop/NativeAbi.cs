@@ -11,9 +11,9 @@ internal static class NativeAbi
 
     public static readonly bool Is32Bit = IntPtr.Size == 4;
     public static readonly bool Is64Bit = IntPtr.Size == 8;
-    public static readonly LibCImplementation Implementation = GetLibCImplementation();
-    public static readonly bool IsGlibc = Implementation == LibCImplementation.Glibc;
-    public static readonly bool IsMusl = Implementation == LibCImplementation.Musl;
+    public static readonly LibCImplementation LibCImplementation = GetLibCImplementation();
+    public static readonly bool IsGlibc = LibCImplementation == LibCImplementation.Glibc;
+    public static readonly bool IsMusl = LibCImplementation == LibCImplementation.Musl;
     public static readonly bool IsLikelyQemuLinuxUser = GetIsLikelyQemuLinuxUser();
 
     private static LibCImplementation GetLibCImplementation()

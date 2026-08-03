@@ -12,19 +12,30 @@ namespace LinuxCore.Tests;
 public class RuntimeArchitectureTests
 {
     [TestMethod]
-    public void Runtime_Matches_CI_Architecture_Markers()
+    public void Runtime_Matches_CI_Architecture_Marker()
     {
-        var expectedArchitecture = Environment.GetEnvironmentVariable("LINUXCORE_EXPECTED_ARCHITECTURE");
-        var expectedPointerSize = Environment.GetEnvironmentVariable("LINUXCORE_EXPECTED_POINTER_SIZE");
-        if (expectedArchitecture is null && expectedPointerSize is null)
-            return;
+        if (Environment.GetEnvironmentVariable("LINUXCORE_EXPECTED_ARCHITECTURE") is { } expectedArchitecture)
+            Assert.AreEqual(Enum.Parse<Architecture>(expectedArchitecture, true), RuntimeInformation.ProcessArchitecture);
+        else
+            Assert.Inconclusive("CI variable LINUXCORE_EXPECTED_ARCHITECTURE is missing");
+    }
 
-        Assert.IsNotNull(expectedArchitecture, "LINUXCORE_EXPECTED_ARCHITECTURE must be set with LINUXCORE_EXPECTED_POINTER_SIZE.");
-        Assert.IsNotNull(expectedPointerSize, "LINUXCORE_EXPECTED_POINTER_SIZE must be set with LINUXCORE_EXPECTED_ARCHITECTURE.");
-        Assert.IsTrue(Enum.TryParse<Architecture>(expectedArchitecture, false, out var architecture), $"Invalid expected architecture: {expectedArchitecture}");
-        Assert.IsTrue(int.TryParse(expectedPointerSize, NumberStyles.None, CultureInfo.InvariantCulture, out var pointerSize), $"Invalid expected pointer size: {expectedPointerSize}");
-        Assert.AreEqual(architecture, RuntimeInformation.ProcessArchitecture);
-        Assert.AreEqual(pointerSize, IntPtr.Size);
+    [TestMethod]
+    public void Runtime_Matches_CI_PointerSize_Marker()
+    {
+        if (Environment.GetEnvironmentVariable("LINUXCORE_EXPECTED_POINTER_SIZE") is { } expectedPointerSize)
+            Assert.AreEqual(int.Parse(expectedPointerSize, NumberStyles.None, CultureInfo.InvariantCulture), IntPtr.Size);
+        else
+            Assert.Inconclusive("CI variable LINUXCORE_EXPECTED_POINTER_SIZE is missing");
+    }
+
+    [TestMethod]
+    public void Runtime_Matches_CI_LibCImplementation_Marker()
+    {
+        if (Environment.GetEnvironmentVariable("LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION") is { } expectedLibCImplementation)
+            Assert.AreEqual(Enum.Parse<LibCImplementation>(expectedLibCImplementation, true), NativeAbi.LibCImplementation);
+        else
+            Assert.Inconclusive("CI variable LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION is missing");
     }
 
     [TestMethod]
@@ -32,5 +43,7 @@ public class RuntimeArchitectureTests
     {
         if (Environment.GetEnvironmentVariable("LINUXCORE_EXPECTED_QEMU_LINUX_USER") is { } expectedQemuLinuxUser)
             Assert.AreEqual(bool.Parse(expectedQemuLinuxUser), NativeAbi.IsLikelyQemuLinuxUser);
+        else
+            Assert.Inconclusive("CI variable LINUXCORE_EXPECTED_QEMU_LINUX_USER is missing");
     }
 }
