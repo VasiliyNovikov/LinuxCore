@@ -44,4 +44,20 @@ public class LinuxResourceLimitTests
 
         Assert.ThrowsExactly<LinuxException>(() => LinuxResourceLimit.Set(LinuxResourceLimit.Resource.Core, hard + 1, hard));
     }
+
+    [TestMethod]
+    public void LinuxResourceLimitTests_Set_MemoryLock_Limit_Test()
+    {
+        var (originalSoft, originalHard) = LinuxResourceLimit.Get(LinuxResourceLimit.Resource.MemoryLock);
+        try
+        {
+            LinuxResourceLimit.Set(LinuxResourceLimit.Resource.MemoryLock, 0, originalHard);
+            var (newSoft, _) = LinuxResourceLimit.Get(LinuxResourceLimit.Resource.MemoryLock);
+            Assert.AreEqual(0UL, newSoft);
+        }
+        finally
+        {
+            LinuxResourceLimit.Set(LinuxResourceLimit.Resource.MemoryLock, originalSoft, originalHard);
+        }
+    }
 }
