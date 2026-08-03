@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 using static LinuxCore.Interop.Poll;
 
@@ -22,7 +23,8 @@ public static unsafe class LinuxPoll
         fixed (Query* queriesPtr = queries)
             while (true)
             {
-                timeoutMilliseconds = Math.Max(timeoutMilliseconds - (int)(LinuxClock.Monotonic - start).TotalMilliseconds, 0);
+                if (timeoutMilliseconds != Timeout.Infinite)
+                    timeoutMilliseconds = Math.Max(timeoutMilliseconds - (int)(LinuxClock.Monotonic - start).TotalMilliseconds, 0);
                 var result = poll((pollfd*)queriesPtr, (nuint)queries.Length, timeoutMilliseconds);
                 if (!result.IsError)
                     return result > 0;
