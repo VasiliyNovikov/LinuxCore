@@ -211,12 +211,7 @@ jobs:
             set -eu
             ${{ matrix.setup }}
 
-            if [ "$LINUXCORE_EXPECTED_ARCHITECTURE" = s390x ]; then
-              # The MTP 2.3.3 streaming TRX reader assumes native endianness and emits an empty report on s390x.
-              dotnet test /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --logger trx --results-directory "/src/TestResults-${{ matrix.name }}" -- RunConfiguration.TreatNoTestsAsError=true
-            else
-              dotnet /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --report-trx --results-directory "/src/TestResults-${{ matrix.name }}" --minimum-expected-tests "$LINUXCORE_EXPECTED_TESTS" --no-banner
-            fi
+            dotnet test /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --logger trx --results-directory "/src/TestResults-${{ matrix.name }}" -- RunConfiguration.TreatNoTestsAsError=true
 
             shopt -s nullglob
             trx_files=(/src/TestResults-${{ matrix.name }}/*.trx)
