@@ -21,7 +21,7 @@ public class RuntimeArchitectureTests
     public void Runtime_Matches_CI_Architecture_Marker()
     {
         if (Environment.GetEnvironmentVariable("LINUXCORE_EXPECTED_ARCHITECTURE") is { } expectedArchitecture)
-            Assert.AreEqual(Enum.Parse<Architecture>(expectedArchitecture, true), RuntimeInformation.ProcessArchitecture);
+            Assert.AreEqual(expectedArchitecture.Equals("loong64", StringComparison.OrdinalIgnoreCase) ? Architecture.LoongArch64 : Enum.Parse<Architecture>(expectedArchitecture, true), RuntimeInformation.ProcessArchitecture);
         else
             Assert.Inconclusive("CI variable LINUXCORE_EXPECTED_ARCHITECTURE is missing");
     }
