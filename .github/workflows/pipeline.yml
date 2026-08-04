@@ -57,7 +57,7 @@ jobs:
           LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION: glibc
         run: |
           dotnet build
-          dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}"
+          dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}" -- RunConfiguration.TreatNoTestsAsError=true
 
       - name: NativeAOT Smoke
         run: |
@@ -125,7 +125,7 @@ jobs:
             ${{ matrix.setup }}
 
             dotnet build
-            dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}"
+            dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}" -- RunConfiguration.TreatNoTestsAsError=true
             dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot-runtime }} -p:PublishAot=true -o /tmp/aot-smoke
             /tmp/aot-smoke/LinuxCore.AotSmokeTest
           '
@@ -211,9 +211,19 @@ jobs:
             set -eu
             ${{ matrix.setup }}
 
-            suite_status=0
-            dotnet /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --report-trx --results-directory "/src/TestResults-${{ matrix.name }}" --minimum-expected-tests "$LINUXCORE_EXPECTED_TESTS" --no-banner || suite_status=$?
-            test "$suite_status" -eq 0
+            if [ "$LINUXCORE_EXPECTED_ARCHITECTURE" = s390x ]; then
+              # The MTP 2.3.3 streaming TRX reader assumes native endianness and emits an empty report on s390x.
+              dotnet test /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --logger trx --results-directory "/src/TestResults-${{ matrix.name }}" -- RunConfiguration.TreatNoTestsAsError=true
+            else
+              dotnet /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --report-trx --results-directory "/src/TestResults-${{ matrix.name }}" --minimum-expected-tests "$LINUXCORE_EXPECTED_TESTS" --no-banner
+            fi
+
+            shopt -s nullglob
+            trx_files=(/src/TestResults-${{ matrix.name }}/*.trx)
+            test "${#trx_files[@]}" -eq 1
+            trx_text=$(<"${trx_files[0]}")
+            [[ "$trx_text" =~ \<Counters[^\>]*total=\"([0-9]+)\" ]]
+            test "${BASH_REMATCH[1]}" -eq "$LINUXCORE_EXPECTED_TESTS"
           '
 
       - name: Upload Test Results
