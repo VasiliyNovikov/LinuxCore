@@ -72,99 +72,159 @@ internal static unsafe partial class Socket
 
     // int socket(int domain, int type, int protocol);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "socket")]
-    public static partial LinuxResult<FileDescriptor> socket(LinuxAddressFamily domain, LinuxSocketType type, ProtocolType protocol);
+    private static partial int socket_raw(LinuxAddressFamily domain, LinuxSocketType type, ProtocolType protocol);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<FileDescriptor> socket(LinuxAddressFamily domain, LinuxSocketType type, ProtocolType protocol) => new(new(socket_raw(domain, type, protocol)));
 
     // int getsockopt(socklen *restrict optlen; int sockfd, int level, int optname, void optval[_Nullable restrict *optlen], socklen_t *restrict optlen);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "getsockopt")]
-    public static partial LinuxResult getsockopt(FileDescriptor sockfd, LinuxSocketOptionLevel level, int optname, void* optval, ref uint optlen);
+    private static partial int getsockopt_raw(int sockfd, LinuxSocketOptionLevel level, int optname, void* optval, ref uint optlen);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult getsockopt(FileDescriptor sockfd, LinuxSocketOptionLevel level, int optname, void* optval, ref uint optlen) => new(getsockopt_raw(sockfd.Value, level, optname, optval, ref optlen));
 
     // int setsockopt(socklen_t optlen; int sockfd, int level, int optname, const void optval[optlen], socklen_t optlen);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "setsockopt")]
-    public static partial LinuxResult setsockopt(FileDescriptor sockfd, LinuxSocketOptionLevel level, int optname, void* optval, uint optlen);
+    private static partial int setsockopt_raw(int sockfd, LinuxSocketOptionLevel level, int optname, void* optval, uint optlen);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult setsockopt(FileDescriptor sockfd, LinuxSocketOptionLevel level, int optname, void* optval, uint optlen) => new(setsockopt_raw(sockfd.Value, level, optname, optval, optlen));
 
     // int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "bind")]
-    public static partial LinuxResult bind(FileDescriptor sockfd, sockaddr* addr, uint addrlen);
+    private static partial int bind_raw(int sockfd, sockaddr* addr, uint addrlen);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult bind(FileDescriptor sockfd, sockaddr* addr, uint addrlen) => new(bind_raw(sockfd.Value, addr, addrlen));
 
     // int listen(int sockfd, int backlog);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "listen")]
-    public static partial LinuxResult listen(FileDescriptor sockfd, int backlog);
+    private static partial int listen_raw(int sockfd, int backlog);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult listen(FileDescriptor sockfd, int backlog) => new(listen_raw(sockfd.Value, backlog));
 
     // int accept4(int sockfd, struct sockaddr *_Nullable restrict addr, socklen_t *_Nullable restrict addrlen, int flags);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "accept4")]
-    public static partial LinuxResult<FileDescriptor> accept4(FileDescriptor sockfd, sockaddr* addr, uint* addrlen, LinuxSocketType flags);
+    private static partial int accept4_raw(int sockfd, sockaddr* addr, uint* addrlen, LinuxSocketType flags);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<FileDescriptor> accept4(FileDescriptor sockfd, sockaddr* addr, uint* addrlen, LinuxSocketType flags) => new(new(accept4_raw(sockfd.Value, addr, addrlen, flags)));
 
     // int getsockname(int sockfd, struct sockaddr *restrict addr, socklen_t *restrict addrlen);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "getsockname")]
-    public static partial LinuxResult getsockname(FileDescriptor sockfd, sockaddr* addr, ref uint addrlen);
+    private static partial int getsockname_raw(int sockfd, sockaddr* addr, ref uint addrlen);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult getsockname(FileDescriptor sockfd, sockaddr* addr, ref uint addrlen) => new(getsockname_raw(sockfd.Value, addr, ref addrlen));
 
     // int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "connect")]
-    public static partial LinuxResult connect(FileDescriptor sockfd, sockaddr* addr, uint addrlen);
+    private static partial int connect_raw(int sockfd, sockaddr* addr, uint addrlen);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult connect(FileDescriptor sockfd, sockaddr* addr, uint addrlen) => new(connect_raw(sockfd.Value, addr, addrlen));
 
     // ssize_t send(size_t size; int sockfd, const void buf[size], size_t size, int flags);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "send")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial LinuxResult<nuint> send(FileDescriptor sockfd, void* buf, nuint size, int flags);
+    private static partial nint send_raw(int sockfd, void* buf, nuint size, int flags);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<nuint> send(FileDescriptor sockfd, void* buf, nuint size, int flags) => new((nuint)send_raw(sockfd.Value, buf, size, flags));
 
     // ssize_t send(size_t size; int sockfd, const void buf[size], size_t size, int flags);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "send")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial LinuxResult<nuint> send_noblock(FileDescriptor sockfd, void* buf, nuint size, int flags);
+    private static partial nint send_noblock_raw(int sockfd, void* buf, nuint size, int flags);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<nuint> send_noblock(FileDescriptor sockfd, void* buf, nuint size, int flags) => new((nuint)send_noblock_raw(sockfd.Value, buf, size, flags));
 
     // ssize_t sendto(int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "sendto")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial LinuxResult<nuint> sendto(FileDescriptor socket, void* message, nuint length, int flags, sockaddr* dest_addr, uint dest_len);
+    private static partial nint sendto_raw(int socket, void* message, nuint length, int flags, sockaddr* dest_addr, uint dest_len);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<nuint> sendto(FileDescriptor socket, void* message, nuint length, int flags, sockaddr* dest_addr, uint dest_len) => new((nuint)sendto_raw(socket.Value, message, length, flags, dest_addr, dest_len));
 
     // ssize_t sendto(int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "sendto")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial LinuxResult<nuint> sendto_noblock(FileDescriptor socket, void* message, nuint length, int flags, sockaddr* dest_addr, uint dest_len);
+    private static partial nint sendto_noblock_raw(int socket, void* message, nuint length, int flags, sockaddr* dest_addr, uint dest_len);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<nuint> sendto_noblock(FileDescriptor socket, void* message, nuint length, int flags, sockaddr* dest_addr, uint dest_len) => new((nuint)sendto_noblock_raw(socket.Value, message, length, flags, dest_addr, dest_len));
 
     // ssize_t recv(size_t size; int sockfd, void buf[size], size_t size, int flags);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "recv")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial LinuxResult<nuint> recv(FileDescriptor sockfd, void* buf, nuint size, int flags);
+    private static partial nint recv_raw(int sockfd, void* buf, nuint size, int flags);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<nuint> recv(FileDescriptor sockfd, void* buf, nuint size, int flags) => new((nuint)recv_raw(sockfd.Value, buf, size, flags));
 
     // ssize_t recv(size_t size; int sockfd, void buf[size], size_t size, int flags);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "recv")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial LinuxResult<nuint> recv_noblock(FileDescriptor sockfd, void* buf, nuint size, int flags);
+    private static partial nint recv_noblock_raw(int sockfd, void* buf, nuint size, int flags);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<nuint> recv_noblock(FileDescriptor sockfd, void* buf, nuint size, int flags) => new((nuint)recv_noblock_raw(sockfd.Value, buf, size, flags));
 
     // ssize_t recvfrom(int socket, void *restrict buffer, size_t length, int flags, struct sockaddr *restrict address, socklen_t *restrict address_len);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "recvfrom")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial LinuxResult<nuint> recvfrom(FileDescriptor socket, void* buffer, nuint length, int flags, sockaddr* address, ref uint address_len);
+    private static partial nint recvfrom_raw(int socket, void* buffer, nuint length, int flags, sockaddr* address, ref uint address_len);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<nuint> recvfrom(FileDescriptor socket, void* buffer, nuint length, int flags, sockaddr* address, ref uint address_len) => new((nuint)recvfrom_raw(socket.Value, buffer, length, flags, address, ref address_len));
 
     // ssize_t recvfrom(int socket, void *restrict buffer, size_t length, int flags, struct sockaddr *restrict address, socklen_t *restrict address_len);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "recvfrom")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial LinuxResult<nuint> recvfrom_noblock(FileDescriptor socket, void* buffer, nuint length, int flags, sockaddr* address, ref uint address_len);
+    private static partial nint recvfrom_noblock_raw(int socket, void* buffer, nuint length, int flags, sockaddr* address, ref uint address_len);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<nuint> recvfrom_noblock(FileDescriptor socket, void* buffer, nuint length, int flags, sockaddr* address, ref uint address_len) => new((nuint)recvfrom_noblock_raw(socket.Value, buffer, length, flags, address, ref address_len));
 
     // ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "sendmsg")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial LinuxResult<nuint> sendmsg(FileDescriptor sockfd, msghdr* msg, int flags);
+    private static partial nint sendmsg_raw(int sockfd, msghdr* msg, int flags);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<nuint> sendmsg(FileDescriptor sockfd, msghdr* msg, int flags) => new((nuint)sendmsg_raw(sockfd.Value, msg, flags));
 
     // ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "sendmsg")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial LinuxResult<nuint> sendmsg_noblock(FileDescriptor sockfd, msghdr* msg, int flags);
+    private static partial nint sendmsg_noblock_raw(int sockfd, msghdr* msg, int flags);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<nuint> sendmsg_noblock(FileDescriptor sockfd, msghdr* msg, int flags) => new((nuint)sendmsg_noblock_raw(sockfd.Value, msg, flags));
 
     // ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "recvmsg")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial LinuxResult<nuint> recvmsg(FileDescriptor sockfd, msghdr* msg, int flags);
+    private static partial nint recvmsg_raw(int sockfd, msghdr* msg, int flags);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<nuint> recvmsg(FileDescriptor sockfd, msghdr* msg, int flags) => new((nuint)recvmsg_raw(sockfd.Value, msg, flags));
 
     // ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "recvmsg")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial LinuxResult<nuint> recvmsg_noblock(FileDescriptor sockfd, msghdr* msg, int flags);
+    private static partial nint recvmsg_noblock_raw(int sockfd, msghdr* msg, int flags);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<nuint> recvmsg_noblock(FileDescriptor sockfd, msghdr* msg, int flags) => new((nuint)recvmsg_noblock_raw(sockfd.Value, msg, flags));
 }

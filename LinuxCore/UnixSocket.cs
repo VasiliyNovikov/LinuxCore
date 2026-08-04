@@ -4,12 +4,16 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+using LinuxCore.Interop;
+
 using static LinuxCore.Interop.Socket;
 
 namespace LinuxCore;
 
 public sealed unsafe class UnixSocket : LinuxSocketBase
 {
+    private const int ScmRightsControlBufferMaxLength = 4 * 1024;
+
     public UnixSocketAddress LocalAddress
     {
         get
@@ -96,6 +100,66 @@ public sealed unsafe class UnixSocket : LinuxSocketBase
         var receivedCount = ReceiveMessage(buffer, LinuxSocketOptionLevel.Socket, LinuxControlMessageType.ScmRights, MemoryMarshal.AsBytes(fileDescriptors), out var receivedControlCount, out receivedMessageFlags, flags);
         receivedDescriptorCount = receivedControlCount / sizeof(FileDescriptor);
         return receivedCount;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SkipLocalsInit]
+    private protected override int ReceiveMessageCore(Span<byte> buffer, LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType, Span<byte> controlBuffer, out int receivedControlCount, out LinuxSocketMessageFlags receivedMessageFlags, LinuxSocketMessageFlags flags)
+    {
+        if (!ShouldUseScmRightsWorkaround(controlMessageLevel, controlMessageType))
+            return base.ReceiveMessageCore(buffer, controlMessageLevel, controlMessageType, controlBuffer, out receivedControlCount, out receivedMessageFlags, flags);
+
+        Span<byte> allDescriptors = stackalloc byte[ScmRightsControlBufferMaxLength];
+        var result = base.ReceiveMessageCore(buffer, controlMessageLevel, controlMessageType, allDescriptors, out var allDescriptorBytesCount, out receivedMessageFlags, flags);
+        receivedControlCount = CopyDescriptorsAndCloseExcess(allDescriptors, allDescriptorBytesCount, controlBuffer, ref receivedMessageFlags);
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SkipLocalsInit]
+    private protected override bool TryReceiveMessageCore(Span<byte> buffer, LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType, Span<byte> controlBuffer, out nuint receivedCount, out int receivedControlCount, out LinuxSocketMessageFlags receivedMessageFlags, LinuxSocketMessageFlags flags)
+    {
+        flags |= LinuxSocketMessageFlags.DontWait;
+        if (!ShouldUseScmRightsWorkaround(controlMessageLevel, controlMessageType))
+            return base.TryReceiveMessageCore(buffer, controlMessageLevel, controlMessageType, controlBuffer, out receivedCount, out receivedControlCount, out receivedMessageFlags, flags);
+
+        Span<byte> allDescriptors = stackalloc byte[ScmRightsControlBufferMaxLength];
+        if (base.TryReceiveMessageCore(buffer, controlMessageLevel, controlMessageType, allDescriptors, out receivedCount, out var allDescriptorBytesCount, out receivedMessageFlags, flags))
+        {
+            receivedControlCount = CopyDescriptorsAndCloseExcess(allDescriptors, allDescriptorBytesCount, controlBuffer, ref receivedMessageFlags);
+            return true;
+        }
+        receivedControlCount = 0;
+        return false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int CopyDescriptorsAndCloseExcess(ReadOnlySpan<byte> source, int sourceLength, Span<byte> destination, ref LinuxSocketMessageFlags messageFlags)
+    {
+        var completeSourceLength = sourceLength / sizeof(FileDescriptor) * sizeof(FileDescriptor);
+        var sourceDescriptors = MemoryMarshal.Cast<byte, FileDescriptor>(source[..completeSourceLength]);
+        int copiedCount;
+        if (completeSourceLength == sourceLength)
+        {
+            var destinationDescriptors = MemoryMarshal.Cast<byte, FileDescriptor>(destination[..(destination.Length / sizeof(FileDescriptor) * sizeof(FileDescriptor))]);
+            copiedCount = Math.Min(sourceDescriptors.Length, destinationDescriptors.Length);
+            sourceDescriptors[..copiedCount].CopyTo(destinationDescriptors);
+        }
+        else
+            copiedCount = 0;
+        foreach (var descriptor in sourceDescriptors[copiedCount..])
+            descriptor.Close();
+        if (copiedCount < sourceDescriptors.Length)
+            messageFlags |= LinuxSocketMessageFlags.ControlTruncated;
+        return copiedCount * sizeof(FileDescriptor);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool ShouldUseScmRightsWorkaround(LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType)
+    {
+        return controlMessageLevel == LinuxSocketOptionLevel.Socket
+            && controlMessageType == LinuxControlMessageType.ScmRights
+            && NativeAbi.IsLikelyQemuLinuxUser;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

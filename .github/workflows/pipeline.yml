@@ -10,86 +10,235 @@ on:
 jobs:
   validate:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - name: ubuntu-26.04-x64
             os: ubuntu-26.04
-            aot_runtime: linux-x64
+            architecture: x64
           - name: ubuntu-26.04-arm64
             os: ubuntu-26.04-arm
-            aot_runtime: linux-arm64
+            architecture: arm64
           - name: ubuntu-24.04-x64
             os: ubuntu-24.04
-            aot_runtime: linux-x64
+            architecture: x64
           - name: ubuntu-24.04-arm64
             os: ubuntu-24.04-arm
-            aot_runtime: linux-arm64
+            architecture: arm64
           - name: ubuntu-22.04-x64
             os: ubuntu-22.04
-            aot_runtime: linux-x64
+            architecture: x64
           - name: ubuntu-22.04-arm64
             os: ubuntu-22.04-arm
-            aot_runtime: linux-arm64
+            architecture: arm64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: latest
+          dotnet-channel: '10.0'
           cache: true
           cache-dependency-path: |
             Directory.Packages.props
             **/*.csproj
 
-      - name: Build & Test
-        run: |
-          dotnet build
-          dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}"
-
-      - name: Install Native AOT prerequisites
+      - name: Install build prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang zlib1g-dev
+          sudo apt-get install -y build-essential clang linux-libc-dev zlib1g-dev
+
+      - name: Build & Test
+        env:
+          LINUXCORE_EXPECTED_QEMU_LINUX_USER: false
+          LINUXCORE_EXPECTED_ARCHITECTURE: ${{ matrix.architecture }}
+          LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION: glibc
+        run: |
+          dotnet build
+          dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}" -- RunConfiguration.TreatNoTestsAsError=true
 
       - name: NativeAOT Smoke
         run: |
-          dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true --self-contained true -o "artifacts/aot-smoke/${{ matrix.name }}"
+          dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r "linux-${{ matrix.architecture }}" -p:PublishAot=true -o "artifacts/aot-smoke/${{ matrix.name }}"
           "./artifacts/aot-smoke/${{ matrix.name }}/LinuxCore.AotSmokeTest"
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ matrix.name }}
           path: TestResults-${{ matrix.name }}
         if: ${{ always() }}
 
-  validate-alpine:
+  validate-containerized-architectures:
+    name: validate-containerized-architectures (${{ matrix.name }})
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - name: alpine-x64
+          - name: x64-musl
             os: ubuntu-latest
-            aot_runtime: linux-musl-x64
-          - name: alpine-arm64
+            platform: linux/amd64
+            image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
+            architecture: x64
+            libc-implementation: musl
+            setup: apk add --no-cache build-base clang linux-headers zlib-dev
+            aot-runtime: linux-musl-x64
+          - name: arm64-musl
             os: ubuntu-24.04-arm
-            aot_runtime: linux-musl-arm64
+            platform: linux/arm64
+            image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
+            architecture: arm64
+            libc-implementation: musl
+            setup: apk add --no-cache build-base clang linux-headers zlib-dev
+            aot-runtime: linux-musl-arm64
+          - name: arm32-glibc
+            os: ubuntu-24.04-arm
+            platform: linux/arm/v7
+            image: mcr.microsoft.com/dotnet/sdk:10.0-resolute
+            architecture: arm
+            libc-implementation: glibc
+            setup: apt-get update && apt-get install -y --no-install-recommends clang gcc libc6-dev linux-libc-dev zlib1g-dev
+            aot-runtime: linux-arm
+          - name: arm32-musl
+            os: ubuntu-24.04-arm
+            platform: linux/arm/v7
+            image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
+            architecture: arm
+            libc-implementation: musl
+            setup: apk add --no-cache build-base clang linux-headers zlib-dev
+            aot-runtime: linux-musl-arm
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build & Test
-        run: >
-          docker run --rm --privileged -v "${{ github.workspace }}:/src" -w /src mcr.microsoft.com/dotnet/sdk:10.0-alpine
-          sh -c "dotnet build &&
-          dotnet test --no-build --logger trx --results-directory TestResults-${{ matrix.name }} &&
-          apk add --no-cache clang build-base zlib-dev &&
-          dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot_runtime }} -p:PublishAot=true --self-contained true -o /tmp/aot-smoke &&
-          /tmp/aot-smoke/LinuxCore.AotSmokeTest"
+        run: |
+          docker run --rm --platform "${{ matrix.platform }}" \
+            -v "${{ github.workspace }}:/src" -w /src \
+            -e LINUXCORE_EXPECTED_ARCHITECTURE=${{ matrix.architecture }} \
+            -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=false \
+            -e LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION=${{ matrix.libc-implementation }} \
+            "${{ matrix.image }}" /bin/sh -lc '
+            set -eu
+            ${{ matrix.setup }}
+
+            dotnet build
+            dotnet test --no-build --logger trx --results-directory "TestResults-${{ matrix.name }}" -- RunConfiguration.TreatNoTestsAsError=true
+            dotnet publish ./LinuxCore.AotSmokeTest/LinuxCore.AotSmokeTest.csproj -c Release -r ${{ matrix.aot-runtime }} -p:PublishAot=true -o /tmp/aot-smoke
+            /tmp/aot-smoke/LinuxCore.AotSmokeTest
+          '
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-${{ matrix.name }}
+          path: TestResults-${{ matrix.name }}
+        if: ${{ always() }}
+
+  validate-emulated-architectures:
+    name: validate-emulated-architectures (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ppc64le-glibc
+            image: registry.access.redhat.com/dotnet/sdk:10.0
+            architecture: ppc64le
+            setup: microdnf install -y binutils gcc glibc-devel kernel-headers
+          - name: s390x-glibc
+            image: registry.access.redhat.com/dotnet/sdk:10.0
+            architecture: s390x
+            setup: microdnf install -y binutils gcc glibc-devel kernel-headers
+          - name: riscv64-glibc
+            image: debian:stable-slim
+            architecture: riscv64
+            setup: |
+              sdk_version=10.0.109
+
+              apt-get update
+              apt-get install -y --no-install-recommends binutils ca-certificates curl gcc coreutils libc-bin libc6-dev libgcc-s1 libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libunwind8 linux-libc-dev tzdata zlib1g
+              sdk_name=dotnet-sdk-$sdk_version-linux-riscv64.tar.gz
+              sdk_archive=/tmp/$sdk_name
+              curl --fail --location --retry 5 --output "$sdk_archive" https://github.com/filipnavara/dotnet-riscv/releases/download/$sdk_version/$sdk_name
+              mkdir -p /usr/share/dotnet
+              tar -xzf "$sdk_archive" -C /usr/share/dotnet
+              ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: latest
+          dotnet-channel: '10.0'
+          cache: true
+          cache-dependency-path: |
+            Directory.Packages.props
+            **/*.csproj
+
+      - name: Build and discover portable tests on host
+        id: portable_tests
+        run: |
+          set -euo pipefail
+          dotnet build LinuxCore.Tests/LinuxCore.Tests.csproj -p:BuildPortableMtpRunner=true
+          discovery_output=$(dotnet LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --list-tests --no-banner --no-ansi --progress off)
+          printf '%s\n' "$discovery_output"
+          if [[ "$discovery_output" =~ Test\ discovery\ summary:\ found\ ([1-9][0-9]*)\ test\(s\) ]]; then
+            printf 'count=%s\n' "${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          else
+            exit 1
+          fi
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+        with:
+          platforms: ${{ matrix.architecture }}
+
+      - name: Build & Test
+        run: |
+          docker run --rm --platform "linux/${{ matrix.architecture }}" --user 0 \
+            -v "${{ github.workspace }}:/src" -w /src \
+            -e DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+            -e LINUXCORE_EXPECTED_ARCHITECTURE=${{ matrix.architecture }} \
+            -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=true \
+            -e LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION=glibc \
+            "${{ matrix.image }}" /bin/bash -lc '
+            set -eu
+            ${{ matrix.setup }}
+
+            elf_data=$(LC_ALL=C readelf -h /bin/bash | grep "^  Data:")
+            case "$elf_data" in
+              *"big endian"*)
+                # The MTP 2.3.3 streaming TRX reader assumes native endianness and emits empty reports on big-endian targets.
+                dotnet test /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --logger trx --results-directory "/src/TestResults-${{ matrix.name }}" -- RunConfiguration.TreatNoTestsAsError=true
+                ;;
+              *"little endian"*)
+                dotnet /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --report-trx --results-directory "/src/TestResults-${{ matrix.name }}" --no-banner
+                ;;
+              *)
+                printf "Unsupported ELF data encoding: %s\n" "$elf_data" >&2
+                exit 1
+                ;;
+            esac
+          '
+
+      - name: Validate Test Results
+        shell: pwsh
+        run: |
+          $files = @(Get-ChildItem "TestResults-${{ matrix.name }}" -Filter *.trx)
+          if ($files.Count -ne 1) { throw "Expected exactly one TRX, found $($files.Count)" }
+
+          [xml]$trx = Get-Content $files[0] -Raw
+          $actual = [int]$trx.TestRun.ResultSummary.Counters.total
+          $expected = ${{ steps.portable_tests.outputs.count }}
+          if ($actual -ne $expected) { throw "Expected $expected tests, TRX reported $actual" }
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ matrix.name }}
           path: TestResults-${{ matrix.name }}
@@ -99,15 +248,17 @@ jobs:
     if: ${{ success() && (vars.PUBLISH == 'true' || vars.PUBLISH == 'auto' && github.ref_name == 'master') }}
     needs:
       - validate
-      - validate-alpine
+      - validate-containerized-architectures
+      - validate-emulated-architectures
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: latest
+          dotnet-channel: '10.0'
           cache: true
           cache-dependency-path: |
             Directory.Packages.props

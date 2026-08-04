@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsAotCompatible>true</IsAotCompatible>
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
     <PackageVersion>$(Version)</PackageVersion>
     <Authors>Vasyl Novikov</Authors>
     <Description>Some Linux LibC API wrappers and base types</Description>

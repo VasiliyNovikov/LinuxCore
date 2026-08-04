@@ -13,5 +13,8 @@ internal static partial class EventFd
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "eventfd")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition]
-    public static partial LinuxResult<FileDescriptor> eventfd(uint initval, int flags);
+    private static partial int eventfd_raw(uint initval, int flags);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<FileDescriptor> eventfd(uint initval, int flags) => new(new(eventfd_raw(initval, flags)));
 }

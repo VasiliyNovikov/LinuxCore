@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 using static LinuxCore.Interop.File;
@@ -19,7 +20,7 @@ public unsafe class LinuxFile(FileDescriptor descriptor, bool ownsDescriptor = t
     private bool _immutableCached;
 
     public LinuxFile(string path, LinuxFileFlags flags, LinuxFileMode mode = LinuxFileMode.None)
-        : this(open(path, flags | LinuxFileFlags.CloseOnExec, mode).ThrowIfError())
+        : this(open(path, NativeLinuxFileFlags.ToNative(flags | LinuxFileFlags.LargeFile | LinuxFileFlags.CloseOnExec), mode).ThrowIfError())
     {
     }
 
@@ -29,7 +30,7 @@ public unsafe class LinuxFile(FileDescriptor descriptor, bool ownsDescriptor = t
         get
         {
             Stat(out var stat);
-            return stat.st_size;
+            return checked((long)stat.stx_size);
         }
     }
 
@@ -74,10 +75,34 @@ public unsafe class LinuxFile(FileDescriptor descriptor, bool ownsDescriptor = t
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ReadExactly(Span<byte> buffer)
+    {
+        while (!buffer.IsEmpty)
+        {
+            var read = Read(buffer);
+            if (read == 0)
+                throw new EndOfStreamException();
+            buffer = buffer[read..];
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Write(ReadOnlySpan<byte> buffer)
     {
         fixed (byte* ptr = buffer)
             return (int)base.Write(ptr, (nuint)buffer.Length);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteExactly(ReadOnlySpan<byte> buffer)
+    {
+        while (!buffer.IsEmpty)
+        {
+            var written = Write(buffer);
+            if (written == 0)
+                throw new EndOfStreamException();
+            buffer = buffer[written..];
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -86,11 +111,14 @@ public unsafe class LinuxFile(FileDescriptor descriptor, bool ownsDescriptor = t
         if (_immutableCached)
             return;
         Stat(out var stat);
-        DeviceId = stat.st_dev;
-        INode = stat.st_ino;
+        DeviceId = ((ulong)(stat.stx_dev_major & 0x00000fffU) << 8)
+                 | ((ulong)(stat.stx_dev_major & 0xfffff000U) << 32)
+                 | (stat.stx_dev_minor & 0x000000ffU)
+                 | ((ulong)(stat.stx_dev_minor & 0xffffff00U) << 12);
+        INode = stat.stx_ino;
         _immutableCached = true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Stat(out stat buf) => fstat(Descriptor, out buf).ThrowIfError();
+    private void Stat(out statx buf) => statx_fd(Descriptor, out buf).ThrowIfError();
 }

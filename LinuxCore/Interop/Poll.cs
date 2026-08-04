@@ -23,5 +23,8 @@ internal static unsafe partial class Poll
     // int poll(struct pollfd *fds, nfds_t nfds, int timeout);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "poll")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static partial LinuxResult<int> poll(pollfd* fds, nuint nfds, int timeout);
+    private static partial int poll_raw(pollfd* fds, nuint nfds, int timeout);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<int> poll(pollfd* fds, nuint nfds, int timeout) => new(poll_raw(fds, nfds, timeout));
 }

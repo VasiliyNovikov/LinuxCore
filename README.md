@@ -7,7 +7,7 @@ A thin, AOT-compatible .NET wrapper around Linux libc APIs. Provides ergonomic, 
 
 ## Features
 
-- **File I/O** — `LinuxFile` for `open`/`read`/`write`/`seek`/`fstat` with `Span<byte>` support
+- **File I/O** — `LinuxFile` for `open`/`read`/`write`/`seek`/`statx` with `Span<byte>` support
 - **Memory Files** — `LinuxMemoryFile` for `memfd_create` and memfd seals via `fcntl`
 - **Memory Maps** — `LinuxMemoryMap`/`LinuxReadOnlyMemoryMap` for `mmap`/`munmap` with `Span<byte>`/`Memory<byte>` access
 - **Events & Semaphores** — `LinuxEvent` and `LinuxSemaphore` backed by `eventfd`
@@ -24,6 +24,7 @@ A thin, AOT-compatible .NET wrapper around Linux libc APIs. Provides ergonomic, 
 
 - Linux (the library is annotated with `[SupportedOSPlatform("linux")]`)
 - .NET 10+
+- glibc 2.28+ (2.34+ on 32-bit architectures) or musl 1.2.5+ for `statx` and time64 entry points
 
 ## Architecture
 
@@ -52,6 +53,9 @@ LinuxSecurityObject (Id + Name)
 - AF_UNIX pathname sockets are subject to the kernel `sockaddr_un.sun_path` limit (108 bytes on Linux).
 - `FileDescriptor` is an allocation-free, non-owning value. Copying it or reading `FileObject.Descriptor` does not duplicate the descriptor or retain its lifetime; use `Clone()` for an independent descriptor. `FileObject` intentionally avoids per-operation lifetime leasing, so callers must keep the owner strongly reachable and prevent concurrent disposal or external closure while operations or raw descriptors are in use. Closed or stale descriptor values may refer to unrelated resources after Linux recycles the number.
 - Generic `ReceiveMessage` methods return only the requested control-message type and do not close resources from nonmatching messages. On Unix sockets, use `ReceiveFileDescriptors` when an `SCM_RIGHTS` message may be present.
+- On QEMU linux-user, `ReceiveFileDescriptors` requires `SO_PASSPIDFD` and `SO_PASSSEC` to be disabled. Either option can cause host-side descriptors to be omitted during ancillary conversion and remain open. LinuxCore does not enable either option.
+- `LinuxFileFlags` and `LinuxMemoryMapFlags` values are stable managed tokens. LinuxCore translates architecture-dependent file flags on Arm and PowerPC, and mapping flags on PowerPC, before calling libc.
+- CI runs the full test suite on every target. Alpine x64 and arm64 plus Arm32 glibc and musl build and test inside native SDK containers; ppc64le, s390x, and RISC-V64 run host-built portable test output under QEMU. All targets gate publishing. The RISC-V64 matrix entry uses a community runtime because Microsoft does not publish a supported .NET 10 RISC-V64 runtime or support QEMU execution.
 - NativeAOT compatibility is exercised in CI on both glibc (Ubuntu) and musl (Alpine) runners via a small smoke app.
 
 ## License

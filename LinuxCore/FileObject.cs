@@ -28,7 +28,7 @@ public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDesc
     public LinuxFileFlags Flags
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (LinuxFileFlags)FileControl(F_GETFL);
+        get => NativeLinuxFileFlags.FromNative(FileControl(F_GETFL));
     }
 
     // Cached under the assumption descriptor flags are not externally changed after first observation.
@@ -67,7 +67,7 @@ public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDesc
     private void IOControl(ulong request, void* arg) => ioctl(descriptor, request, arg).ThrowIfError();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void IOControl(ulong request, ulong arg) => IOControl(request, (void*)arg);
+    protected void IOControl(ulong request, nuint arg) => IOControl(request, (void*)arg);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void IOControl<T>(ulong request, ref T arg) where T : unmanaged

@@ -13,14 +13,16 @@ dotnet run -c Release --project LinuxCore.Benchmarks                  # benchmar
 ```
 
 All projects target **net10.0** and use `LangVersion=preview`. Warnings are treated as errors (`TreatWarningsAsErrors=true`). Documentation XML is generated for the main library.
+Architecture flag tests require `cc`, libc development headers, and Linux UAPI headers because they compile current-platform constants during the test run.
 
 ## CI
 
-The GitHub Actions pipeline (`.github/workflows/pipeline.yml`) has three jobs:
+The GitHub Actions pipeline (`.github/workflows/pipeline.yml`) has four jobs:
 
 - **`validate`** — builds and tests on a matrix of Ubuntu runners: `ubuntu-26.04` (x64 + arm64), `ubuntu-24.04` (x64 + arm64) and `ubuntu-22.04` (x64 + arm64), then runs a NativeAOT smoke publish/run of `LinuxCore.AotSmokeTest`. Uploads TRX test results as artifacts.
-- **`validate-alpine`** — builds and tests under musl/Alpine Linux via Docker (`mcr.microsoft.com/dotnet/sdk:10.0-alpine`) on x64 and arm64 runners, and also runs the NativeAOT smoke app there. Uploads TRX test results as artifacts.
-- **`publish`** — publishes to NuGet, gated on both `validate` and `validate-alpine` succeeding. Runs when `PUBLISH` is `'true'` on any branch, or `'auto'` on the `master` branch.
+- **`validate-containerized-architectures`** — builds and tests inside native SDK containers for Alpine x64 and arm64 plus Arm32 glibc and musl on GitHub-hosted Arm64 runners. Every target also runs the NativeAOT smoke app and uploads TRX test results.
+- **`validate-emulated-architectures`** — builds a portable embedded-MTP test runner on the native host, then runs the full suite under QEMU for ppc64le, s390x, and RISC-V64. Native-header oracles compile inside each target container through a direct `posix_spawnp` test helper. The RISC-V64 matrix entry uses a community runtime because Microsoft does not publish a RISC-V64 .NET 10 runtime or support QEMU execution. They require and exercise the `SCM_RIGHTS` truncation workaround; every discovered test must pass, and all matrix entries gate publishing.
+- **`publish`** — publishes to NuGet, gated on all required validation jobs succeeding. Runs when `PUBLISH` is `'true'` on any branch, or `'auto'` on the `master` branch.
 
 ## Architecture
 
@@ -58,6 +60,11 @@ For non-FD security objects:
 
 ### Struct layout
 - Public value types that cross the P/Invoke boundary are decorated with `[StructLayout(LayoutKind.Sequential)]`.
+
+### Architecture-dependent flags
+- Public `LinuxFileFlags` and `LinuxMemoryMapFlags` values are stable managed tokens, not native constants on every architecture.
+- Translate file and mapping flags only at managed/native boundaries through `NativeLinuxFileFlags`, `NativeLinuxMemoryMapFlags`; reverse-translate native `F_GETFL` results before exposing them publicly.
+- Update current-platform native-header oracle tests and containerized or emulated architecture tests whenever an architecture-dependent flag is added.
 
 ### Package management
 Central package versions are in `Directory.Packages.props`. Add new dependencies there, not in individual `.csproj` files.

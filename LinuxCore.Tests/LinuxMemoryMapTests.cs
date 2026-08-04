@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.IO;
 using System.Runtime.InteropServices;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -50,6 +51,35 @@ public class LinuxMemoryMapTests
         using var map = new LinuxReadOnlyMemoryMap(file.Descriptor, expected.Length);
 
         Assert.IsTrue(map.Span.SequenceEqual(expected));
+    }
+
+    [TestMethod]
+    public void LinuxMemoryMap_FileBacked_Large_Offset_RoundTrips()
+    {
+        const long offset = 1L << 32;
+        var pageSize = checked((int)SystemConfiguration.Get(SystemConfigurationName.PageSize));
+        var filePath = Path.GetTempFileName();
+        try
+        {
+            using var file = new LinuxFile(filePath, LinuxFileFlags.ReadWrite | LinuxFileFlags.Truncate);
+            file.Position = offset + pageSize - 1;
+            Assert.AreEqual(1, file.Write("\0"u8));
+
+            using (var map = new LinuxMemoryMap(file.Descriptor, pageSize, offset: offset))
+            {
+                "large-map"u8.CopyTo(map.Span);
+                map.Sync();
+            }
+
+            file.Position = offset;
+            Span<byte> actual = stackalloc byte[9];
+            Assert.AreEqual(actual.Length, file.Read(actual));
+            Assert.IsTrue(actual.SequenceEqual("large-map"u8));
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
     }
 
     [TestMethod]
@@ -149,5 +179,30 @@ public class LinuxMemoryMapTests
 
         var e = Assert.ThrowsExactly<LinuxException>(() => new LinuxMemoryMap(file.Descriptor, 4, flags: LinuxMemoryMapFlags.SharedValidate | LinuxMemoryMapFlags.Anonymous));
         Assert.AreEqual(LinuxErrorNumber.InvalidArgument, e.ErrorNumber);
+    }
+
+    [TestMethod]
+    public void LinuxMemoryMap_Locked_Respects_Memlock_Limit()
+    {
+        using var unlocked = new LinuxMemoryMap(4096);
+        using var locked = new LinuxMemoryMap(4096, LinuxMemoryMapFlags.Private | LinuxMemoryMapFlags.Locked);
+        var (originalSoft, originalHard) = LinuxResourceLimit.Get(LinuxResourceLimit.Resource.MemoryLock);
+        try
+        {
+            LinuxResourceLimit.Set(LinuxResourceLimit.Resource.MemoryLock, 0, originalHard);
+            var exception = Assert.ThrowsExactly<LinuxException>(() => new LinuxMemoryMap(4096, LinuxMemoryMapFlags.Private | LinuxMemoryMapFlags.Locked));
+            Assert.IsTrue(exception.ErrorNumber is LinuxErrorNumber.TryAgain or LinuxErrorNumber.OperationNotPermitted or LinuxErrorNumber.OutOfMemory, $"Unexpected MAP_LOCKED error: {exception.ErrorNumber}");
+        }
+        finally
+        {
+            LinuxResourceLimit.Set(LinuxResourceLimit.Resource.MemoryLock, originalSoft, originalHard);
+        }
+    }
+
+    [TestMethod]
+    public void LinuxMemoryMap_Flag_Translation_Matches_Current_Platform_Headers()
+    {
+        Assert.AreEqual(CScript.EvaluateInt32("MAP_LOCKED", "asm/mman.h"), NativeLinuxMemoryMapFlags.ToNative(LinuxMemoryMapFlags.Locked));
+        Assert.AreEqual(CScript.EvaluateInt32("MAP_NORESERVE", "asm/mman.h"), NativeLinuxMemoryMapFlags.ToNative(LinuxMemoryMapFlags.NoReserve));
     }
 }

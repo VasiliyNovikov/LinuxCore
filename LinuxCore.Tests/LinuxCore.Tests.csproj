@@ -1,4 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup Condition="'$(BuildPortableMtpRunner)' == 'true'">
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>false</UseAppHost>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="PortableMtpRunner.cs" Condition="'$(BuildPortableMtpRunner)' != 'true'" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MSTest" />
     <PackageReference Include="ProcFsCore" />

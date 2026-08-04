@@ -200,6 +200,13 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
     [SkipLocalsInit]
     public int ReceiveMessage(Span<byte> buffer, LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType, Span<byte> controlBuffer, out int receivedControlCount, out LinuxSocketMessageFlags receivedMessageFlags, LinuxSocketMessageFlags flags = default)
     {
+        return ReceiveMessageCore(buffer, controlMessageLevel, controlMessageType, controlBuffer, out receivedControlCount, out receivedMessageFlags, flags);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SkipLocalsInit]
+    private protected virtual int ReceiveMessageCore(Span<byte> buffer, LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType, Span<byte> controlBuffer, out int receivedControlCount, out LinuxSocketMessageFlags receivedMessageFlags, LinuxSocketMessageFlags flags)
+    {
         var controlPtr = stackalloc byte[ControlMessageSpace(controlBuffer)];
         fixed (byte* bufferPtr = buffer)
         {
@@ -220,6 +227,13 @@ public abstract unsafe class LinuxSocketBase(FileDescriptor descriptor, bool own
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SkipLocalsInit]
     public bool TryReceiveMessage(Span<byte> buffer, LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType, Span<byte> controlBuffer, out nuint receivedCount, out int receivedControlCount, out LinuxSocketMessageFlags receivedMessageFlags, LinuxSocketMessageFlags flags = LinuxSocketMessageFlags.DontWait)
+    {
+        return TryReceiveMessageCore(buffer, controlMessageLevel, controlMessageType, controlBuffer, out receivedCount, out receivedControlCount, out receivedMessageFlags, flags);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SkipLocalsInit]
+    private protected virtual bool TryReceiveMessageCore(Span<byte> buffer, LinuxSocketOptionLevel controlMessageLevel, LinuxControlMessageType controlMessageType, Span<byte> controlBuffer, out nuint receivedCount, out int receivedControlCount, out LinuxSocketMessageFlags receivedMessageFlags, LinuxSocketMessageFlags flags)
     {
         flags |= LinuxSocketMessageFlags.DontWait;
         var controlPtr = stackalloc byte[ControlMessageSpace(controlBuffer)];

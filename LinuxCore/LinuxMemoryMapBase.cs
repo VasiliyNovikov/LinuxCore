@@ -48,7 +48,7 @@ public abstract unsafe class LinuxMemoryMapBase : NativeObject
     {
         ArgumentOutOfRangeException.ThrowIfNegative(length);
         var manager = new MappedMemoryManager(this);
-        var address = mmap(null, (nuint)length, protection, flags, descriptor, offset).ThrowIfError();
+        var address = mmap(null, (nuint)length, protection, NativeLinuxMemoryMapFlags.ToNative(flags), descriptor, offset).ThrowIfError();
         _address = (byte*)address;
         _length = length;
 

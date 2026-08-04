@@ -1,6 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
 
+using LinuxCore.Interop;
+
 using static LinuxCore.Interop.SysCall;
 
 namespace LinuxCore;
@@ -8,28 +10,28 @@ namespace LinuxCore;
 public static unsafe class SystemCall
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static LinuxResult Invoke(SystemCallNumber number) => Result(syscall(number));
+    public static LinuxResult Invoke(SystemCallNumber number) => Result(syscall(number.Value));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static LinuxResult<TResult> Invoke<TResult>(SystemCallNumber number) 
+    public static LinuxResult<TResult> Invoke<TResult>(SystemCallNumber number)
         where TResult : unmanaged
     {
-        return Result<TResult>(syscall(number));
+        return Result<TResult>(syscall(number.Value));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static LinuxResult Invoke<T>(SystemCallNumber number, T arg) 
+    public static LinuxResult Invoke<T>(SystemCallNumber number, T arg)
         where T : unmanaged
     {
-        return Result(syscall(number, Param(arg)));
+        return Result(syscall(number.Value, Param(arg)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static LinuxResult<TResult> Invoke<T, TResult>(SystemCallNumber number, T arg) 
+    public static LinuxResult<TResult> Invoke<T, TResult>(SystemCallNumber number, T arg)
         where T : unmanaged
         where TResult : unmanaged
     {
-        return Result<TResult>(syscall(number, Param(arg)));
+        return Result<TResult>(syscall(number.Value, Param(arg)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -37,7 +39,7 @@ public static unsafe class SystemCall
         where T1 : unmanaged
         where T2 : unmanaged
     {
-        return Result(syscall(number, Param(arg1), Param(arg2)));
+        return Result(syscall(number.Value, Param(arg1), Param(arg2)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,7 +48,7 @@ public static unsafe class SystemCall
         where T2 : unmanaged
         where TResult : unmanaged
     {
-        return Result<TResult>(syscall(number, Param(arg1), Param(arg2)));
+        return Result<TResult>(syscall(number.Value, Param(arg1), Param(arg2)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -55,7 +57,7 @@ public static unsafe class SystemCall
         where T2 : unmanaged
         where T3 : unmanaged
     {
-        return Result(syscall(number, Param(arg1), Param(arg2), Param(arg3)));
+        return Result(syscall(number.Value, Param(arg1), Param(arg2), Param(arg3)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -65,7 +67,7 @@ public static unsafe class SystemCall
         where T3 : unmanaged
         where TResult : unmanaged
     {
-        return Result<TResult>(syscall(number, Param(arg1), Param(arg2), Param(arg3)));
+        return Result<TResult>(syscall(number.Value, Param(arg1), Param(arg2), Param(arg3)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -75,7 +77,7 @@ public static unsafe class SystemCall
         where T3 : unmanaged
         where T4 : unmanaged
     {
-        return Result(syscall(number, Param(arg1), Param(arg2), Param(arg3), Param(arg4)));
+        return Result(syscall(number.Value, Param(arg1), Param(arg2), Param(arg3), Param(arg4)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -86,7 +88,7 @@ public static unsafe class SystemCall
         where T4 : unmanaged
         where TResult : unmanaged
     {
-        return Result<TResult>(syscall(number, Param(arg1), Param(arg2), Param(arg3), Param(arg4)));
+        return Result<TResult>(syscall(number.Value, Param(arg1), Param(arg2), Param(arg3), Param(arg4)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -97,7 +99,7 @@ public static unsafe class SystemCall
         where T4 : unmanaged
         where T5 : unmanaged
     {
-        return Result(syscall(number, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5)));
+        return Result(syscall(number.Value, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -109,7 +111,7 @@ public static unsafe class SystemCall
         where T5 : unmanaged
         where TResult : unmanaged
     {
-        return Result<TResult>(syscall(number, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5)));
+        return Result<TResult>(syscall(number.Value, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -121,7 +123,7 @@ public static unsafe class SystemCall
         where T5 : unmanaged
         where T6 : unmanaged
     {
-        return Result(syscall(number, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5), Param(arg6)));
+        return Result(syscall(number.Value, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5), Param(arg6)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,27 +136,27 @@ public static unsafe class SystemCall
         where T6 : unmanaged
         where TResult : unmanaged
     {
-        return Result<TResult>(syscall(number, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5), Param(arg6)));
+        return Result<TResult>(syscall(number.Value, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5), Param(arg6)));
     }
 
     public static class NonBlocking
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static LinuxResult Invoke(SystemCallNumber number) => Result(syscall_noblock(number));
+        public static LinuxResult Invoke(SystemCallNumber number) => Result(syscall_noblock(number.Value));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static LinuxResult Invoke<T>(SystemCallNumber number, T arg) 
+        public static LinuxResult Invoke<T>(SystemCallNumber number, T arg)
             where T : unmanaged
         {
-            return Result(syscall_noblock(number, Param(arg)));
+            return Result(syscall_noblock(number.Value, Param(arg)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static LinuxResult<TResult> Invoke<T, TResult>(SystemCallNumber number, T arg) 
+        public static LinuxResult<TResult> Invoke<T, TResult>(SystemCallNumber number, T arg)
             where T : unmanaged
             where TResult : unmanaged
         {
-            return Result<TResult>(syscall_noblock(number, Param(arg)));
+            return Result<TResult>(syscall_noblock(number.Value, Param(arg)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -162,7 +164,7 @@ public static unsafe class SystemCall
             where T1 : unmanaged
             where T2 : unmanaged
         {
-            return Result(syscall_noblock(number, Param(arg1), Param(arg2)));
+            return Result(syscall_noblock(number.Value, Param(arg1), Param(arg2)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -171,7 +173,7 @@ public static unsafe class SystemCall
             where T2 : unmanaged
             where TResult : unmanaged
         {
-            return Result<TResult>(syscall_noblock(number, Param(arg1), Param(arg2)));
+            return Result<TResult>(syscall_noblock(number.Value, Param(arg1), Param(arg2)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -180,7 +182,7 @@ public static unsafe class SystemCall
             where T2 : unmanaged
             where T3 : unmanaged
         {
-            return Result(syscall_noblock(number, Param(arg1), Param(arg2), Param(arg3)));
+            return Result(syscall_noblock(number.Value, Param(arg1), Param(arg2), Param(arg3)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -190,7 +192,7 @@ public static unsafe class SystemCall
             where T3 : unmanaged
             where TResult : unmanaged
         {
-            return Result<TResult>(syscall_noblock(number, Param(arg1), Param(arg2), Param(arg3)));
+            return Result<TResult>(syscall_noblock(number.Value, Param(arg1), Param(arg2), Param(arg3)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -200,7 +202,7 @@ public static unsafe class SystemCall
             where T3 : unmanaged
             where T4 : unmanaged
         {
-            return Result(syscall_noblock(number, Param(arg1), Param(arg2), Param(arg3), Param(arg4)));
+            return Result(syscall_noblock(number.Value, Param(arg1), Param(arg2), Param(arg3), Param(arg4)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -211,7 +213,7 @@ public static unsafe class SystemCall
             where T4 : unmanaged
             where TResult : unmanaged
         {
-            return Result<TResult>(syscall_noblock(number, Param(arg1), Param(arg2), Param(arg3), Param(arg4)));
+            return Result<TResult>(syscall_noblock(number.Value, Param(arg1), Param(arg2), Param(arg3), Param(arg4)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -222,7 +224,7 @@ public static unsafe class SystemCall
             where T4 : unmanaged
             where T5 : unmanaged
         {
-            return Result(syscall_noblock(number, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5)));
+            return Result(syscall_noblock(number.Value, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -234,7 +236,7 @@ public static unsafe class SystemCall
             where T5 : unmanaged
             where TResult : unmanaged
         {
-            return Result<TResult>(syscall_noblock(number, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5)));
+            return Result<TResult>(syscall_noblock(number.Value, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -246,7 +248,7 @@ public static unsafe class SystemCall
             where T5 : unmanaged
             where T6 : unmanaged
         {
-            return Result(syscall_noblock(number, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5), Param(arg6)));
+            return Result(syscall_noblock(number.Value, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5), Param(arg6)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -259,13 +261,16 @@ public static unsafe class SystemCall
             where T6 : unmanaged
             where TResult : unmanaged
         {
-            return Result<TResult>(syscall_noblock(number, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5), Param(arg6)));
+            return Result<TResult>(syscall_noblock(number.Value, Param(arg1), Param(arg2), Param(arg3), Param(arg4), Param(arg5), Param(arg6)));
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static nint Param<T>(T param) where T : unmanaged
     {
+        if (sizeof(T) > sizeof(nint))
+            throw new ArgumentException($"Unsupported parameter size: {sizeof(T)}", nameof(param));
+
         return param switch
         {
             sbyte @sbyte => @sbyte,
@@ -273,7 +278,7 @@ public static unsafe class SystemCall
             int @int => @int,
             nint @nint => @nint,
             long @long => (nint)@long,
-            FileDescriptor fd => Unsafe.BitCast<FileDescriptor, int>(fd),  
+            FileDescriptor fd => fd.Value,
             _ => sizeof(T) switch
             {
                 1 => Unsafe.BitCast<T, byte>(param),
@@ -294,7 +299,7 @@ public static unsafe class SystemCall
         return sizeof(T) switch
         {
             4 => Unsafe.BitCast<int, LinuxResult<T>>((int)result),
-            8 => Unsafe.BitCast<long, LinuxResult<T>>(result),
+            8 when NativeAbi.Is64Bit => Unsafe.BitCast<long, LinuxResult<T>>(result),
             _ => throw new ArgumentException($"Unsupported result size: {sizeof(T)}", nameof(result))
         };
     }

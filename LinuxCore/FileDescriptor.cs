@@ -22,6 +22,15 @@ public readonly struct FileDescriptor : IEquatable<FileDescriptor>, IEqualityOpe
     private readonly int _fd;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal FileDescriptor(int fd) => _fd = fd;
+
+    internal int Value
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _fd;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Close()
     {
         if (_fd >= 0)

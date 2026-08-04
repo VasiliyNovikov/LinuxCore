@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 using static LinuxCore.Interop.Poll;
 
@@ -12,23 +13,34 @@ namespace LinuxCore;
 /// </summary>
 public static unsafe class LinuxPoll
 {
+    private const int NanosecondsPerMillisecond = 1_000_000;
+
     /// <summary>
     /// Waits for one or more file descriptors to become ready.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Wait(Span<Query> queries, int timeoutMilliseconds)
     {
+        var start = timeoutMilliseconds > 0 ? LinuxClock.MonotonicNanoseconds : 0;
         fixed (Query* queriesPtr = queries)
-        {
-            var result = poll((pollfd*)queriesPtr, (nuint)queries.Length, timeoutMilliseconds);
-            if (!result.IsError)
-                return result > 0;
+            while (true)
+            {
+                int remainingTimeoutMilliseconds;
+                if (timeoutMilliseconds > 0)
+                {
+                    var elapsedTimeoutMilliseconds = (int)((LinuxClock.MonotonicNanoseconds - start) / NanosecondsPerMillisecond);
+                    remainingTimeoutMilliseconds = Math.Max(timeoutMilliseconds - elapsedTimeoutMilliseconds, 0);
+                }
+                else
+                    remainingTimeoutMilliseconds = timeoutMilliseconds;
+                var result = poll((pollfd*)queriesPtr, (nuint)queries.Length, remainingTimeoutMilliseconds);
+                if (!result.IsError)
+                    return result > 0;
 
-            var error = LinuxErrorNumber.Last;
-            return error == LinuxErrorNumber.InterruptedSystemCall
-                ? false
-                : throw new LinuxException(error);
-        }
+                var error = LinuxErrorNumber.Last;
+                if (error != LinuxErrorNumber.InterruptedSystemCall)
+                    throw new LinuxException(error);
+            }
     }
 
     /// <summary>
