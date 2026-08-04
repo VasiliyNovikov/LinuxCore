@@ -27,7 +27,7 @@ public static unsafe class LinuxPoll
         fixed (Query* queriesPtr = queries)
             while (true)
             {
-                var remainingTimeoutMilliseconds = timeoutMilliseconds == Timeout.Infinite
+                var remainingTimeoutMilliseconds = timeoutMilliseconds <= 0
                     ? timeoutMilliseconds
                     : (int)Math.Max((end - LinuxClock.MonotonicNanoseconds) / NanosecondsPerMillisecond, 0);
                 var result = poll((pollfd*)queriesPtr, (nuint)queries.Length, remainingTimeoutMilliseconds);
