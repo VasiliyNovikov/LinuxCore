@@ -138,17 +138,15 @@ public sealed unsafe class UnixSocket : LinuxSocketBase
     {
         var completeSourceLength = sourceLength / sizeof(FileDescriptor) * sizeof(FileDescriptor);
         var sourceDescriptors = MemoryMarshal.Cast<byte, FileDescriptor>(source[..completeSourceLength]);
-        if (completeSourceLength != sourceLength)
+        int copiedCount;
+        if (completeSourceLength == sourceLength)
         {
-            foreach (var descriptor in sourceDescriptors)
-                descriptor.Close();
-            messageFlags |= LinuxSocketMessageFlags.ControlTruncated;
-            return 0;
+            var destinationDescriptors = MemoryMarshal.Cast<byte, FileDescriptor>(destination[..(destination.Length / sizeof(FileDescriptor) * sizeof(FileDescriptor))]);
+            copiedCount = Math.Min(sourceDescriptors.Length, destinationDescriptors.Length);
+            sourceDescriptors[..copiedCount].CopyTo(destinationDescriptors);
         }
-
-        var destinationDescriptors = MemoryMarshal.Cast<byte, FileDescriptor>(destination[..(destination.Length / sizeof(FileDescriptor) * sizeof(FileDescriptor))]);
-        var copiedCount = Math.Min(sourceDescriptors.Length, destinationDescriptors.Length);
-        sourceDescriptors[..copiedCount].CopyTo(destinationDescriptors);
+        else
+            copiedCount = 0;
         foreach (var descriptor in sourceDescriptors[copiedCount..])
             descriptor.Close();
         if (copiedCount < sourceDescriptors.Length)
