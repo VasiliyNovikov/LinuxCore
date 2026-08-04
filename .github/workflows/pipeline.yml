@@ -204,22 +204,30 @@ jobs:
             -v "${{ github.workspace }}:/src" -w /src \
             -e DOTNET_CLI_TELEMETRY_OPTOUT=1 \
             -e LINUXCORE_EXPECTED_ARCHITECTURE=${{ matrix.architecture }} \
-            -e LINUXCORE_EXPECTED_TESTS=${{ steps.portable_tests.outputs.count }} \
             -e LINUXCORE_EXPECTED_QEMU_LINUX_USER=true \
             -e LINUXCORE_EXPECTED_LIBC_IMPLEMENTATION=glibc \
             "${{ matrix.image }}" /bin/bash -lc '
             set -eu
             ${{ matrix.setup }}
 
-            dotnet test /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --logger trx --results-directory "/src/TestResults-${{ matrix.name }}" -- RunConfiguration.TreatNoTestsAsError=true
-
-            shopt -s nullglob
-            trx_files=(/src/TestResults-${{ matrix.name }}/*.trx)
-            test "${#trx_files[@]}" -eq 1
-            trx_text=$(<"${trx_files[0]}")
-            [[ "$trx_text" =~ \<Counters[^\>]*total=\"([0-9]+)\" ]]
-            test "${BASH_REMATCH[1]}" -eq "$LINUXCORE_EXPECTED_TESTS"
+            if [ "$LINUXCORE_EXPECTED_ARCHITECTURE" = s390x ]; then
+              # The MTP 2.3.3 streaming TRX reader assumes native endianness and emits an empty report on s390x.
+              dotnet test /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --logger trx --results-directory "/src/TestResults-${{ matrix.name }}" -- RunConfiguration.TreatNoTestsAsError=true
+            else
+              dotnet /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --report-trx --results-directory "/src/TestResults-${{ matrix.name }}" --no-banner
+            fi
           '
+
+      - name: Validate Test Results
+        shell: pwsh
+        run: |
+          $files = @(Get-ChildItem "TestResults-${{ matrix.name }}" -Filter *.trx)
+          if ($files.Count -ne 1) { throw "Expected exactly one TRX, found $($files.Count)" }
+
+          [xml]$trx = Get-Content $files[0] -Raw
+          $actual = [int]$trx.TestRun.ResultSummary.Counters.total
+          $expected = ${{ steps.portable_tests.outputs.count }}
+          if ($actual -ne $expected) { throw "Expected $expected tests, TRX reported $actual" }
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v7
