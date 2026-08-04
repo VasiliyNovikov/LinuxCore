@@ -13,19 +13,24 @@ namespace LinuxCore;
 /// </summary>
 public static unsafe class LinuxPoll
 {
+    private const long NanosecondsPerMillisecond = 1_000_000;
+
     /// <summary>
     /// Waits for one or more file descriptors to become ready.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Wait(Span<Query> queries, int timeoutMilliseconds)
     {
-        var start = LinuxClock.MonotonicNanoseconds;
+        var end = timeoutMilliseconds == Timeout.Infinite
+            ? long.MaxValue
+            : LinuxClock.MonotonicNanoseconds + timeoutMilliseconds * NanosecondsPerMillisecond;
         fixed (Query* queriesPtr = queries)
             while (true)
             {
-                if (timeoutMilliseconds != Timeout.Infinite)
-                    timeoutMilliseconds = (int)Math.Max(timeoutMilliseconds - (LinuxClock.MonotonicNanoseconds - start) / 1_000_000, 0);
-                var result = poll((pollfd*)queriesPtr, (nuint)queries.Length, timeoutMilliseconds);
+                var remainingTimeoutMilliseconds = timeoutMilliseconds == Timeout.Infinite
+                    ? timeoutMilliseconds
+                    : (int)Math.Max((end - LinuxClock.MonotonicNanoseconds) / NanosecondsPerMillisecond, 0);
+                var result = poll((pollfd*)queriesPtr, (nuint)queries.Length, remainingTimeoutMilliseconds);
                 if (!result.IsError)
                     return result > 0;
 
