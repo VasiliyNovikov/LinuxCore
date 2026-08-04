@@ -148,11 +148,11 @@ jobs:
           - name: ppc64le-glibc
             image: registry.access.redhat.com/dotnet/sdk:10.0
             architecture: ppc64le
-            setup: microdnf install -y gcc glibc-devel kernel-headers
+            setup: microdnf install -y binutils gcc glibc-devel kernel-headers
           - name: s390x-glibc
             image: registry.access.redhat.com/dotnet/sdk:10.0
             architecture: s390x
-            setup: microdnf install -y gcc glibc-devel kernel-headers
+            setup: microdnf install -y binutils gcc glibc-devel kernel-headers
           - name: riscv64-glibc
             image: debian:stable-slim
             architecture: riscv64
@@ -160,7 +160,7 @@ jobs:
               sdk_version=10.0.109
 
               apt-get update
-              apt-get install -y --no-install-recommends ca-certificates curl gcc coreutils libc-bin libc6-dev libgcc-s1 libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libunwind8 linux-libc-dev tzdata zlib1g
+              apt-get install -y --no-install-recommends binutils ca-certificates curl gcc coreutils libc-bin libc6-dev libgcc-s1 libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libunwind8 linux-libc-dev tzdata zlib1g
               sdk_name=dotnet-sdk-$sdk_version-linux-riscv64.tar.gz
               sdk_archive=/tmp/$sdk_name
               curl --fail --location --retry 5 --output "$sdk_archive" https://github.com/filipnavara/dotnet-riscv/releases/download/$sdk_version/$sdk_name
@@ -210,12 +210,20 @@ jobs:
             set -eu
             ${{ matrix.setup }}
 
-            if [ "$LINUXCORE_EXPECTED_ARCHITECTURE" = s390x ]; then
-              # The MTP 2.3.3 streaming TRX reader assumes native endianness and emits an empty report on s390x.
-              dotnet test /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --logger trx --results-directory "/src/TestResults-${{ matrix.name }}" -- RunConfiguration.TreatNoTestsAsError=true
-            else
-              dotnet /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --report-trx --results-directory "/src/TestResults-${{ matrix.name }}" --no-banner
-            fi
+            elf_data=$(LC_ALL=C readelf -h /bin/bash | grep "^  Data:")
+            case "$elf_data" in
+              *"big endian"*)
+                # The MTP 2.3.3 streaming TRX reader assumes native endianness and emits empty reports on big-endian targets.
+                dotnet test /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --logger trx --results-directory "/src/TestResults-${{ matrix.name }}" -- RunConfiguration.TreatNoTestsAsError=true
+                ;;
+              *"little endian"*)
+                dotnet /src/LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --report-trx --results-directory "/src/TestResults-${{ matrix.name }}" --no-banner
+                ;;
+              *)
+                printf "Unsupported ELF data encoding: %s\n" "$elf_data" >&2
+                exit 1
+                ;;
+            esac
           '
 
       - name: Validate Test Results
