@@ -70,7 +70,7 @@ internal static unsafe partial class File
     // int close(int fd);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "close")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SuppressGCTransition]
+    [SuppressGCTransition] // Optimizes ordinary descriptor cleanup; close can block for options such as SO_LINGER
     private static partial int close_raw(int fd);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -104,7 +104,7 @@ internal static unsafe partial class File
     // ssize_t read(int fd, void* buf, size_t count);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "read")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SuppressGCTransition]
+    [SuppressGCTransition] // Caller must ensure the descriptor and operation cannot block
     private static partial nint read_noblock_raw(int fd, void* buf, nuint count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -121,7 +121,7 @@ internal static unsafe partial class File
     // ssize_t write(int fd, const void* buf, size_t count);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "write")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SuppressGCTransition]
+    [SuppressGCTransition] // Caller must ensure the descriptor and operation cannot block
     private static partial nint write_noblock_raw(int fd, void* buf, nuint count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -130,7 +130,7 @@ internal static unsafe partial class File
     // int ioctl(int fd, unsigned long operation, ...);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "ioctl")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SuppressGCTransition]
+    [SuppressGCTransition] // Optimizes expected fast requests; a blocking ioctl can delay GC
     private static partial int ioctl_raw(int fd, nuint operation, void* argp);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -157,7 +157,7 @@ internal static unsafe partial class File
     // int statx(int dirfd, const char *restrict pathname, int flags, unsigned int mask, struct statx *restrict statxbuf);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "statx")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SuppressGCTransition]
+    [SuppressGCTransition] // Optimizes the common local-filesystem path; a blocking remote filesystem can delay GC
     private static partial int statx_raw(int dirfd, byte* pathname, int flags, uint mask, out statx statxbuf);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -170,13 +170,13 @@ internal static unsafe partial class File
     // off_t lseek(int fd, off_t offset, int whence);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "lseek")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SuppressGCTransition]
+    [SuppressGCTransition] // Optimizes the common local-filesystem path; a blocking filesystem can delay GC
     private static partial long lseek_raw(int fd, long offset, LinuxSeekOrigin whence);
 
     // off64_t lseek64(int fd, off64_t offset, int whence);
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "lseek64")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SuppressGCTransition]
+    [SuppressGCTransition] // Optimizes the common local-filesystem path; a blocking filesystem can delay GC
     private static partial long lseek64_raw(int fd, long offset, LinuxSeekOrigin whence);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
