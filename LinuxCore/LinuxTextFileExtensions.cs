@@ -15,7 +15,7 @@ public static class LinuxTextFileExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ReadAllText(int bufferSize = DefaultBufferSize)
         {
-            var buffer = new ArrayBufferWriter<byte>(Math.Max(bufferSize, (int)(file.Size - file.Position)));
+            var buffer = new ArrayBufferWriter<byte>(Math.Max(bufferSize, file.CanSeek ? (int)(file.Size - file.Position) : 0));
             while (true)
             {
                 var bytes = buffer.GetSpan(bufferSize);
