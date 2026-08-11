@@ -159,13 +159,14 @@ internal static unsafe partial class File
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "statx")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition] // Optimizes the common local-filesystem path; a blocking remote filesystem can delay GC
-    private static partial int statx_raw(int dirfd, byte* pathname, int flags, uint mask, out statx statxbuf);
+    private static partial int statx_raw(int dirfd, byte* pathname, int flags, uint mask, statx* statxbuf);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LinuxResult statx_fd(FileDescriptor fd, out statx statbuf)
     {
         byte emptyPath = 0;
-        return new(statx_raw(fd.Value, &emptyPath, AT_EMPTY_PATH, STATX_BASIC_STATS, out statbuf));
+        fixed(statx* statbufPtr = &statbuf)
+            return new(statx_raw(fd.Value, &emptyPath, AT_EMPTY_PATH, STATX_BASIC_STATS, statbufPtr));
     }
 
     // off_t lseek(int fd, off_t offset, int whence);
