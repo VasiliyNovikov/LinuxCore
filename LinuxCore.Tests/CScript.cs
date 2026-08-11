@@ -34,9 +34,7 @@ internal static class CScript
                 compiler = "cc";
 
             File.WriteAllText(sourcePath, source.ToString());
-            var result = NativeProcess.Run(compiler, "-std=c11", "-Wall", "-Wextra", "-Werror", "-shared", "-fPIC", sourcePath, "-o", libraryPath);
-            if (result.ExitCode != 0)
-                throw new InvalidOperationException($"{compiler} exited with code {result.ExitCode}: {result.StandardError}\n{result.StandardOutput}");
+            Script.Run(compiler, "-std=c11", "-Wall", "-Wextra", "-Werror", "-shared", "-fPIC", sourcePath, "-o", libraryPath);
 
             var library = NativeLibrary.Load(libraryPath);
             try

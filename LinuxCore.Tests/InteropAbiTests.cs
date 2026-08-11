@@ -11,6 +11,13 @@ namespace LinuxCore.Tests;
 [TestClass]
 public class InteropAbiTests
 {
+    [StructLayout(LayoutKind.Sequential)]
+    private struct ProcessActionsAlignmentProbe
+    {
+        public byte Prefix;
+        public Process.posix_spawn_file_actions_t Actions;
+    }
+
     [TestMethod]
     public void Native_Word_Widths_Match_Current_Platform_Headers()
     {
@@ -30,6 +37,17 @@ public class InteropAbiTests
         Assert.AreEqual(Marshal.OffsetOf<Poll.pollfd>(nameof(Poll.pollfd.fd)), Marshal.OffsetOf<LinuxPoll.Query>(nameof(LinuxPoll.Query.Descriptor)));
         Assert.AreEqual(Marshal.OffsetOf<Poll.pollfd>(nameof(Poll.pollfd.events)), Marshal.OffsetOf<LinuxPoll.Query>(nameof(LinuxPoll.Query.Events)));
         Assert.AreEqual(Marshal.OffsetOf<Poll.pollfd>(nameof(Poll.pollfd.revents)), Marshal.OffsetOf<LinuxPoll.Query>(nameof(LinuxPoll.Query.ReturnedEvents)));
+    }
+
+    [TestMethod]
+    public void Process_Interop_Matches_Current_Platform_Headers()
+    {
+        var expectedActionsSize = 72 + IntPtr.Size;
+        Assert.AreEqual(expectedActionsSize, Unsafe.SizeOf<Process.posix_spawn_file_actions_t>());
+        Assert.AreEqual(IntPtr.Size, Marshal.OffsetOf<ProcessActionsAlignmentProbe>(nameof(ProcessActionsAlignmentProbe.Actions)));
+        Assert.AreEqual(expectedActionsSize, CScript.EvaluateInt32("sizeof(posix_spawn_file_actions_t)", "spawn.h"));
+        Assert.AreEqual(IntPtr.Size, CScript.EvaluateInt32("_Alignof(posix_spawn_file_actions_t)", "spawn.h"));
+        Assert.AreEqual(File.F_DUPFD_CLOEXEC, CScript.EvaluateInt32("F_DUPFD_CLOEXEC", "fcntl.h"));
     }
 
     [TestMethod]

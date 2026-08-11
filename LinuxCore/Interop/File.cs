@@ -5,9 +5,10 @@ namespace LinuxCore.Interop;
 
 internal static unsafe partial class File
 {
-    public const int F_GETFD     = 1; // Get file descriptor flags
-    public const int F_SETFD     = 2; // Set file descriptor flags
-    public const int F_GETFL     = 3; // Get file status flags
+    public const int F_GETFD         = 1;    // Get file descriptor flags
+    public const int F_SETFD         = 2;    // Set file descriptor flags
+    public const int F_GETFL         = 3;    // Get file status flags
+    public const int F_DUPFD_CLOEXEC = 1030; // Duplicate descriptor with close-on-exec
 
     public const int F_ADD_SEALS = 1033; // Add seals to file
     public const int F_GET_SEALS = 1034; // Get seals for file
@@ -158,13 +159,14 @@ internal static unsafe partial class File
     [LibraryImport(LinuxLibraries.LibC, EntryPoint = "statx")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressGCTransition] // Optimizes the common local-filesystem path; a blocking remote filesystem can delay GC
-    private static partial int statx_raw(int dirfd, byte* pathname, int flags, uint mask, out statx statxbuf);
+    private static partial int statx_raw(int dirfd, byte* pathname, int flags, uint mask, statx* statxbuf);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LinuxResult statx_fd(FileDescriptor fd, out statx statbuf)
     {
         byte emptyPath = 0;
-        return new(statx_raw(fd.Value, &emptyPath, AT_EMPTY_PATH, STATX_BASIC_STATS, out statbuf));
+        fixed(statx* statbufPtr = &statbuf)
+            return new(statx_raw(fd.Value, &emptyPath, AT_EMPTY_PATH, STATX_BASIC_STATS, statbufPtr));
     }
 
     // off_t lseek(int fd, off_t offset, int whence);

@@ -20,7 +20,7 @@ public sealed class LinuxMemoryFile : LinuxFile
     {
     }
 
-    public LinuxMemoryFile(string name, LinuxMemoryFileFlags flags = LinuxMemoryFileFlags.None)
+    public LinuxMemoryFile(string name = "", LinuxMemoryFileFlags flags = LinuxMemoryFileFlags.None)
         : base(memfd_create(name, flags | LinuxMemoryFileFlags.CloseOnExec).ThrowIfError())
     {
     }
