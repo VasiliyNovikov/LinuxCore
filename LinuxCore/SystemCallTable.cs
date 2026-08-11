@@ -13,6 +13,8 @@ public abstract class SystemCallTable
         _ => throw new PlatformNotSupportedException($"Unsupported architecture: {RuntimeInformation.ProcessArchitecture}")
     };
 
+    public static SystemCallNumber PidFdOpen => new(434); // __NR_pidfd_open
+
     public abstract SystemCallNumber SchedGetScheduler { get; } // __NR_sched_getscheduler
     public abstract SystemCallNumber SchedSetScheduler { get; } // __NR_sched_setscheduler
     public abstract SystemCallNumber SchedGetParam     { get; } // __NR_sched_getparam

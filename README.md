@@ -19,12 +19,14 @@ A thin, AOT-compatible .NET wrapper around Linux libc APIs. Provides ergonomic, 
 - **Sockets** — `UnixSocket` for AF_UNIX sockets and `LinuxSocketBase` for shared raw socket operations
 - **System Configuration** — `SystemConfiguration` for `sysconf()` queries (page size, max open files, etc.)
 - **Users & Groups** — `LinuxUser` and `LinuxGroup` for passwd/group lookups by name or ID
+- **Processes** — `LinuxProcess` for `posix_spawnp`, environment and standard-stream redirection, and cancellable pidfd waiting
 
 ## Requirements
 
 - Linux (the library is annotated with `[SupportedOSPlatform("linux")]`)
 - .NET 10+
 - glibc 2.28+ (2.34+ on 32-bit architectures) or musl 1.2.5+ for `statx` and time64 entry points
+- Linux 5.3+ for `LinuxProcess` pidfd waiting
 
 ## Architecture
 
@@ -57,6 +59,7 @@ LinuxSecurityObject (Id + Name)
 - `LinuxFileFlags` and `LinuxMemoryMapFlags` values are stable managed tokens. LinuxCore translates architecture-dependent file flags on Arm and PowerPC, and mapping flags on PowerPC, before calling libc.
 - CI runs the full test suite on every target. Alpine x64 and arm64 plus Arm32 glibc and musl build and test inside native SDK containers; ppc64le, s390x, RISC-V64, and LoongArch64 run host-built portable test output under QEMU. All targets gate publishing. The RISC-V64 and LoongArch64 matrix entries use community runtimes because Microsoft does not publish supported .NET 10 runtimes for those architectures or support QEMU execution.
 - NativeAOT compatibility is exercised in CI on both glibc (Ubuntu) and musl (Alpine) runners via a small smoke app.
+- `LinuxProcess` cancellation stops only the wait; it does not terminate the child. Callers must successfully wait and reap the child before disposal. Process waits, disposal, supplied-descriptor mutation, native-environment mutation, and external child reaping must not race. A replacement child environment does not control `posix_spawnp` executable lookup on supported glibc and musl versions; pass a path containing `/` when lookup must not use the native parent `PATH`.
 
 ## License
 

@@ -11,6 +11,7 @@ public class SystemCallTableTests
         AssertSysCall("__NR_sched_getscheduler", SystemCallTable.Current.SchedGetScheduler);
         AssertSysCall("__NR_sched_setscheduler", SystemCallTable.Current.SchedSetScheduler);
         AssertSysCall("__NR_sched_getparam", SystemCallTable.Current.SchedGetParam);
+        AssertSysCall("__NR_pidfd_open", SystemCallTable.PidFdOpen);
     }
 
     private static void AssertSysCall(string name, SystemCallNumber number) => Assert.AreEqual(CScript.EvaluateNInt(name, "sys/syscall.h"), number.Value);

@@ -133,5 +133,11 @@ public static unsafe class LinuxErrorNumberExtensions
                 static string GetMessage(LinuxErrorNumber errorNumber) => Utf8StringMarshaller.ConvertToManaged(strerror(errorNumber))!;
             }
         }
+
+        public void ThrowIfError()
+        {
+            if (errorNumber != LinuxErrorNumber.OK)
+                throw new LinuxException(errorNumber);
+        }
     }
 }

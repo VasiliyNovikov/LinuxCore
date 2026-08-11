@@ -19,6 +19,10 @@ namespace LinuxCore;
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct FileDescriptor : IEquatable<FileDescriptor>, IEqualityOperators<FileDescriptor, FileDescriptor, bool>
 {
+    public static readonly FileDescriptor StandardInput = new(0);
+    public static readonly FileDescriptor StandardOutput = new(1);
+    public static readonly FileDescriptor StandardError = new(2);
+
     private readonly int _fd;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

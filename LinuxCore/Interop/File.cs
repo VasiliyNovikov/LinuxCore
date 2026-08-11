@@ -5,9 +5,10 @@ namespace LinuxCore.Interop;
 
 internal static unsafe partial class File
 {
-    public const int F_GETFD     = 1; // Get file descriptor flags
-    public const int F_SETFD     = 2; // Set file descriptor flags
-    public const int F_GETFL     = 3; // Get file status flags
+    public const int F_GETFD         = 1;    // Get file descriptor flags
+    public const int F_SETFD         = 2;    // Set file descriptor flags
+    public const int F_GETFL         = 3;    // Get file status flags
+    public const int F_DUPFD_CLOEXEC = 1030; // Duplicate descriptor with close-on-exec
 
     public const int F_ADD_SEALS = 1033; // Add seals to file
     public const int F_GET_SEALS = 1034; // Get seals for file

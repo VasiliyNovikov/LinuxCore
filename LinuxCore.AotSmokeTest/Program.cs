@@ -39,6 +39,10 @@ incrementThread.Start();
 semaphore.Decrement();
 incrementThread.Join();
 
+using var process = LinuxProcess.Start("/bin/true");
+if (process.Wait() != (0, null))
+    throw new InvalidOperationException("Failed to spawn and wait for a process.");
+
 var pageSize = SystemConfiguration.Get(SystemConfigurationName.PageSize);
 if (pageSize <= 0)
     throw new InvalidOperationException("Expected a positive page size.");
