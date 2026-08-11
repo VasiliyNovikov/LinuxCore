@@ -59,7 +59,7 @@ public unsafe class LinuxFile(FileDescriptor descriptor, bool ownsDescriptor = t
     public bool CanSeek
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => !lseek(Descriptor, 0, LinuxSeekOrigin.Current).IsError || LinuxErrorNumber.Last != LinuxErrorNumber.BrokenPipe;
+        get => !lseek(Descriptor, 0, LinuxSeekOrigin.Current).IsError || LinuxErrorNumber.Last != LinuxErrorNumber.IllegalSeek;
     }
 
     public long Position
