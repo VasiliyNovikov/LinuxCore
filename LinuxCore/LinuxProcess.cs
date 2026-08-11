@@ -257,8 +257,7 @@ public sealed unsafe class LinuxProcess : FileObject
     {
         var result = pidfd_open(Environment.ProcessId, 0);
         if (result.IsError)
-            return false;
-
+            return LinuxErrorNumber.Last is not (LinuxErrorNumber.InvalidSystemCall or LinuxErrorNumber.NoSuchDevice or LinuxErrorNumber.OperationNotPermitted);
         result.ThrowIfError().Close();
         return true;
     }

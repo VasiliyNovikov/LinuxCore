@@ -7,24 +7,22 @@ namespace LinuxCore;
 
 public static class LinuxTextFileExtensions
 {
+    private const int DefaultBufferSize = 4096;
     private static readonly UTF8Encoding Encoding = new(false);
 
     extension(LinuxFile file)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string ReadAllText()
+        public string ReadAllText(int bufferSize = DefaultBufferSize)
         {
-            var length = (int)(file.Size - file.Position);
-            var buffer = ArrayPool<byte>.Shared.Rent(length);
-            try
+            var buffer = new ArrayBufferWriter<byte>(Math.Max(bufferSize, (int)(file.Size - file.Position)));
+            while (true)
             {
-                var bytes = buffer[..length];
-                file.ReadExactly(bytes);
-                return Encoding.GetString(bytes);
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(buffer);
+                var bytes = buffer.GetSpan(bufferSize);
+                var read = file.Read(bytes);
+                if (read == 0)
+                    return Encoding.GetString(buffer.WrittenSpan);
+                buffer.Advance(read);
             }
         }
 
