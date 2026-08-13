@@ -203,6 +203,47 @@ public class LinuxFileTests
     }
 
     [TestMethod]
+    public void Linux_File_OpenAt_Handles_Long_Relative_Unicode_Path()
+    {
+        var originalDirectory = Environment.CurrentDirectory;
+        var directory = Directory.CreateTempSubdirectory("linuxcore-openat-");
+        try
+        {
+            var firstComponent = $"first-{new string('\u00e9', 80)}";
+            var secondComponent = $"second-{new string('\u0416', 80)}";
+            var relativeDirectory = Path.Combine(firstComponent, secondComponent);
+            Directory.CreateDirectory(Path.Combine(directory.FullName, relativeDirectory));
+            var relativePath = Path.Combine(relativeDirectory, "file-\u6587.txt");
+            Assert.IsGreaterThan(256, Encoding.UTF8.GetByteCount(relativePath));
+
+            Environment.CurrentDirectory = directory.FullName;
+            using (var file = new LinuxFile(relativePath, LinuxFileFlags.ReadWrite | LinuxFileFlags.Create | LinuxFileFlags.Exclusive, LinuxFileMode.UserRead | LinuxFileMode.UserWrite))
+            {
+                Assert.IsTrue(file.CloseOnExec);
+                file.WriteExactly("syscall-openat"u8);
+                Assert.AreEqual("syscall-openat"u8.Length, file.Size);
+            }
+
+            Assert.AreEqual("syscall-openat", File.ReadAllText(relativePath));
+        }
+        finally
+        {
+            Environment.CurrentDirectory = originalDirectory;
+            directory.Delete(true);
+        }
+    }
+
+    [TestMethod]
+    public void Linux_File_Long_Missing_Path_Preserves_Errno()
+    {
+        var path = Path.Combine(Path.GetTempPath(), new string('a', 200), new string('b', 100), "missing");
+        Assert.IsGreaterThan(256, Encoding.UTF8.GetByteCount(path));
+
+        var exception = Assert.ThrowsExactly<LinuxException>(() => new LinuxFile(path, LinuxFileFlags.ReadOnly));
+        Assert.AreEqual(LinuxErrorNumber.NoSuchFileOrDirectory, exception.ErrorNumber);
+    }
+
+    [TestMethod]
     public void Linux_File_NoFollow_Rejects_Symbolic_Link()
     {
         var directory = Directory.CreateTempSubdirectory("linuxcore-nofollow-");

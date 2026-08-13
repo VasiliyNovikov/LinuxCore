@@ -1,6 +1,6 @@
 # LinuxCore
 
-A thin, AOT-compatible .NET wrapper around Linux libc APIs. Provides ergonomic, low-allocation C# abstractions over raw syscalls for files, sockets, events, polling, scheduling, and more.
+A thin, AOT-compatible .NET wrapper around Linux libc APIs and raw kernel interfaces. Provides ergonomic, low-allocation C# abstractions for files, sockets, events, polling, scheduling, and more.
 
 [![LinuxCore release](https://img.shields.io/nuget/v/LinuxCore)](https://www.nuget.org/packages/LinuxCore/)
 [![LinuxCore download count](https://img.shields.io/nuget/dt/LinuxCore)](https://www.nuget.org/packages/LinuxCore/)
@@ -25,14 +25,15 @@ A thin, AOT-compatible .NET wrapper around Linux libc APIs. Provides ergonomic, 
 
 - Linux (the library is annotated with `[SupportedOSPlatform("linux")]`)
 - .NET 10+
-- glibc 2.28+ (2.34+ on 32-bit architectures) or musl 1.2.5+ for `statx` and time64 entry points
+- Linux 4.11+ for `LinuxFile` metadata via `statx`
+- glibc 2.28+ (2.34+ on 32-bit architectures) or musl 1.2.5+ for the remaining libc and time64 entry points
 - Linux 5.3+ for `LinuxProcess` pidfd waiting
 
 ## Architecture
 
 The library has two layers:
 
-- **`LinuxCore.Interop`** — internal P/Invoke declarations using source-generated `[LibraryImport]`. Each file maps to a libc subsystem.
+- **`LinuxCore.Interop`** — internal native bindings. Most files map to libc subsystems through source-generated `[LibraryImport]`; file operations use libc `syscall()` with architecture-specific numbers from `SystemCallTable`.
 - **`LinuxCore`** — public API types wrapping the interop layer with safe-ish, idiomatic C# APIs.
 
 File-descriptor-owning types follow this hierarchy:
@@ -54,6 +55,7 @@ LinuxSecurityObject (Id + Name)
 - `LinuxScheduler.Set(...)` and some `LinuxResourceLimit.Set(...)` calls may require root privileges or Linux capabilities such as `CAP_SYS_NICE` / `CAP_SYS_RESOURCE`.
 - AF_UNIX pathname sockets are subject to the kernel `sockaddr_un.sun_path` limit (108 bytes on Linux).
 - `FileDescriptor` is an allocation-free, non-owning value. Copying it or reading `FileObject.Descriptor` does not duplicate the descriptor or retain its lifetime; use `Clone()` for an independent descriptor. `FileObject` intentionally avoids per-operation lifetime leasing, so callers must keep the owner strongly reachable and prevent concurrent disposal or external closure while operations or raw descriptors are in use. Closed or stale descriptor values may refer to unrelated resources after Linux recycles the number.
+- File operations dispatch through libc `syscall()` rather than dedicated libc symbols. They therefore use raw kernel semantics without libc cancellation points, musl close/AIO normalization, old-kernel `O_CLOEXEC`/`fcntl` fallbacks, special `fcntl` emulation, or 32-bit time64 ioctl translation. Dedicated-symbol interposition such as `LD_PRELOAD` hooks for `open`, `read`, or `write` is bypassed. Seccomp profiles must allow the architecture-specific calls, including `openat` on every architecture and `fcntl64`/`_llseek` on 32-bit x86 and Arm. `FileDescriptor.Close()` ignores close errors and must not be retried after `EINTR`.
 - Generic `ReceiveMessage` methods return only the requested control-message type and do not close resources from nonmatching messages. On Unix sockets, use `ReceiveFileDescriptors` when an `SCM_RIGHTS` message may be present.
 - On QEMU linux-user, `ReceiveFileDescriptors` requires `SO_PASSPIDFD` and `SO_PASSSEC` to be disabled. Either option can cause host-side descriptors to be omitted during ancillary conversion and remain open. LinuxCore does not enable either option.
 - `LinuxFileFlags` and `LinuxMemoryMapFlags` values are stable managed tokens. LinuxCore translates architecture-dependent file flags on Arm and PowerPC, and mapping flags on PowerPC, before calling libc.

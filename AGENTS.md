@@ -26,9 +26,9 @@ The GitHub Actions pipeline (`.github/workflows/pipeline.yml`) has four jobs:
 
 ## Architecture
 
-The library is a thin Linux LibC wrapper with two distinct layers:
+The library is a thin Linux LibC and kernel-ABI wrapper with two distinct layers:
 
-- **`LinuxCore/Interop/`** — raw P/Invoke declarations only. Each file maps to one libc header/subsystem (e.g. `File.cs`, `Socket.cs`, `Time.cs`, `SysConf.cs`, `User.cs`). These are `internal static unsafe partial` classes using `[LibraryImport]` (source-generated P/Invoke, AOT-compatible).
+- **`LinuxCore/Interop/`** — native interop grouped by header/subsystem. Most files use source-generated `[LibraryImport]`; `File.cs` routes through the shared libc `syscall()` dispatcher and `SystemCallTable` because file syscall numbers vary by architecture.
 - **`LinuxCore/` (root)** — public API types that wrap the `Interop` layer. These expose ergonomic, safe-ish abstractions (e.g. `LinuxFile`, `LinuxMemoryFile`, `LinuxEvent`, `LinuxSemaphore`, `LinuxClock`, `UnixSocket`, `LinuxUser`, `LinuxGroup`, `SystemConfiguration`).
 
 The hierarchy for file-descriptor-owning types is:  
