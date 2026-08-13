@@ -14,6 +14,9 @@ namespace LinuxCore;
 /// Whether disposal closes <paramref name="descriptor"/>. When <see langword="false"/>, the external
 /// owner must keep the descriptor open and prevent concurrent closure while this object is in use.
 /// </param>
+/// <remarks>
+/// File operations use the kernel ABI through <c>syscall(2)</c> rather than dedicated libc file symbols.
+/// </remarks>
 public unsafe class LinuxFile(FileDescriptor descriptor, bool ownsDescriptor = true)
     : FileObject(descriptor, ownsDescriptor)
 {

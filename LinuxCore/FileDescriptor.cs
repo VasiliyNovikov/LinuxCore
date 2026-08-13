@@ -34,6 +34,13 @@ public readonly struct FileDescriptor : IEquatable<FileDescriptor>, IEqualityOpe
         get => _fd;
     }
 
+    /// <summary>
+    /// Closes the descriptor when it is nonnegative.
+    /// </summary>
+    /// <remarks>
+    /// Close errors are ignored. In particular, this method must not be retried after an interrupted
+    /// close because Linux may already have released and reused the descriptor number.
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Close()
     {

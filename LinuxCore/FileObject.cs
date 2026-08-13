@@ -13,6 +13,8 @@ namespace LinuxCore;
 /// instance strongly reachable and prevent concurrent disposal or external closure while an operation
 /// is in progress. Operations after disposal are unsupported because Linux may have recycled the
 /// numeric descriptor.
+/// File operations use the kernel ABI through <c>syscall(2)</c>, bypassing dedicated libc wrappers and
+/// their cancellation, compatibility, time64 ioctl translation, and symbol-interposition behavior.
 /// </remarks>
 public abstract unsafe class FileObject(FileDescriptor descriptor, bool ownsDescriptor = true) : NativeObject, IFileObject
 {
