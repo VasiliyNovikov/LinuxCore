@@ -28,10 +28,10 @@ public unsafe partial class SyscallBenchmarks
     private int _fd = -1;
     private void* _code;
     private nuint _codeLength;
-    private delegate* unmanaged[SuppressGCTransition]<int> _directGetPid;
-    private delegate* unmanaged[SuppressGCTransition]<int, int> _directDup;
-    private delegate* unmanaged[SuppressGCTransition]<int, int> _directClose;
-    private delegate* unmanaged[SuppressGCTransition]<int, int, int> _directFcntl;
+    private static delegate* unmanaged[SuppressGCTransition]<int> _directGetPid;
+    private static delegate* unmanaged[SuppressGCTransition]<int, int> _directDup;
+    private static delegate* unmanaged[SuppressGCTransition]<int, int> _directClose;
+    private static delegate* unmanaged[SuppressGCTransition]<int, int, int> _directFcntl;
 
     [GlobalSetup]
     public void Setup()
