@@ -2,4 +2,4 @@
 
 using LinuxCore.Benchmarks;
 
-BenchmarkRunner.Run<LinuxEventBenchmarks>();
+BenchmarkSwitcher.FromAssembly(typeof(LinuxEventBenchmarks).Assembly).Run(args);
