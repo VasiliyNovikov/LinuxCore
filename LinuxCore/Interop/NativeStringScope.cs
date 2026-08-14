@@ -6,7 +6,7 @@ namespace LinuxCore.Interop;
 
 internal ref struct NativeStringScope : IDisposable
 {
-    public const int BufferSize = 0x100;
+    public static int BufferSize => Utf8StringMarshaller.ManagedToUnmanagedIn.BufferSize;
 
     private Utf8StringMarshaller.ManagedToUnmanagedIn _marshaller = new();
 
