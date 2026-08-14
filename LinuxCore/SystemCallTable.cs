@@ -3,6 +3,15 @@ using System.Runtime.InteropServices;
 
 namespace LinuxCore;
 
+/// <summary>
+/// Provides Linux system call numbers for the current architecture.
+/// </summary>
+/// <remarks>
+/// Use <see cref="Current"/> to select the runtime architecture. System call numbers that are stable
+/// across supported architectures are exposed as static members. Numbers that vary but are available on every
+/// supported architecture are abstract members implemented by each architecture table. Members for calls available
+/// only on a subset of architectures may be virtual and throw by default. This type is not intended for external inheritance.
+/// </remarks>
 public abstract class SystemCallTable
 {
     public static readonly SystemCallTable Current = RuntimeInformation.ProcessArchitecture switch
@@ -25,16 +34,18 @@ public abstract class SystemCallTable
     public abstract SystemCallNumber SchedSetScheduler { get; } // __NR_sched_setscheduler
     public abstract SystemCallNumber SchedGetParam     { get; } // __NR_sched_getparam
 
-    public abstract SystemCallNumber OpenAt { get; } // __NR_openat
-    public abstract SystemCallNumber Close  { get; } // __NR_close
-    public abstract SystemCallNumber Dup    { get; } // __NR_dup
-    public abstract SystemCallNumber Read   { get; } // __NR_read
-    public abstract SystemCallNumber Write  { get; } // __NR_write
-    public abstract SystemCallNumber Ioctl  { get; } // __NR_ioctl
-    public abstract SystemCallNumber Fcntl  { get; } // __NR_fcntl or __NR_fcntl64
-    public abstract SystemCallNumber Statx  { get; } // __NR_statx
-    public abstract SystemCallNumber Lseek  { get; } // __NR_lseek
-    public virtual SystemCallNumber Llseek  => throw new NotImplementedException(); // __NR__llseek
+    public abstract SystemCallNumber OpenAt      { get; } // __NR_openat
+    public abstract SystemCallNumber Close       { get; } // __NR_close
+    public abstract SystemCallNumber Dup         { get; } // __NR_dup
+    public abstract SystemCallNumber Read        { get; } // __NR_read
+    public abstract SystemCallNumber Write       { get; } // __NR_write
+    public abstract SystemCallNumber Ioctl       { get; } // __NR_ioctl
+    public abstract SystemCallNumber Fcntl       { get; } // __NR_fcntl or __NR_fcntl64
+    public abstract SystemCallNumber Statx       { get; } // __NR_statx
+    public abstract SystemCallNumber Lseek       { get; } // __NR_lseek
+    public virtual SystemCallNumber Llseek       => throw new NotImplementedException(); // __NR__llseek
+
+    public abstract SystemCallNumber MemFdCreate { get; } // __NR_memfd_create
 
     private abstract class Legacy : SystemCallTable
     {
@@ -58,14 +69,18 @@ public abstract class SystemCallTable
 
     private sealed class X86 : Legacy32
     {
-        public override SystemCallNumber OpenAt => new(295);
-        public override SystemCallNumber Statx  => new(383);
+        public override SystemCallNumber OpenAt      => new(295);
+        public override SystemCallNumber Statx       => new(383);
+
+        public override SystemCallNumber MemFdCreate => new(356);
     }
 
     private sealed class Arm : Legacy32
     {
-        public override SystemCallNumber OpenAt => new(322);
-        public override SystemCallNumber Statx  => new(397);
+        public override SystemCallNumber OpenAt      => new(322);
+        public override SystemCallNumber Statx       => new(397);
+
+        public override SystemCallNumber MemFdCreate => new(385);
     }
 
     private sealed class X64 : SystemCallTable
@@ -74,15 +89,17 @@ public abstract class SystemCallTable
         public override SystemCallNumber SchedSetScheduler => new(144);
         public override SystemCallNumber SchedGetParam     => new(143);
 
-        public override SystemCallNumber OpenAt => new(257);
-        public override SystemCallNumber Close  => new(3);
-        public override SystemCallNumber Dup    => new(32);
-        public override SystemCallNumber Read   => new(0);
-        public override SystemCallNumber Write  => new(1);
-        public override SystemCallNumber Ioctl  => new(16);
-        public override SystemCallNumber Fcntl  => new(72);
-        public override SystemCallNumber Statx  => new(332);
-        public override SystemCallNumber Lseek  => new(8);
+        public override SystemCallNumber OpenAt      => new(257);
+        public override SystemCallNumber Close       => new(3);
+        public override SystemCallNumber Dup         => new(32);
+        public override SystemCallNumber Read        => new(0);
+        public override SystemCallNumber Write       => new(1);
+        public override SystemCallNumber Ioctl       => new(16);
+        public override SystemCallNumber Fcntl       => new(72);
+        public override SystemCallNumber Statx       => new(332);
+        public override SystemCallNumber Lseek       => new(8);
+
+        public override SystemCallNumber MemFdCreate => new(319);
     }
 
     private abstract class Legacy64 : Legacy
@@ -92,14 +109,18 @@ public abstract class SystemCallTable
 
     private sealed class S390x : Legacy64
     {
-        public override SystemCallNumber OpenAt => new(288);
-        public override SystemCallNumber Statx  => new(379);
+        public override SystemCallNumber OpenAt      => new(288);
+        public override SystemCallNumber Statx       => new(379);
+
+        public override SystemCallNumber MemFdCreate => new(350);
     }
 
     private sealed class Ppc64le : Legacy64
     {
-        public override SystemCallNumber OpenAt => new(286);
-        public override SystemCallNumber Statx  => new(383);
+        public override SystemCallNumber OpenAt      => new(286);
+        public override SystemCallNumber Statx       => new(383);
+
+        public override SystemCallNumber MemFdCreate => new(360);
     }
 
     private sealed class Generic : SystemCallTable
@@ -108,14 +129,16 @@ public abstract class SystemCallTable
         public override SystemCallNumber SchedSetScheduler => new(119);
         public override SystemCallNumber SchedGetParam     => new(121);
 
-        public override SystemCallNumber OpenAt => new(56);
-        public override SystemCallNumber Close  => new(57);
-        public override SystemCallNumber Dup    => new(23);
-        public override SystemCallNumber Read   => new(63);
-        public override SystemCallNumber Write  => new(64);
-        public override SystemCallNumber Ioctl  => new(29);
-        public override SystemCallNumber Fcntl  => new(25);
-        public override SystemCallNumber Statx  => new(291);
-        public override SystemCallNumber Lseek  => new(62);
+        public override SystemCallNumber OpenAt      => new(56);
+        public override SystemCallNumber Close       => new(57);
+        public override SystemCallNumber Dup         => new(23);
+        public override SystemCallNumber Read        => new(63);
+        public override SystemCallNumber Write       => new(64);
+        public override SystemCallNumber Ioctl       => new(29);
+        public override SystemCallNumber Fcntl       => new(25);
+        public override SystemCallNumber Statx       => new(291);
+        public override SystemCallNumber Lseek       => new(62);
+
+        public override SystemCallNumber MemFdCreate => new(279);
     }
 }
