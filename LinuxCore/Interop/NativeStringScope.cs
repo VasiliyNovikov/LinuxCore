@@ -1,24 +1,42 @@
 using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.Marshalling;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace LinuxCore.Interop;
 
-internal ref struct NativeStringScope : IDisposable
+internal readonly unsafe ref struct NativeStringScope : IDisposable
 {
-    public static int BufferSize => Utf8StringMarshaller.ManagedToUnmanagedIn.BufferSize;
+    public const int BufferSize = 0x100;
 
-    private Utf8StringMarshaller.ManagedToUnmanagedIn _marshaller = new();
+    private readonly bool _allocated = false;
 
-    public unsafe byte* NativeValue
+    public byte* NativeValue { get; } = null;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeStringScope(string? value, Span<byte> scratchBuffer)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _marshaller.ToUnmanaged();
+        if (value is null)
+            return;
+
+        if (3L * value.Length >= scratchBuffer.Length)
+        {
+            var byteCount = checked(Encoding.UTF8.GetByteCount(value) + 1);
+            if (byteCount > scratchBuffer.Length)
+            {
+                scratchBuffer = new Span<byte>((byte*)NativeMemory.Alloc((nuint)byteCount), byteCount);
+                _allocated = true;
+            }
+        }
+
+        NativeValue = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(scratchBuffer));
+        scratchBuffer[Encoding.UTF8.GetBytes(value, scratchBuffer)] = 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeStringScope(string value, Span<byte> scratchBuffer) => _marshaller.FromManaged(value, scratchBuffer);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Dispose() => _marshaller.Free();
+    public void Dispose()
+    {
+        if (_allocated)
+            NativeMemory.Free(NativeValue);
+    }
 }
