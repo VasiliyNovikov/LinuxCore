@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.Marshalling;
 
 namespace LinuxCore.Interop;
 
@@ -80,19 +79,13 @@ internal static unsafe class File
     [SkipLocalsInit]
     public static LinuxResult<FileDescriptor> open(string path, int flags, LinuxFileMode mode)
     {
-        scoped Utf8StringMarshaller.ManagedToUnmanagedIn marshaller = new();
-        marshaller.FromManaged(path, stackalloc byte[Utf8StringMarshaller.ManagedToUnmanagedIn.BufferSize]);
         LinuxResult<FileDescriptor> result;
         var error = LinuxErrorNumber.OK;
-        try
+        using (var pathScope = new NativeStringScope(path, stackalloc byte[NativeStringScope.BufferSize]))
         {
-            result = SystemCall.Invoke<int, nint, int, LinuxFileMode, FileDescriptor>(SystemCallTable.Current.OpenAt, AT_FDCWD, (nint)marshaller.ToUnmanaged(), flags, mode);
+            result = SystemCall.Invoke<int, nint, int, LinuxFileMode, FileDescriptor>(SystemCallTable.Current.OpenAt, AT_FDCWD, (nint)pathScope.NativeValue, flags, mode);
             if (result.IsError)
                 error = LinuxErrorNumber.Last;
-        }
-        finally
-        {
-            marshaller.Free();
         }
         if (error != LinuxErrorNumber.OK)
             LinuxErrorNumber.Last = error;

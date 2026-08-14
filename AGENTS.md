@@ -50,6 +50,13 @@ For non-FD security objects:
 - Throw `LinuxException` (wraps `LinuxErrorNumber`) on error. Never throw `IOException` or `Win32Exception`.
 - Non-fatal EAGAIN/EWOULDBLOCK/EINTR conditions use the `TryRead`/`TryWrite` pattern (returns `bool`, sets `out` count) instead of throwing.
 
+### System call numbers
+- Expose syscall numbers that are stable across every supported architecture as public static `SystemCallTable` members.
+- Expose syscall numbers that vary but are available on every supported architecture as public abstract `SystemCallTable` members and override them in every architecture table.
+- For syscalls available only on a subset of supported architectures, use a public virtual member that throws `NotImplementedException` by default and override it in each applicable architecture table.
+- `SystemCallTable.Current` is the intended runtime entry point; external inheritance is not supported.
+- Add each new syscall number to the current-platform native-header oracle tests and ensure every containerized or emulated architecture exercises the affected operation.
+
 ### Platform targeting
 - `LinuxOnly.cs` applies `[assembly: SupportedOSPlatform("linux")]` to every project — the library is Linux-only by design.
 - The main library is AOT-compatible (`IsAotCompatible=true`); avoid reflection.

@@ -26,6 +26,8 @@ public class SystemCallTableTests
         AssertSysCall("__NR_lseek", SystemCallTable.Current.Lseek);
         if (!NativeAbi.Is64Bit)
             AssertSysCall("__NR__llseek", SystemCallTable.Current.Llseek);
+
+        AssertSysCall("__NR_memfd_create", SystemCallTable.Current.MemFdCreate);
     }
 
     private static void AssertSysCall(string name, SystemCallNumber number) => Assert.AreEqual(CScript.EvaluateNInt(name, "sys/syscall.h"), number.Value);
