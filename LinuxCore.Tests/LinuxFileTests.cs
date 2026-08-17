@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -309,25 +310,35 @@ public class LinuxFileTests
     [TestMethod]
     public void Linux_File_Flag_Translation_Matches_Current_Platform_Headers()
     {
-        AssertFileFlag(LinuxFileFlags.ReadOnly, "O_RDONLY");
-        AssertFileFlag(LinuxFileFlags.WriteOnly, "O_WRONLY");
-        AssertFileFlag(LinuxFileFlags.ReadWrite, "O_RDWR");
-        AssertFileFlag(LinuxFileFlags.Append, "O_APPEND");
-        AssertFileFlag(LinuxFileFlags.NonBlock, "O_NONBLOCK");
-        AssertFileFlag(LinuxFileFlags.Direct, "O_DIRECT");
-        AssertFileFlag(LinuxFileFlags.LargeFile, "O_LARGEFILE");
-        AssertFileFlag(LinuxFileFlags.Directory, "O_DIRECTORY");
-        AssertFileFlag(LinuxFileFlags.NoFollow, "O_NOFOLLOW");
-        AssertFileFlag(LinuxFileFlags.CloseOnExec, "O_CLOEXEC");
-        AssertFileFlag(LinuxFileFlags.TmpFile, "O_TMPFILE");
+        (LinuxFileFlags Managed, string Native)[] constants =
+        [
+            (LinuxFileFlags.ReadOnly, "O_RDONLY"),
+            (LinuxFileFlags.WriteOnly, "O_WRONLY"),
+            (LinuxFileFlags.ReadWrite, "O_RDWR"),
+            (LinuxFileFlags.Create, "O_CREAT"),
+            (LinuxFileFlags.Exclusive, "O_EXCL"),
+            (LinuxFileFlags.NoCTTY, "O_NOCTTY"),
+            (LinuxFileFlags.Truncate, "O_TRUNC"),
+            (LinuxFileFlags.Append, "O_APPEND"),
+            (LinuxFileFlags.NonBlock, "O_NONBLOCK"),
+            (LinuxFileFlags.DataSync, "O_DSYNC"),
+            (LinuxFileFlags.Async, "FASYNC"),
+            (LinuxFileFlags.Direct, "O_DIRECT"),
+            (LinuxFileFlags.LargeFile, "O_LARGEFILE"),
+            (LinuxFileFlags.Directory, "O_DIRECTORY"),
+            (LinuxFileFlags.NoFollow, "O_NOFOLLOW"),
+            (LinuxFileFlags.NoAccessTime, "O_NOATIME"),
+            (LinuxFileFlags.CloseOnExec, "O_CLOEXEC"),
+            (LinuxFileFlags.Path, "O_PATH"),
+            (LinuxFileFlags.TmpFile, "O_TMPFILE")
+        ];
+        Assert.AreSequenceEqual(Enum.GetValues<LinuxFileFlags>(), constants.Select(static constant => constant.Managed), SequenceOrder.InAnyOrder);
 
-        return;
-
-        static void AssertFileFlag(LinuxFileFlags managed, string nativeName)
+        var nativeValues = CScript.EvaluateInt32s([.. constants.Select(static constant => constant.Native)], "asm/fcntl.h");
+        for (var i = 0; i < constants.Length; ++i)
         {
-            var native = CScript.EvaluateInt32(nativeName, "asm/fcntl.h");
-            Assert.AreEqual(native, NativeLinuxFileFlags.ToNative(managed));
-            Assert.AreEqual(managed, NativeLinuxFileFlags.FromNative(native));
+            Assert.AreEqual(nativeValues[i], NativeLinuxFileFlags.ToNative(constants[i].Managed), constants[i].Managed.ToString());
+            Assert.AreEqual(constants[i].Managed, NativeLinuxFileFlags.FromNative(nativeValues[i]), constants[i].Managed.ToString());
         }
     }
 }
