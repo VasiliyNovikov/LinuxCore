@@ -128,9 +128,9 @@ internal static class CScript
                           """);
 
             var compiler = Environment.GetEnvironmentVariable("CC") ?? "cc";
-            File.WriteAllText(sourcePath, source.ToString());
             try
             {
+                File.WriteAllText(sourcePath, source.ToString());
                 Script.Run(compiler, "-std=c11", "-Wall", "-Wextra", "-Werror", "-shared", "-fPIC", sourcePath, "-o", libraryPath);
             }
             finally
