@@ -59,6 +59,18 @@ public class LinuxSynchronizationTests
     }
 
     [TestMethod]
+    public void LinuxSemaphore_InitialValue_And_CloseOnExec_Are_Applied()
+    {
+        using var semaphore = new LinuxSemaphore(2);
+
+        Assert.IsTrue(semaphore.CloseOnExec);
+        semaphore.Decrement();
+        Assert.AreEqual(LinuxPoll.Event.Readable, LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+        semaphore.Decrement();
+        Assert.IsNull(LinuxPoll.Wait(semaphore.Descriptor, LinuxPoll.Event.Readable, 0));
+    }
+
+    [TestMethod]
     public void LinuxSemaphoreSlim_Add_Remove_Tracks_Count_Transitions()
     {
         using var semaphore = new LinuxSemaphoreSlim();

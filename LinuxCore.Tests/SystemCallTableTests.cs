@@ -28,6 +28,8 @@ public class SystemCallTableTests
             AssertSysCall("__NR__llseek", SystemCallTable.Current.Llseek);
 
         AssertSysCall("__NR_memfd_create", SystemCallTable.Current.MemFdCreate);
+
+        AssertSysCall("__NR_eventfd2", SystemCallTable.Current.EventFd2);
     }
 
     private static void AssertSysCall(string name, SystemCallNumber number) => Assert.AreEqual(CScript.EvaluateNInt(name, "sys/syscall.h"), number.Value);

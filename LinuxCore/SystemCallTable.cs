@@ -47,6 +47,8 @@ public abstract class SystemCallTable
 
     public abstract SystemCallNumber MemFdCreate { get; } // __NR_memfd_create
 
+    public abstract SystemCallNumber EventFd2    { get; } // __NR_eventfd2
+
     private abstract class Legacy : SystemCallTable
     {
         public override SystemCallNumber SchedGetScheduler => new(157);
@@ -73,6 +75,8 @@ public abstract class SystemCallTable
         public override SystemCallNumber Statx       => new(383);
 
         public override SystemCallNumber MemFdCreate => new(356);
+
+        public override SystemCallNumber EventFd2    => new(328);
     }
 
     private sealed class Arm : Legacy32
@@ -81,6 +85,8 @@ public abstract class SystemCallTable
         public override SystemCallNumber Statx       => new(397);
 
         public override SystemCallNumber MemFdCreate => new(385);
+
+        public override SystemCallNumber EventFd2    => new(356);
     }
 
     private sealed class X64 : SystemCallTable
@@ -100,6 +106,8 @@ public abstract class SystemCallTable
         public override SystemCallNumber Lseek       => new(8);
 
         public override SystemCallNumber MemFdCreate => new(319);
+
+        public override SystemCallNumber EventFd2    => new(290);
     }
 
     private abstract class Legacy64 : Legacy
@@ -113,6 +121,8 @@ public abstract class SystemCallTable
         public override SystemCallNumber Statx       => new(379);
 
         public override SystemCallNumber MemFdCreate => new(350);
+
+        public override SystemCallNumber EventFd2    => new(323);
     }
 
     private sealed class Ppc64le : Legacy64
@@ -121,6 +131,8 @@ public abstract class SystemCallTable
         public override SystemCallNumber Statx       => new(383);
 
         public override SystemCallNumber MemFdCreate => new(360);
+
+        public override SystemCallNumber EventFd2    => new(314);
     }
 
     private sealed class Generic : SystemCallTable
@@ -140,5 +152,7 @@ public abstract class SystemCallTable
         public override SystemCallNumber Lseek       => new(62);
 
         public override SystemCallNumber MemFdCreate => new(279);
+
+        public override SystemCallNumber EventFd2    => new(19);
     }
 }
