@@ -1,3 +1,5 @@
+using LinuxCore.Interop;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LinuxCore.Tests;
@@ -5,6 +7,12 @@ namespace LinuxCore.Tests;
 [TestClass]
 public class InterfaceNameHelperTests
 {
+    [TestMethod]
+    public void InterfaceNameHelper_Constants_Match_Current_Platform_Headers()
+    {
+        Assert.AreEqual(NetIf.IF_NAMESIZE, CScript.EvaluateInt32("IF_NAMESIZE", "net/if.h"));
+    }
+
     [TestMethod]
     public void InterfaceNameHelper_GetIndex()
     {

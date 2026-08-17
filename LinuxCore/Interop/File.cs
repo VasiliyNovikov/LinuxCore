@@ -21,9 +21,9 @@ internal static unsafe class File
     public const int F_SEAL_WRITE        = 0x0008; // Prevent writes
     public const int F_SEAL_FUTURE_WRITE = 0x0010; // Prevent future writes while mapped
 
-    private const int  AT_FDCWD          = -100;
-    private const int  AT_EMPTY_PATH     = 0x1000;
-    private const uint STATX_BASIC_STATS = 0x07ff;
+    internal const int  AT_FDCWD          = -100;
+    internal const int  AT_EMPTY_PATH     = 0x1000;
+    internal const uint STATX_BASIC_STATS = 0x07ff;
 
     [StructLayout(LayoutKind.Sequential)]
     internal readonly struct statx_timestamp

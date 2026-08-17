@@ -201,6 +201,25 @@ public class LinuxMemoryMapTests
     }
 
     [TestMethod]
+    public void LinuxMemoryMap_Constants_Match_Current_Platform_Headers()
+    {
+        NativeConstantAssert.EnumValuesMatch<LinuxMemoryProtection>(
+        [
+            (nameof(LinuxMemoryProtection.None), "PROT_NONE"),
+            (nameof(LinuxMemoryProtection.Read), "PROT_READ"),
+            (nameof(LinuxMemoryProtection.Write), "PROT_WRITE"),
+            (nameof(LinuxMemoryProtection.Execute), "PROT_EXEC")
+        ], "sys/mman.h");
+
+        NativeConstantAssert.EnumValuesMatch<LinuxMemoryMapSync>(
+        [
+            (nameof(LinuxMemoryMapSync.Sync), "MS_SYNC"),
+            (nameof(LinuxMemoryMapSync.Async), "MS_ASYNC"),
+            (nameof(LinuxMemoryMapSync.Invalidate), "MS_INVALIDATE")
+        ], "sys/mman.h");
+    }
+
+    [TestMethod]
     public void LinuxMemoryMap_Flag_Translation_Matches_Current_Platform_Headers()
     {
         (LinuxMemoryMapFlags Managed, string Native)[] constants =

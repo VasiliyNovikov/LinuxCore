@@ -1,6 +1,8 @@
 using System;
 using System.Threading;
 
+using LinuxCore.Interop;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LinuxCore.Tests;
@@ -8,6 +10,28 @@ namespace LinuxCore.Tests;
 [TestClass]
 public class LinuxSynchronizationTests
 {
+    [TestMethod]
+    public void LinuxPoll_And_EventFd_Constants_Match_Current_Platform_Headers()
+    {
+        NativeConstantAssert.EnumValuesMatch<LinuxPoll.Event>(
+        [
+            (nameof(LinuxPoll.Event.None), "0"),
+            (nameof(LinuxPoll.Event.Readable), "POLLIN"),
+            (nameof(LinuxPoll.Event.Urgent), "POLLPRI"),
+            (nameof(LinuxPoll.Event.Writable), "POLLOUT"),
+            (nameof(LinuxPoll.Event.Error), "POLLERR"),
+            (nameof(LinuxPoll.Event.HangUp), "POLLHUP"),
+            (nameof(LinuxPoll.Event.Invalid), "POLLNVAL")
+        ], "poll.h");
+
+        NativeConstantAssert.ValuesMatch(
+        [
+            (nameof(EventFd.EFD_SEMAPHORE), EventFd.EFD_SEMAPHORE, "EFD_SEMAPHORE"),
+            (nameof(EventFd.EFD_NONBLOCK), EventFd.EFD_NONBLOCK, "EFD_NONBLOCK"),
+            (nameof(EventFd.EFD_CLOEXEC), EventFd.EFD_CLOEXEC, "EFD_CLOEXEC")
+        ], "sys/eventfd.h");
+    }
+
     [TestMethod]
     public void LinuxEvent_Set_Makes_Descriptor_Readable_Until_Wait()
     {
