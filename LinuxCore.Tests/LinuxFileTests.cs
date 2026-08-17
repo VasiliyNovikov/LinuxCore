@@ -1,9 +1,12 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using NativeFile = LinuxCore.Interop.File;
 
 namespace LinuxCore.Tests;
 
@@ -307,27 +310,96 @@ public class LinuxFileTests
     }
 
     [TestMethod]
+    public void Linux_File_Constants_Match_Current_Platform_Headers()
+    {
+        NativeConstantAssert.ValuesMatch(
+        [
+            (nameof(NativeFile.F_GETFD), NativeFile.F_GETFD, "F_GETFD"),
+            (nameof(NativeFile.F_SETFD), NativeFile.F_SETFD, "F_SETFD"),
+            (nameof(NativeFile.F_GETFL), NativeFile.F_GETFL, "F_GETFL"),
+            (nameof(NativeFile.F_DUPFD_CLOEXEC), NativeFile.F_DUPFD_CLOEXEC, "F_DUPFD_CLOEXEC"),
+            (nameof(NativeFile.F_ADD_SEALS), NativeFile.F_ADD_SEALS, "F_ADD_SEALS"),
+            (nameof(NativeFile.F_GET_SEALS), NativeFile.F_GET_SEALS, "F_GET_SEALS"),
+            (nameof(NativeFile.FD_CLOEXEC), NativeFile.FD_CLOEXEC, "FD_CLOEXEC"),
+            (nameof(NativeFile.F_SEAL_SEAL), NativeFile.F_SEAL_SEAL, "F_SEAL_SEAL"),
+            (nameof(NativeFile.F_SEAL_SHRINK), NativeFile.F_SEAL_SHRINK, "F_SEAL_SHRINK"),
+            (nameof(NativeFile.F_SEAL_GROW), NativeFile.F_SEAL_GROW, "F_SEAL_GROW"),
+            (nameof(NativeFile.F_SEAL_WRITE), NativeFile.F_SEAL_WRITE, "F_SEAL_WRITE"),
+            (nameof(NativeFile.F_SEAL_FUTURE_WRITE), NativeFile.F_SEAL_FUTURE_WRITE, "F_SEAL_FUTURE_WRITE")
+        ], "fcntl.h");
+
+        NativeConstantAssert.ValuesMatch(
+        [
+            (nameof(NativeFile.AT_FDCWD), NativeFile.AT_FDCWD, "AT_FDCWD"),
+            (nameof(NativeFile.AT_EMPTY_PATH), NativeFile.AT_EMPTY_PATH, "AT_EMPTY_PATH")
+        ], "fcntl.h");
+
+        Assert.AreEqual(NativeFile.STATX_BASIC_STATS, CScript.EvaluateInt64("STATX_BASIC_STATS", "linux/stat.h"));
+
+        NativeConstantAssert.EnumValuesMatch<LinuxFileMode>(
+        [
+            (nameof(LinuxFileMode.None), "0"),
+            (nameof(LinuxFileMode.OtherExecute), "S_IXOTH"),
+            (nameof(LinuxFileMode.OtherWrite), "S_IWOTH"),
+            (nameof(LinuxFileMode.OtherRead), "S_IROTH"),
+            (nameof(LinuxFileMode.GroupExecute), "S_IXGRP"),
+            (nameof(LinuxFileMode.GroupWrite), "S_IWGRP"),
+            (nameof(LinuxFileMode.GroupRead), "S_IRGRP"),
+            (nameof(LinuxFileMode.UserExecute), "S_IXUSR"),
+            (nameof(LinuxFileMode.UserWrite), "S_IWUSR"),
+            (nameof(LinuxFileMode.UserRead), "S_IRUSR"),
+            (nameof(LinuxFileMode.StickyBit), "S_ISVTX"),
+            (nameof(LinuxFileMode.SetGroup), "S_ISGID"),
+            (nameof(LinuxFileMode.SetUser), "S_ISUID")
+        ], "fcntl.h");
+
+        NativeConstantAssert.EnumValuesMatch<LinuxSeekOrigin>(
+        [
+            (nameof(LinuxSeekOrigin.Begin), "SEEK_SET"),
+            (nameof(LinuxSeekOrigin.Current), "SEEK_CUR"),
+            (nameof(LinuxSeekOrigin.End), "SEEK_END")
+        ], "unistd.h");
+
+        NativeConstantAssert.ValuesMatch(
+        [
+            (nameof(FileDescriptor.StandardInput), FileDescriptor.StandardInput.Value, "STDIN_FILENO"),
+            (nameof(FileDescriptor.StandardOutput), FileDescriptor.StandardOutput.Value, "STDOUT_FILENO"),
+            (nameof(FileDescriptor.StandardError), FileDescriptor.StandardError.Value, "STDERR_FILENO")
+        ], "unistd.h");
+    }
+
+    [TestMethod]
     public void Linux_File_Flag_Translation_Matches_Current_Platform_Headers()
     {
-        AssertFileFlag(LinuxFileFlags.ReadOnly, "O_RDONLY");
-        AssertFileFlag(LinuxFileFlags.WriteOnly, "O_WRONLY");
-        AssertFileFlag(LinuxFileFlags.ReadWrite, "O_RDWR");
-        AssertFileFlag(LinuxFileFlags.Append, "O_APPEND");
-        AssertFileFlag(LinuxFileFlags.NonBlock, "O_NONBLOCK");
-        AssertFileFlag(LinuxFileFlags.Direct, "O_DIRECT");
-        AssertFileFlag(LinuxFileFlags.LargeFile, "O_LARGEFILE");
-        AssertFileFlag(LinuxFileFlags.Directory, "O_DIRECTORY");
-        AssertFileFlag(LinuxFileFlags.NoFollow, "O_NOFOLLOW");
-        AssertFileFlag(LinuxFileFlags.CloseOnExec, "O_CLOEXEC");
-        AssertFileFlag(LinuxFileFlags.TmpFile, "O_TMPFILE");
+        (LinuxFileFlags Managed, string Native)[] constants =
+        [
+            (LinuxFileFlags.ReadOnly, "O_RDONLY"),
+            (LinuxFileFlags.WriteOnly, "O_WRONLY"),
+            (LinuxFileFlags.ReadWrite, "O_RDWR"),
+            (LinuxFileFlags.Create, "O_CREAT"),
+            (LinuxFileFlags.Exclusive, "O_EXCL"),
+            (LinuxFileFlags.NoCTTY, "O_NOCTTY"),
+            (LinuxFileFlags.Truncate, "O_TRUNC"),
+            (LinuxFileFlags.Append, "O_APPEND"),
+            (LinuxFileFlags.NonBlock, "O_NONBLOCK"),
+            (LinuxFileFlags.DataSync, "O_DSYNC"),
+            (LinuxFileFlags.Async, "FASYNC"),
+            (LinuxFileFlags.Direct, "O_DIRECT"),
+            (LinuxFileFlags.LargeFile, "O_LARGEFILE"),
+            (LinuxFileFlags.Directory, "O_DIRECTORY"),
+            (LinuxFileFlags.NoFollow, "O_NOFOLLOW"),
+            (LinuxFileFlags.NoAccessTime, "O_NOATIME"),
+            (LinuxFileFlags.CloseOnExec, "O_CLOEXEC"),
+            (LinuxFileFlags.Path, "O_PATH"),
+            (LinuxFileFlags.TmpFile, "O_TMPFILE")
+        ];
+        Assert.AreSequenceEqual(Enum.GetValues<LinuxFileFlags>(), constants.Select(static constant => constant.Managed), SequenceOrder.InAnyOrder);
 
-        return;
-
-        static void AssertFileFlag(LinuxFileFlags managed, string nativeName)
+        var nativeValues = CScript.EvaluateInt32s([.. constants.Select(static constant => constant.Native)], "asm/fcntl.h");
+        for (var i = 0; i < constants.Length; ++i)
         {
-            var native = CScript.EvaluateInt32(nativeName, "asm/fcntl.h");
-            Assert.AreEqual(native, NativeLinuxFileFlags.ToNative(managed));
-            Assert.AreEqual(managed, NativeLinuxFileFlags.FromNative(native));
+            Assert.AreEqual(nativeValues[i], NativeLinuxFileFlags.ToNative(constants[i].Managed), constants[i].Managed.ToString());
+            Assert.AreEqual(constants[i].Managed, NativeLinuxFileFlags.FromNative(nativeValues[i]), constants[i].Managed.ToString());
         }
     }
 }

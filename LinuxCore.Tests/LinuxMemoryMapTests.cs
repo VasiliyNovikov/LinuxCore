@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -200,9 +201,70 @@ public class LinuxMemoryMapTests
     }
 
     [TestMethod]
+    public void LinuxMemoryMap_Constants_Match_Current_Platform_Headers()
+    {
+        NativeConstantAssert.EnumValuesMatch<LinuxMemoryProtection>(
+        [
+            (nameof(LinuxMemoryProtection.None), "PROT_NONE"),
+            (nameof(LinuxMemoryProtection.Read), "PROT_READ"),
+            (nameof(LinuxMemoryProtection.Write), "PROT_WRITE"),
+            (nameof(LinuxMemoryProtection.Execute), "PROT_EXEC")
+        ], "sys/mman.h");
+
+        NativeConstantAssert.EnumValuesMatch<LinuxMemoryMapSync>(
+        [
+            (nameof(LinuxMemoryMapSync.Sync), "MS_SYNC"),
+            (nameof(LinuxMemoryMapSync.Async), "MS_ASYNC"),
+            (nameof(LinuxMemoryMapSync.Invalidate), "MS_INVALIDATE")
+        ], "sys/mman.h");
+    }
+
+    [TestMethod]
     public void LinuxMemoryMap_Flag_Translation_Matches_Current_Platform_Headers()
     {
-        Assert.AreEqual(CScript.EvaluateInt32("MAP_LOCKED", "asm/mman.h"), NativeLinuxMemoryMapFlags.ToNative(LinuxMemoryMapFlags.Locked));
-        Assert.AreEqual(CScript.EvaluateInt32("MAP_NORESERVE", "asm/mman.h"), NativeLinuxMemoryMapFlags.ToNative(LinuxMemoryMapFlags.NoReserve));
+        (LinuxMemoryMapFlags Managed, string Native)[] constants =
+        [
+            (LinuxMemoryMapFlags.None, "0"),
+            (LinuxMemoryMapFlags.Shared, "MAP_SHARED"),
+            (LinuxMemoryMapFlags.Private, "MAP_PRIVATE"),
+            (LinuxMemoryMapFlags.SharedValidate, "MAP_SHARED_VALIDATE"),
+            (LinuxMemoryMapFlags.Droppable, "MAP_DROPPABLE"),
+            (LinuxMemoryMapFlags.Fixed, "MAP_FIXED"),
+            (LinuxMemoryMapFlags.Anonymous, "MAP_ANONYMOUS"),
+            (LinuxMemoryMapFlags.GrowsDown, "MAP_GROWSDOWN"),
+            (LinuxMemoryMapFlags.Locked, "MAP_LOCKED"),
+            (LinuxMemoryMapFlags.NoReserve, "MAP_NORESERVE"),
+            (LinuxMemoryMapFlags.Populate, "MAP_POPULATE"),
+            (LinuxMemoryMapFlags.NonBlocking, "MAP_NONBLOCK"),
+            (LinuxMemoryMapFlags.FixedNoReplace, "MAP_FIXED_NOREPLACE"),
+            (LinuxMemoryMapFlags.Uninitialized, "MAP_UNINITIALIZED"),
+            (LinuxMemoryMapFlags.HugeTLB, "MAP_HUGETLB"),
+            (LinuxMemoryMapFlags.Huge2M, "MAP_HUGETLB | MAP_HUGE_2MB"),
+            (LinuxMemoryMapFlags.Huge1G, "MAP_HUGETLB | MAP_HUGE_1GB")
+        ];
+        Assert.AreSequenceEqual(Enum.GetValues<LinuxMemoryMapFlags>(), constants.Select(static constant => constant.Managed), SequenceOrder.InAnyOrder);
+
+        (string symbol, string Native)[] nativeConstants =
+        [
+            .. constants.Select(static constant =>
+            {
+                var symbol = constant.Managed switch
+                {
+                    LinuxMemoryMapFlags.None => "MAP_SHARED",
+                    LinuxMemoryMapFlags.Huge2M => "MAP_HUGE_2MB",
+                    LinuxMemoryMapFlags.Huge1G => "MAP_HUGE_1GB",
+                    _ => constant.Native
+                };
+                return (symbol, constant.Native);
+            })
+        ];
+        var nativeValues = CScript.EvaluateDefinedInt32s(nativeConstants, "linux/mman.h");
+        for (var i = 0; i < constants.Length; ++i)
+        {
+            if (nativeValues[i] is { } nativeValue)
+                Assert.AreEqual(nativeValue, NativeLinuxMemoryMapFlags.ToNative(constants[i].Managed), constants[i].Managed.ToString());
+            else
+                Assert.AreEqual(LinuxMemoryMapFlags.Droppable, constants[i].Managed, $"Unexpected undefined native constant: {nativeConstants[i].symbol}");
+        }
     }
 }

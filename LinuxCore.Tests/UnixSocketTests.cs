@@ -7,11 +7,25 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ProcFsCore;
 
+using NativeSocket = LinuxCore.Interop.Socket;
+
 namespace LinuxCore.Tests;
 
 [TestClass]
 public class UnixSocketTests
 {
+    [TestMethod]
+    public void UnixSocketAddress_Constants_Match_Current_Platform_Headers()
+    {
+        NativeConstantAssert.ValuesMatch(
+        [
+            (nameof(NativeSocket.SOCKADDR_UN_PATH_OFFSET), NativeSocket.SOCKADDR_UN_PATH_OFFSET, "offsetof(struct sockaddr_un, sun_path)"),
+            (nameof(NativeSocket.SOCKADDR_UN_PATH_LENGTH), NativeSocket.SOCKADDR_UN_PATH_LENGTH, "sizeof(((struct sockaddr_un*)0)->sun_path)"),
+            (nameof(UnixSocketAddress.MaxPathLength), UnixSocketAddress.MaxPathLength, "sizeof(((struct sockaddr_un*)0)->sun_path)"),
+            (nameof(UnixSocketAddress.MaxAbstractNameLength), UnixSocketAddress.MaxAbstractNameLength, "sizeof(((struct sockaddr_un*)0)->sun_path) - 1")
+        ], "sys/socket.h", "sys/un.h");
+    }
+
     [TestMethod]
     public void UnixSocket_Create_Sets_CloseOnExec()
     {

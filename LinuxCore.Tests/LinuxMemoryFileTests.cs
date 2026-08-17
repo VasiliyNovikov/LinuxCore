@@ -9,6 +9,28 @@ namespace LinuxCore.Tests;
 public class LinuxMemoryFileTests
 {
     [TestMethod]
+    public void LinuxMemoryFile_Constants_Match_Current_Platform_Headers()
+    {
+        NativeConstantAssert.EnumValuesMatch<LinuxMemoryFileFlags>(
+        [
+            (nameof(LinuxMemoryFileFlags.None), "0"),
+            (nameof(LinuxMemoryFileFlags.CloseOnExec), "MFD_CLOEXEC"),
+            (nameof(LinuxMemoryFileFlags.AllowSealing), "MFD_ALLOW_SEALING"),
+            (nameof(LinuxMemoryFileFlags.HugeTLB), "MFD_HUGETLB")
+        ], "sys/mman.h");
+
+        NativeConstantAssert.EnumValuesMatch<LinuxMemoryFileSeals>(
+        [
+            (nameof(LinuxMemoryFileSeals.None), "0"),
+            (nameof(LinuxMemoryFileSeals.Seal), "F_SEAL_SEAL"),
+            (nameof(LinuxMemoryFileSeals.Shrink), "F_SEAL_SHRINK"),
+            (nameof(LinuxMemoryFileSeals.Grow), "F_SEAL_GROW"),
+            (nameof(LinuxMemoryFileSeals.Write), "F_SEAL_WRITE"),
+            (nameof(LinuxMemoryFileSeals.FutureWrite), "F_SEAL_FUTURE_WRITE")
+        ], "fcntl.h");
+    }
+
+    [TestMethod]
     public void LinuxMemoryFile_Create_Write_And_Read_RoundTrips()
     {
         using var file = new LinuxMemoryFile("roundtrip");

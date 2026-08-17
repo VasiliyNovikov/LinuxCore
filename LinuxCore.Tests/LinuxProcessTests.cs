@@ -5,11 +5,19 @@ using System.Threading;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using NativeProcess = LinuxCore.Interop.Process;
+
 namespace LinuxCore.Tests;
 
 [TestClass]
 public class LinuxProcessTests
 {
+    [TestMethod]
+    public void LinuxProcess_Constants_Match_Current_Platform_Headers()
+    {
+        Assert.AreEqual(NativeProcess.SIGKILL, CScript.EvaluateInt32("SIGKILL", "signal.h"));
+    }
+
     [TestMethod]
     public void IsPidFdSupported_Is_True_On_Supported_Kernel() => Assert.IsTrue(LinuxProcess.IsPidFdSupported);
 
