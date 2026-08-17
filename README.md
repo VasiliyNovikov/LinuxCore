@@ -63,6 +63,10 @@ LinuxSecurityObject (Id + Name)
 - NativeAOT compatibility is exercised in CI on both glibc (Ubuntu) and musl (Alpine) runners via a small smoke app.
 - `LinuxProcess` cancellation stops only the wait; it does not terminate the child. Callers must successfully wait and reap the child before disposal. Process waits, disposal, supplied-descriptor mutation, native-environment mutation, and external child reaping must not race. A replacement child environment does not control `posix_spawnp` executable lookup on supported glibc and musl versions; pass a path containing `/` when lookup must not use the native parent `PATH`.
 
+## Contributing
+
+Every new or changed constant that represents a libc or Linux kernel value must include a `CScript` assertion against the current platform's native headers in the corresponding subsystem test file. Include explicit mappings for enum aliases and composite values. For architecture-dependent managed tokens such as `LinuxFileFlags` and `LinuxMemoryMapFlags`, assert the translated native value instead of the managed numeric token. Use optional-symbol assertions only when supported header versions genuinely omit the symbol.
+
 ## License
 
 [MIT](LICENSE)

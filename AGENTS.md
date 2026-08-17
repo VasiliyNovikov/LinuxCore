@@ -94,3 +94,4 @@ Central package versions are in `Directory.Packages.props`. Add new dependencies
 ### Tests
 - Framework: **MSTest** (`[TestClass]` / `[TestMethod]`).
 - `Global.cs` applies `[assembly: DoNotParallelize]` — tests must not run in parallel.
+- Every new or changed managed constant, enum member, syscall number, or interop constant that represents a C library or Linux kernel value must have a current-platform native-header oracle assertion using `CScript` in the corresponding subsystem test file. Map aliases and composite values explicitly, use `EvaluateDefinedInt32s` only for symbols genuinely absent from some supported headers, and test architecture-dependent managed tokens after translation to native values rather than comparing their managed numeric values directly.
