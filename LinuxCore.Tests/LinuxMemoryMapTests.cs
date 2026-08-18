@@ -84,6 +84,32 @@ public class LinuxMemoryMapTests
     }
 
     [TestMethod]
+    public unsafe void MemoryMap_Munmap_DirectSyscall_Succeeds()
+    {
+        const nuint length = 4096;
+        var address = Interop.MemoryMap.mmap(
+            null,
+            length,
+            LinuxMemoryProtection.Read | LinuxMemoryProtection.Write,
+            NativeLinuxMemoryMapFlags.ToNative(LinuxMemoryMapFlags.Private | LinuxMemoryMapFlags.Anonymous),
+            new FileDescriptor(-1),
+            0).ThrowIfError();
+
+        var unmapped = false;
+        try
+        {
+            *(byte*)address = 1;
+            Interop.MemoryMap.munmap((void*)address, length).ThrowIfError();
+            unmapped = true;
+        }
+        finally
+        {
+            if (!unmapped)
+                Interop.MemoryMap.munmap((void*)address, length);
+        }
+    }
+
+    [TestMethod]
     public void LinuxMemoryMap_Sync_SyncAndAsync_ThrowsLinuxException()
     {
         using var map = new LinuxMemoryMap(4);
@@ -161,6 +187,27 @@ public class LinuxMemoryMapTests
         using var file = new LinuxMemoryFile("negative-offset");
 
         var e = Assert.ThrowsExactly<LinuxException>(() => new LinuxMemoryMap(file.Descriptor, 4, offset: -1));
+        Assert.AreEqual(LinuxErrorNumber.InvalidArgument, e.ErrorNumber);
+    }
+
+    [TestMethod]
+    public void LinuxMemoryMap_FileBacked_UnalignedOffset_ThrowsLinuxException()
+    {
+        using var file = new LinuxMemoryFile("unaligned-offset");
+
+        var e = Assert.ThrowsExactly<LinuxException>(() => new LinuxMemoryMap(file.Descriptor, 4, offset: 1));
+        Assert.AreEqual(LinuxErrorNumber.InvalidArgument, e.ErrorNumber);
+    }
+
+    [TestMethod]
+    public void LinuxMemoryMap_FileBacked_32BitArch_OutOfRangeOffset_ThrowsLinuxException()
+    {
+        if (Interop.NativeAbi.Is64Bit)
+            return;
+
+        using var file = new LinuxMemoryFile("32bitarch-out-of-range-offset");
+
+        var e = Assert.ThrowsExactly<LinuxException>(() => new LinuxMemoryMap(file.Descriptor, 4, offset: 1L << 44));
         Assert.AreEqual(LinuxErrorNumber.InvalidArgument, e.ErrorNumber);
     }
 
