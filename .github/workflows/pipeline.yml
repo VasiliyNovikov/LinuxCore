@@ -159,32 +159,12 @@ jobs:
             image: debian:stable-slim
             binfmt-image: docker.io/tonistiigi/binfmt:latest
             architecture: riscv64
-            setup: |
-              sdk_version=10.0.109
-
-              apt-get update
-              apt-get install -y --no-install-recommends binutils ca-certificates curl gcc coreutils libc-bin libc6-dev libgcc-s1 libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libunwind8 linux-libc-dev tzdata zlib1g
-              sdk_name=dotnet-sdk-$sdk_version-linux-riscv64.tar.gz
-              sdk_archive=/tmp/$sdk_name
-              curl --fail --location --retry 5 --output "$sdk_archive" https://github.com/filipnavara/dotnet-riscv/releases/download/$sdk_version/$sdk_name
-              mkdir -p /usr/share/dotnet
-              tar -xzf "$sdk_archive" -C /usr/share/dotnet
-              ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+            setup: /bin/bash /src/.github/workflows/install-community-dotnet.sh filipnavara/dotnet-riscv riscv64
           - name: loongarch64-glibc
             image: ghcr.io/loong64/debian:trixie-slim
             binfmt-image: ghcr.io/loong64/tonistiigi/binfmt:master
             architecture: loong64
-            setup: |
-              sdk_version=10.0.110
-
-              apt-get update
-              apt-get install -y --no-install-recommends binutils ca-certificates curl gcc libc6-dev libgcc-s1 libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libunwind8 linux-libc-dev tzdata zlib1g
-              sdk_name=dotnet-sdk-$sdk_version-linux-loongarch64.tar.gz
-              sdk_archive=/tmp/$sdk_name
-              curl --fail --location --retry 5 --output "$sdk_archive" https://github.com/loongson/dotnet/releases/download/v$sdk_version-loongarch64/$sdk_name
-              mkdir -p /usr/share/dotnet
-              tar -xzf "$sdk_archive" -C /usr/share/dotnet
-              ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+            setup: /bin/bash /src/.github/workflows/install-community-dotnet.sh loongson/dotnet loongarch64
     steps:
       - uses: actions/checkout@v7
 
