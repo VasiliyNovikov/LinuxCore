@@ -6,6 +6,7 @@
     <File Path=".github/workflows/copilot-setup-steps.yml" />
     <File Path=".github/workflows/PackageVersion.cs" />
     <File Path=".github/workflows/pipeline.yml" />
+    <File Path=".github\workflows\install-community-dotnet.sh" />
   </Folder>
   <Folder Name="/.sln/">
     <File Path=".editorconfig" />
