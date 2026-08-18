@@ -6,6 +6,9 @@ using static LinuxCore.Interop.MemoryMap;
 
 namespace LinuxCore;
 
+/// <remarks>
+/// Memory-map operations use the kernel ABI through <c>syscall(2)</c> rather than dedicated libc symbols.
+/// </remarks>
 public abstract unsafe class LinuxMemoryMapBase : NativeObject
 {
     private readonly byte* _address;

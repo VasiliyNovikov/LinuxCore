@@ -45,6 +45,11 @@ public abstract class SystemCallTable
     public abstract SystemCallNumber Lseek       { get; } // __NR_lseek
     public virtual SystemCallNumber Llseek       => throw new NotImplementedException(); // __NR__llseek
 
+    public virtual SystemCallNumber Mmap         => throw new NotImplementedException(); // __NR_mmap
+    public virtual SystemCallNumber Mmap2        => throw new NotImplementedException(); // __NR_mmap2
+    public abstract SystemCallNumber Munmap      { get; } // __NR_munmap
+    public abstract SystemCallNumber Msync       { get; } // __NR_msync
+
     public abstract SystemCallNumber MemFdCreate { get; } // __NR_memfd_create
 
     public abstract SystemCallNumber EventFd2    { get; } // __NR_eventfd2
@@ -61,12 +66,17 @@ public abstract class SystemCallTable
         public override SystemCallNumber Write => new(4);
         public override SystemCallNumber Ioctl => new(54);
         public override SystemCallNumber Lseek => new(19);
+
+        public override SystemCallNumber Munmap => new(91);
+        public override SystemCallNumber Msync  => new(144);
     }
 
     private abstract class Legacy32 : Legacy
     {
         public override SystemCallNumber Fcntl  => new(221);
         public override SystemCallNumber Llseek => new(140);
+
+        public override SystemCallNumber Mmap2  => new(192);
     }
 
     private sealed class X86 : Legacy32
@@ -105,6 +115,10 @@ public abstract class SystemCallTable
         public override SystemCallNumber Statx       => new(332);
         public override SystemCallNumber Lseek       => new(8);
 
+        public override SystemCallNumber Mmap        => new(9);
+        public override SystemCallNumber Munmap      => new(11);
+        public override SystemCallNumber Msync       => new(26);
+
         public override SystemCallNumber MemFdCreate => new(319);
 
         public override SystemCallNumber EventFd2    => new(290);
@@ -113,6 +127,8 @@ public abstract class SystemCallTable
     private abstract class Legacy64 : Legacy
     {
         public override SystemCallNumber Fcntl => new(55);
+
+        public override SystemCallNumber Mmap  => new(90);
     }
 
     private sealed class S390x : Legacy64
@@ -150,6 +166,10 @@ public abstract class SystemCallTable
         public override SystemCallNumber Fcntl       => new(25);
         public override SystemCallNumber Statx       => new(291);
         public override SystemCallNumber Lseek       => new(62);
+
+        public override SystemCallNumber Mmap        => new(222);
+        public override SystemCallNumber Munmap      => new(215);
+        public override SystemCallNumber Msync       => new(227);
 
         public override SystemCallNumber MemFdCreate => new(279);
 

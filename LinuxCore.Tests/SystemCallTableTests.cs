@@ -1,3 +1,5 @@
+using System;
+
 using LinuxCore.Interop;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -26,6 +28,19 @@ public class SystemCallTableTests
         AssertSysCall("__NR_lseek", SystemCallTable.Current.Lseek);
         if (!NativeAbi.Is64Bit)
             AssertSysCall("__NR__llseek", SystemCallTable.Current.Llseek);
+
+        if (NativeAbi.Is64Bit)
+        {
+            AssertSysCall("__NR_mmap", SystemCallTable.Current.Mmap);
+            Assert.ThrowsExactly<NotImplementedException>(() => SystemCallTable.Current.Mmap2);
+        }
+        else
+        {
+            Assert.ThrowsExactly<NotImplementedException>(() => SystemCallTable.Current.Mmap);
+            AssertSysCall("__NR_mmap2", SystemCallTable.Current.Mmap2);
+        }
+        AssertSysCall("__NR_munmap", SystemCallTable.Current.Munmap);
+        AssertSysCall("__NR_msync", SystemCallTable.Current.Msync);
 
         AssertSysCall("__NR_memfd_create", SystemCallTable.Current.MemFdCreate);
 
