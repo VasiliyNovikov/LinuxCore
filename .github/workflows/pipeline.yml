@@ -141,6 +141,8 @@ jobs:
     name: validate-emulated-architectures (${{ matrix.name }})
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -159,34 +161,20 @@ jobs:
             image: debian:stable-slim
             binfmt-image: docker.io/tonistiigi/binfmt:latest
             architecture: riscv64
-            setup: |
-              sdk_version=10.0.109
-
-              apt-get update
-              apt-get install -y --no-install-recommends binutils ca-certificates curl gcc coreutils libc-bin libc6-dev libgcc-s1 libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libunwind8 linux-libc-dev tzdata zlib1g
-              sdk_name=dotnet-sdk-$sdk_version-linux-riscv64.tar.gz
-              sdk_archive=/tmp/$sdk_name
-              curl --fail --location --retry 5 --output "$sdk_archive" https://github.com/filipnavara/dotnet-riscv/releases/download/$sdk_version/$sdk_name
-              mkdir -p /usr/share/dotnet
-              tar -xzf "$sdk_archive" -C /usr/share/dotnet
-              ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+            sdk-repository: filipnavara/dotnet-riscv
+            sdk-asset-architecture: riscv64
+            setup: /bin/bash /src/.github/workflows/install-community-dotnet.sh /src/artifacts/community-dotnet/riscv64-glibc.tar.gz
           - name: loongarch64-glibc
             image: ghcr.io/loong64/debian:trixie-slim
             binfmt-image: ghcr.io/loong64/tonistiigi/binfmt:master
             architecture: loong64
-            setup: |
-              sdk_version=10.0.110
-
-              apt-get update
-              apt-get install -y --no-install-recommends binutils ca-certificates curl gcc libc6-dev libgcc-s1 libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libunwind8 linux-libc-dev tzdata zlib1g
-              sdk_name=dotnet-sdk-$sdk_version-linux-loongarch64.tar.gz
-              sdk_archive=/tmp/$sdk_name
-              curl --fail --location --retry 5 --output "$sdk_archive" https://github.com/loongson/dotnet/releases/download/v$sdk_version-loongarch64/$sdk_name
-              mkdir -p /usr/share/dotnet
-              tar -xzf "$sdk_archive" -C /usr/share/dotnet
-              ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+            sdk-repository: loongson/dotnet
+            sdk-asset-architecture: loongarch64
+            setup: /bin/bash /src/.github/workflows/install-community-dotnet.sh /src/artifacts/community-dotnet/loongarch64-glibc.tar.gz
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v6
@@ -210,6 +198,15 @@ jobs:
           else
             exit 1
           fi
+
+      - name: Download community .NET SDK
+        if: ${{ matrix.sdk-repository != '' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SDK_REPOSITORY: ${{ matrix.sdk-repository }}
+          SDK_ASSET_ARCHITECTURE: ${{ matrix.sdk-asset-architecture }}
+          SDK_ARCHIVE: ${{ github.workspace }}/artifacts/community-dotnet/${{ matrix.name }}.tar.gz
+        run: dotnet run ./.github/workflows/DownloadCommunityDotNet.cs -- "$SDK_REPOSITORY" "$SDK_ASSET_ARCHITECTURE" "$SDK_ARCHIVE"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
