@@ -202,6 +202,7 @@ jobs:
       - name: Download community .NET SDK
         if: ${{ matrix.sdk-repository != '' }}
         env:
+          GITHUB_TOKEN: ${{ github.token }}
           SDK_REPOSITORY: ${{ matrix.sdk-repository }}
           SDK_ASSET_ARCHITECTURE: ${{ matrix.sdk-asset-architecture }}
           SDK_ARCHIVE: ${{ github.workspace }}/artifacts/community-dotnet/${{ matrix.name }}.tar.gz

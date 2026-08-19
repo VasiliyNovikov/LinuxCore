@@ -18,6 +18,8 @@ Directory.CreateDirectory(Path.GetDirectoryName(output)!);
 
 using var client = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = true }) { Timeout = Timeout.InfiniteTimeSpan };
 client.DefaultRequestHeaders.UserAgent.ParseAdd("LinuxCore-CI");
+if (Environment.GetEnvironmentVariable("GITHUB_TOKEN") is { Length: > 0 } token)
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
 JsonSerializerOptions jsonOptions = new() { RespectNullableAnnotations = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
