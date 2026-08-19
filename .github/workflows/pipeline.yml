@@ -141,6 +141,8 @@ jobs:
     name: validate-emulated-architectures (${{ matrix.name }})
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -159,14 +161,20 @@ jobs:
             image: debian:stable-slim
             binfmt-image: docker.io/tonistiigi/binfmt:latest
             architecture: riscv64
-            setup: /bin/bash /src/.github/workflows/install-community-dotnet.sh filipnavara/dotnet-riscv riscv64
+            sdk-repository: filipnavara/dotnet-riscv
+            sdk-asset-architecture: riscv64
+            setup: /bin/bash /src/.github/workflows/install-community-dotnet.sh /src/artifacts/community-dotnet/riscv64-glibc.tar.gz
           - name: loongarch64-glibc
             image: ghcr.io/loong64/debian:trixie-slim
             binfmt-image: ghcr.io/loong64/tonistiigi/binfmt:master
             architecture: loong64
-            setup: /bin/bash /src/.github/workflows/install-community-dotnet.sh loongson/dotnet loongarch64
+            sdk-repository: loongson/dotnet
+            sdk-asset-architecture: loongarch64
+            setup: /bin/bash /src/.github/workflows/install-community-dotnet.sh /src/artifacts/community-dotnet/loongarch64-glibc.tar.gz
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v6
@@ -190,6 +198,14 @@ jobs:
           else
             exit 1
           fi
+
+      - name: Download community .NET SDK
+        if: ${{ matrix.sdk-repository != '' }}
+        env:
+          SDK_REPOSITORY: ${{ matrix.sdk-repository }}
+          SDK_ASSET_ARCHITECTURE: ${{ matrix.sdk-asset-architecture }}
+          SDK_ARCHIVE: ${{ github.workspace }}/artifacts/community-dotnet/${{ matrix.name }}.tar.gz
+        run: dotnet run ./.github/workflows/DownloadCommunityDotNet.cs -- "$SDK_REPOSITORY" "$SDK_ASSET_ARCHITECTURE" "$SDK_ARCHIVE"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
