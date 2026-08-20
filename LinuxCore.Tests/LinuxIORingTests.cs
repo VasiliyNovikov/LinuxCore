@@ -1,6 +1,10 @@
 using System;
 
+using LinuxCore.Interop;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using static LinuxCore.Interop.File;
 
 namespace LinuxCore.Tests;
 
@@ -70,6 +74,12 @@ public class LinuxIORingTests
     [TestMethod]
     public void LinuxIORing_Create()
     {
+        if (NativeAbi.IsLikelyQemuLinuxUser)
+        {
+            AssertInvalidSystemCall(32);
+            return;
+        }
+
         using var ring = new LinuxIORing(32);
         Assert.AreEqual(LinuxIORingFlags.None, ring.Flags);
         Assert.IsTrue(ring.Features.HasFlag(LinuxIORingFeatures.SingleMemoryMap));
@@ -82,9 +92,30 @@ public class LinuxIORingTests
     public void LinuxIORing_Create_FailsOnInvalidSize()
     {
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new LinuxIORing(-1));
+        if (NativeAbi.IsLikelyQemuLinuxUser)
+        {
+            AssertInvalidSystemCall(0);
+            AssertInvalidSystemCall(int.MaxValue);
+            return;
+        }
+
         var e = Assert.ThrowsExactly<LinuxException>(() => new LinuxIORing(0));
         Assert.AreEqual(LinuxErrorNumber.InvalidArgument, e.ErrorNumber);
         e = Assert.ThrowsExactly<LinuxException>(() => new LinuxIORing(int.MaxValue));
         Assert.AreEqual(LinuxErrorNumber.InvalidArgument, e.ErrorNumber);
     }
+
+    [TestMethod]
+    public void LinuxIORing_FailedConstruction_DoesNotCloseStandardInput()
+    {
+        fcntl(FileDescriptor.StandardInput, F_GETFD).ThrowIfError();
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new LinuxIORing(-1));
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+
+        fcntl(FileDescriptor.StandardInput, F_GETFD).ThrowIfError();
+    }
+
+    private static void AssertInvalidSystemCall(int size) => Assert.AreEqual(LinuxErrorNumber.InvalidSystemCall, Assert.ThrowsExactly<LinuxException>(() => new LinuxIORing(size)).ErrorNumber);
 }
