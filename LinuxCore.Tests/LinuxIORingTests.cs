@@ -104,6 +104,9 @@ public class LinuxIORingTests
     [TestMethod]
     public void LinuxIORing_FailedConstruction_DoesNotCloseStandardInput()
     {
+        if (NativeAbi.IsLikelyQemuLinuxUser)
+            return;
+
         fcntl(FileDescriptor.StandardInput, F_GETFD).ThrowIfError();
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new LinuxIORing(-1));
 
