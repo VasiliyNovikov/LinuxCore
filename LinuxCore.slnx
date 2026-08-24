@@ -8,6 +8,7 @@
     <File Path=".github/workflows/pipeline.yml" />
     <File Path=".github/workflows/DownloadCommunityDotNet.cs" />
     <File Path=".github/workflows/install-community-dotnet.sh" />
+    <File Path=".github/workflows/run-s390x-full-system.sh" />
   </Folder>
   <Folder Name="/.sln/">
     <File Path=".editorconfig" />

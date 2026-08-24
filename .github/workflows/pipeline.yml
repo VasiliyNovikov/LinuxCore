@@ -260,6 +260,154 @@ jobs:
           path: TestResults-${{ matrix.name }}
         if: ${{ always() }}
 
+  validate-full-system-emulation-s390x:
+    name: validate-full-system-emulation-s390x (experimental)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 5
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
+        timeout-minutes: 5
+        with:
+          dotnet-version: 10.0.111
+          cache: true
+          cache-dependency-path: |
+            Directory.Packages.props
+            **/*.csproj
+
+      - name: Install full-system emulation prerequisites
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          mkdir -p "TestResults-s390x-full-system"
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends qemu-system-s390x qemu-utils cloud-image-utils openssh-client
+          command -v qemu-system-s390x qemu-img cloud-localds ssh scp systemctl systemd-run
+          dotnet --info > "TestResults-s390x-full-system/host-dotnet-info.log"
+          qemu-system-s390x --version > "TestResults-s390x-full-system/qemu-version.log"
+          dpkg-query --show qemu-system-s390x qemu-utils cloud-image-utils openssh-client > "TestResults-s390x-full-system/host-packages.log"
+
+      - name: Validate VM lifecycle controls
+        timeout-minutes: 5
+        run: ./.github/workflows/run-s390x-full-system.sh self-test
+
+      - name: Build and discover portable tests on host
+        id: full_system_portable_tests
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          dotnet build LinuxCore.Tests/LinuxCore.Tests.csproj -p:BuildPortableMtpRunner=true
+          discovery_output=$(dotnet LinuxCore.Tests/bin/Debug/net10.0/LinuxCore.Tests.dll --list-tests --no-banner --no-ansi --progress off)
+          printf '%s\n' "$discovery_output"
+          if [[ "$discovery_output" =~ Test\ discovery\ summary:\ found\ ([1-9][0-9]*)\ test\(s\) ]]; then
+            printf 'count=%s\n' "${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          else
+            exit 1
+          fi
+          tar -C LinuxCore.Tests/bin/Debug/net10.0 -czf "$RUNNER_TEMP/LinuxCore.Tests-s390x-portable.tar.gz" .
+
+      - name: Restore Fedora s390x cloud image
+        id: fedora_s390x_cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        timeout-minutes: 10
+        with:
+          path: ${{ runner.temp }}/linuxcore-s390x-image/Fedora-Cloud-Base-Generic-44-1.7.s390x.qcow2
+          key: fedora-cloud-44-s390x-Fedora-Cloud-Base-Generic-44-1.7.s390x.qcow2-31a98e71c786f1355ffafdd54a11023ad5675b26f651266ca03b5951e9f03e45
+
+      - name: Download and verify Fedora s390x cloud image
+        timeout-minutes: 15
+        env:
+          FEDORA_IMAGE: ${{ runner.temp }}/linuxcore-s390x-image/Fedora-Cloud-Base-Generic-44-1.7.s390x.qcow2
+          FEDORA_IMAGE_SHA256: 31a98e71c786f1355ffafdd54a11023ad5675b26f651266ca03b5951e9f03e45
+          FEDORA_IMAGE_URL: https://download.fedoraproject.org/pub/fedora-secondary/releases/44/Cloud/s390x/images/Fedora-Cloud-Base-Generic-44-1.7.s390x.qcow2
+        run: |
+          set -euo pipefail
+          mkdir -p "$(dirname "$FEDORA_IMAGE")"
+          if [[ -f "$FEDORA_IMAGE" ]] && ! printf '%s  %s\n' "$FEDORA_IMAGE_SHA256" "$FEDORA_IMAGE" | sha256sum --check --status; then
+            rm -f "$FEDORA_IMAGE"
+          fi
+          if [[ ! -f "$FEDORA_IMAGE" ]]; then
+            temporary_image="${FEDORA_IMAGE}.tmp.$$"
+            trap 'rm -f "$temporary_image"' EXIT
+            curl --fail --location --retry 5 --output "$temporary_image" "$FEDORA_IMAGE_URL"
+            printf '%s  %s\n' "$FEDORA_IMAGE_SHA256" "$temporary_image" | sha256sum --check
+            mv -f "$temporary_image" "$FEDORA_IMAGE"
+          fi
+          printf '%s  %s\n' "$FEDORA_IMAGE_SHA256" "$FEDORA_IMAGE" | sha256sum --check
+
+      - name: Save Fedora s390x cloud image
+        if: ${{ steps.fedora_s390x_cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        timeout-minutes: 10
+        with:
+          path: ${{ runner.temp }}/linuxcore-s390x-image/Fedora-Cloud-Base-Generic-44-1.7.s390x.qcow2
+          key: fedora-cloud-44-s390x-Fedora-Cloud-Base-Generic-44-1.7.s390x.qcow2-31a98e71c786f1355ffafdd54a11023ad5675b26f651266ca03b5951e9f03e45
+
+      - name: Boot s390x VM and run tests
+        timeout-minutes: 85
+        env:
+          S390X_ARTIFACT_DIRECTORY: ${{ github.workspace }}/TestResults-s390x-full-system
+          S390X_IMAGE: ${{ runner.temp }}/linuxcore-s390x-image/Fedora-Cloud-Base-Generic-44-1.7.s390x.qcow2
+          S390X_QEMU_EXECUTABLE: /usr/bin/qemu-system-s390x
+          S390X_RUNNER_ARCHIVE: ${{ runner.temp }}/LinuxCore.Tests-s390x-portable.tar.gz
+          S390X_STATE_DIRECTORY: ${{ runner.temp }}/linuxcore-s390x-state
+          S390X_UNIT_NAME: linuxcore-s390x-${{ github.run_id }}-${{ github.run_attempt }}.service
+        run: ./.github/workflows/run-s390x-full-system.sh run
+
+      - name: Stop s390x VM
+        if: ${{ always() }}
+        timeout-minutes: 5
+        env:
+          S390X_ARTIFACT_DIRECTORY: ${{ github.workspace }}/TestResults-s390x-full-system
+          S390X_STATE_DIRECTORY: ${{ runner.temp }}/linuxcore-s390x-state
+          S390X_UNIT_NAME: linuxcore-s390x-${{ github.run_id }}-${{ github.run_attempt }}.service
+        run: ./.github/workflows/run-s390x-full-system.sh cleanup
+
+      - name: Validate s390x full-system test results
+        if: ${{ always() }}
+        timeout-minutes: 5
+        shell: pwsh
+        env:
+          EXPECTED_TEST_COUNT: ${{ steps.full_system_portable_tests.outputs.count }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $results = "TestResults-s390x-full-system"
+          if ((Get-Content "$results/helper.status" -Raw).Trim() -ne "success") { throw "VM helper did not complete successfully" }
+          if ((Get-Content "$results/cleanup.status" -Raw).Trim() -ne "success") { throw "VM cleanup did not complete successfully" }
+          if ((Get-Content "$results/test.exitcode" -Raw).Trim() -ne "0") { throw "Guest test runner returned a nonzero exit code" }
+
+          $output = Get-Content "$results/test-output.log" -Raw
+          $pattern = '(?ms)^Test run summary: Passed![^\r\n]*\r?\n\s+total:\s+(?<total>\d+)\r?\n\s+failed:\s+(?<failed>\d+)\r?\n\s+succeeded:\s+(?<succeeded>\d+)\r?\n\s+skipped:\s+(?<skipped>\d+)'
+          $matches = [regex]::Matches($output, $pattern)
+          if ($matches.Count -ne 1) { throw "Expected exactly one successful test summary, found $($matches.Count)" }
+
+          $summary = $matches[0].Groups
+          $expected = [int]$env:EXPECTED_TEST_COUNT
+          $total = [int]$summary['total'].Value
+          $failed = [int]$summary['failed'].Value
+          $succeeded = [int]$summary['succeeded'].Value
+          $skipped = [int]$summary['skipped'].Value
+          if ($total -ne $expected -or $succeeded -ne $expected -or $failed -ne 0 -or $skipped -ne 0) {
+            throw "Expected $expected successful tests; got total=$total failed=$failed succeeded=$succeeded skipped=$skipped"
+          }
+
+      - name: Upload s390x full-system logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        timeout-minutes: 10
+        with:
+          name: test-results-s390x-full-system
+          path: TestResults-s390x-full-system
+          if-no-files-found: warn
+
   publish:
     if: ${{ success() && (vars.PUBLISH == 'true' || vars.PUBLISH == 'auto' && github.ref_name == 'master') }}
     needs:
