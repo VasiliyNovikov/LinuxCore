@@ -19,13 +19,13 @@ public class LinuxIORingTests
             (nameof(LinuxIORingFlags.None), "0"),
             (nameof(LinuxIORingFlags.IOPoll), "IORING_SETUP_IOPOLL"),
             (nameof(LinuxIORingFlags.SQPoll), "IORING_SETUP_SQPOLL"),
-            (nameof(LinuxIORingFlags.SQAffinity), "IORING_SETUP_SQ_AFF"),
+            (nameof(LinuxIORingFlags.SQAffinity), "IORING_SETUP_SQ_AFF")
+        ],
+        [
             (nameof(LinuxIORingFlags.CQSize), "IORING_SETUP_CQSIZE"),
             (nameof(LinuxIORingFlags.Clamp), "IORING_SETUP_CLAMP"),
             (nameof(LinuxIORingFlags.AttachWQ), "IORING_SETUP_ATTACH_WQ"),
-            (nameof(LinuxIORingFlags.Disabled), "IORING_SETUP_R_DISABLED")
-        ],
-        [
+            (nameof(LinuxIORingFlags.Disabled), "IORING_SETUP_R_DISABLED"),
             (nameof(LinuxIORingFlags.SubmitAll), "IORING_SETUP_SUBMIT_ALL"),
             (nameof(LinuxIORingFlags.CoopTaskRun), "IORING_SETUP_COOP_TASKRUN"),
             (nameof(LinuxIORingFlags.TaskRunFlag), "IORING_SETUP_TASKRUN_FLAG"),
@@ -48,7 +48,9 @@ public class LinuxIORingTests
     {
         NativeConstantAssert.EnumValuesMatch<LinuxIORingFeatures>(
         [
-            (nameof(LinuxIORingFeatures.SingleMemoryMap), "IORING_FEAT_SINGLE_MMAP"),
+            (nameof(LinuxIORingFeatures.SingleMemoryMap), "IORING_FEAT_SINGLE_MMAP")
+        ],
+        [
             (nameof(LinuxIORingFeatures.NoDrop), "IORING_FEAT_NODROP"),
             (nameof(LinuxIORingFeatures.SubmitStable), "IORING_FEAT_SUBMIT_STABLE"),
             (nameof(LinuxIORingFeatures.ReadWriteCurrentPosition), "IORING_FEAT_RW_CUR_POS"),
@@ -58,9 +60,7 @@ public class LinuxIORingTests
             (nameof(LinuxIORingFeatures.SQPollNonFixed), "IORING_FEAT_SQPOLL_NONFIXED"),
             (nameof(LinuxIORingFeatures.ExtendedArgs), "IORING_FEAT_EXT_ARG"),
             (nameof(LinuxIORingFeatures.NativeWorkers), "IORING_FEAT_NATIVE_WORKERS"),
-            (nameof(LinuxIORingFeatures.RSRCTags), "IORING_FEAT_RSRC_TAGS")
-        ],
-        [
+            (nameof(LinuxIORingFeatures.RSRCTags), "IORING_FEAT_RSRC_TAGS"),
             (nameof(LinuxIORingFeatures.CQESkip), "IORING_FEAT_CQE_SKIP"),
             (nameof(LinuxIORingFeatures.LinkedFile), "IORING_FEAT_LINKED_FILE"),
             (nameof(LinuxIORingFeatures.RegisterRegisteredRing), "IORING_FEAT_REG_REG_RING"),
@@ -72,13 +72,13 @@ public class LinuxIORingTests
     }
 
     [TestMethod]
+    public void LinuxIORing_IsSupported() => Assert.AreNotEqual(NativeAbi.IsLikelyQemuLinuxUser, LinuxIORing.IsSupported);
+
+    [TestMethod]
     public void LinuxIORing_Create()
     {
         if (NativeAbi.IsLikelyQemuLinuxUser)
-        {
-            AssertInvalidSystemCall(32);
             return;
-        }
 
         using var ring = new LinuxIORing(32);
         Assert.AreEqual(LinuxIORingFlags.None, ring.Flags);
@@ -91,14 +91,10 @@ public class LinuxIORingTests
     [TestMethod]
     public void LinuxIORing_Create_FailsOnInvalidSize()
     {
-        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new LinuxIORing(-1));
         if (NativeAbi.IsLikelyQemuLinuxUser)
-        {
-            AssertInvalidSystemCall(0);
-            AssertInvalidSystemCall(int.MaxValue);
             return;
-        }
 
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new LinuxIORing(-1));
         var e = Assert.ThrowsExactly<LinuxException>(() => new LinuxIORing(0));
         Assert.AreEqual(LinuxErrorNumber.InvalidArgument, e.ErrorNumber);
         e = Assert.ThrowsExactly<LinuxException>(() => new LinuxIORing(int.MaxValue));
@@ -116,6 +112,4 @@ public class LinuxIORingTests
 
         fcntl(FileDescriptor.StandardInput, F_GETFD).ThrowIfError();
     }
-
-    private static void AssertInvalidSystemCall(int size) => Assert.AreEqual(LinuxErrorNumber.InvalidSystemCall, Assert.ThrowsExactly<LinuxException>(() => new LinuxIORing(size)).ErrorNumber);
 }

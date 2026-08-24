@@ -7,6 +7,8 @@ namespace LinuxCore;
 
 public sealed unsafe class LinuxIORing : NativeObject, IFileObject
 {
+    public static readonly bool IsSupported = GetIsSupported();  
+
     private readonly LinuxMemoryMap? _submissionQueueMap;
     private readonly LinuxMemoryMap? _submissionQueueEntryMap;
     private readonly LinuxMemoryMap? _completionQueueMap;
@@ -34,6 +36,9 @@ public sealed unsafe class LinuxIORing : NativeObject, IFileObject
 
     public LinuxIORing(int size, LinuxIORingFlags flags = LinuxIORingFlags.None)
     {
+        if (!IsSupported)
+            throw new PlatformNotSupportedException("io_uring is not supported on this platform");
+
         ArgumentOutOfRangeException.ThrowIfNegative(size);
         try
         {
@@ -83,5 +88,20 @@ public sealed unsafe class LinuxIORing : NativeObject, IFileObject
             _completionQueueMap?.Dispose();
         _submissionQueueMap?.Dispose();
         Descriptor.Close();
+    }
+
+    private static bool GetIsSupported()
+    {
+        var @params = new io_uring_params();
+        io_uring_setup(uint.MaxValue, ref @params);
+        if (io_uring_setup(uint.MaxValue, ref @params).IsError)
+            switch (LinuxErrorNumber.Last)
+            {
+                case LinuxErrorNumber.InvalidArgument:
+                    return true;
+                case LinuxErrorNumber.InvalidSystemCall:
+                    return false;
+            }
+        throw new InvalidOperationException("io_uring_setup should have failed with ENOSYS or EINVAL");
     }
 }
