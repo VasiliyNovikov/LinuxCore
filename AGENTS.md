@@ -17,11 +17,12 @@ Architecture flag tests require `cc`, libc development headers, and Linux UAPI h
 
 ## CI
 
-The GitHub Actions pipeline (`.github/workflows/pipeline.yml`) has four jobs:
+The GitHub Actions pipeline (`.github/workflows/pipeline.yml`) has five jobs:
 
 - **`validate`** — builds and tests on a matrix of Ubuntu runners: `ubuntu-26.04` (x64 + arm64), `ubuntu-24.04` (x64 + arm64) and `ubuntu-22.04` (x64 + arm64), then runs a NativeAOT smoke publish/run of `LinuxCore.AotSmokeTest`. Uploads TRX test results as artifacts.
 - **`validate-containerized-architectures`** — builds and tests inside native SDK containers for Alpine x64 and arm64 plus Arm32 glibc and musl on GitHub-hosted Arm64 runners. Every target also runs the NativeAOT smoke app and uploads TRX test results.
 - **`validate-emulated-architectures`** — builds a portable embedded-MTP test runner on the native host, then runs the full suite under QEMU for ppc64le, s390x, RISC-V64, and LoongArch64. Native-header oracles compile inside each target container through the `LinuxProcess`-backed test helper. The RISC-V64 and LoongArch64 matrix entries use community runtimes because Microsoft does not publish supported .NET 10 runtimes for those architectures or support QEMU execution. They require and exercise the `SCM_RIGHTS` truncation workaround; every discovered test must pass, and all matrix entries gate publishing.
+- **`validate-full-system-emulation-s390x`** — experimental, non-gating validation that boots a checksum-pinned Fedora s390x cloud image under QEMU TCG full-system emulation, provisions .NET 10 and native headers in the guest, and runs every host-built portable test against the emulated guest kernel. The job is intentionally omitted from publishing dependencies while its reliability and runtime are evaluated.
 - **`publish`** — publishes to NuGet, gated on all required validation jobs succeeding. Runs when `PUBLISH` is `'true'` on any branch, or `'auto'` on the `master` branch.
 
 ## Architecture
