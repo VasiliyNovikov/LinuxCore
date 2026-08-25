@@ -9,8 +9,108 @@ using static LinuxCore.Interop.File;
 namespace LinuxCore.Tests;
 
 [TestClass]
-public class LinuxIORingTests
+public unsafe class LinuxIORingTests
 {
+    private const string Header = "linux/io_uring.h";
+
+    [TestMethod]
+    public void IOUring_Offsets_Match_Current_Platform_Headers()
+    {
+        NativeConstantAssert.ValuesMatch(
+        [
+            (nameof(IOUring.IORING_OFF_SQ_RING), (long)IOUring.IORING_OFF_SQ_RING),
+            (nameof(IOUring.IORING_OFF_CQ_RING), (long)IOUring.IORING_OFF_CQ_RING),
+            (nameof(IOUring.IORING_OFF_SQES), (long)IOUring.IORING_OFF_SQES)
+        ], Header);
+        NativeConstantAssert.OptionalValuesMatch(
+        [
+            (nameof(IOUring.IORING_OFF_PBUF_RING), (long)IOUring.IORING_OFF_PBUF_RING),
+            (nameof(IOUring.IORING_OFF_PBUF_SHIFT), (long)IOUring.IORING_OFF_PBUF_SHIFT),
+            (nameof(IOUring.IORING_OFF_MMAP_MASK), (long)IOUring.IORING_OFF_MMAP_MASK)
+        ], Header);
+    }
+
+    [TestMethod]
+    public void IOUring_Layouts_Match_Current_Platform_Headers()
+    {
+        NativeConstantAssert.SizeMatches<IOUring.io_sqring_offsets>(Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_sqring_offsets>(nameof(IOUring.io_sqring_offsets.head), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_sqring_offsets>(nameof(IOUring.io_sqring_offsets.tail), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_sqring_offsets>(nameof(IOUring.io_sqring_offsets.ring_mask), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_sqring_offsets>(nameof(IOUring.io_sqring_offsets.ring_entries), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_sqring_offsets>(nameof(IOUring.io_sqring_offsets.flags), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_sqring_offsets>(nameof(IOUring.io_sqring_offsets.dropped), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_sqring_offsets>(nameof(IOUring.io_sqring_offsets.array), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_sqring_offsets>(nameof(IOUring.io_sqring_offsets.resv1), Header);
+        if (CScript.IsDefined("IORING_SETUP_NO_MMAP", Header))
+            NativeConstantAssert.OffsetMatches<IOUring.io_sqring_offsets>(nameof(IOUring.io_sqring_offsets.user_addr), Header);
+        else
+            NativeConstantAssert.OffsetExpressionMatches<IOUring.io_sqring_offsets>(nameof(IOUring.io_sqring_offsets.user_addr), "offsetof(struct io_sqring_offsets, resv2)", Header);
+        NativeConstantAssert.SizeMatches<IOUring.io_cqring_offsets>(Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_cqring_offsets>(nameof(IOUring.io_cqring_offsets.head), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_cqring_offsets>(nameof(IOUring.io_cqring_offsets.tail), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_cqring_offsets>(nameof(IOUring.io_cqring_offsets.ring_mask), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_cqring_offsets>(nameof(IOUring.io_cqring_offsets.ring_entries), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_cqring_offsets>(nameof(IOUring.io_cqring_offsets.overflow), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_cqring_offsets>(nameof(IOUring.io_cqring_offsets.cqes), Header);
+        var hasCompletionFlags = CScript.IsDefined("IORING_CQ_EVENTFD_DISABLED", Header);
+        if (hasCompletionFlags)
+        {
+            NativeConstantAssert.OffsetMatches<IOUring.io_cqring_offsets>(nameof(IOUring.io_cqring_offsets.flags), Header);
+            NativeConstantAssert.OffsetMatches<IOUring.io_cqring_offsets>(nameof(IOUring.io_cqring_offsets.resv1), Header);
+        }
+        else
+        {
+            NativeConstantAssert.OffsetExpressionMatches<IOUring.io_cqring_offsets>(nameof(IOUring.io_cqring_offsets.flags), "offsetof(struct io_cqring_offsets, resv)", Header);
+            NativeConstantAssert.OffsetExpressionMatches<IOUring.io_cqring_offsets>(nameof(IOUring.io_cqring_offsets.resv1), "offsetof(struct io_cqring_offsets, resv) + sizeof(__u32)", Header);
+        }
+
+        if (CScript.IsDefined("IORING_SETUP_NO_MMAP", Header))
+            NativeConstantAssert.OffsetMatches<IOUring.io_cqring_offsets>(nameof(IOUring.io_cqring_offsets.user_addr), Header);
+        else
+            NativeConstantAssert.OffsetExpressionMatches<IOUring.io_cqring_offsets>(nameof(IOUring.io_cqring_offsets.user_addr),
+                                                                                    hasCompletionFlags
+                                                                                        ? "offsetof(struct io_cqring_offsets, resv2)"
+                                                                                        : "offsetof(struct io_cqring_offsets, resv) + sizeof(__u64)",
+                                                                                    Header);
+        NativeConstantAssert.SizeMatches<IOUring.io_uring_params>(Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_params>(nameof(IOUring.io_uring_params.sq_entries), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_params>(nameof(IOUring.io_uring_params.cq_entries), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_params>(nameof(IOUring.io_uring_params.flags), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_params>(nameof(IOUring.io_uring_params.sq_thread_cpu), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_params>(nameof(IOUring.io_uring_params.sq_thread_idle), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_params>(nameof(IOUring.io_uring_params.features), Header);
+        if (CScript.IsDefined("IORING_SETUP_ATTACH_WQ", Header))
+        {
+            NativeConstantAssert.OffsetMatches<IOUring.io_uring_params>(nameof(IOUring.io_uring_params.wq_fd), Header);
+            NativeConstantAssert.OffsetMatches<IOUring.io_uring_params>(nameof(IOUring.io_uring_params.resv), Header);
+        }
+        else
+        {
+            NativeConstantAssert.OffsetExpressionMatches<IOUring.io_uring_params>(nameof(IOUring.io_uring_params.wq_fd), "offsetof(struct io_uring_params, resv)", Header);
+            NativeConstantAssert.OffsetExpressionMatches<IOUring.io_uring_params>(nameof(IOUring.io_uring_params.resv), "offsetof(struct io_uring_params, resv) + sizeof(__u32)", Header);
+        }
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_params>(nameof(IOUring.io_uring_params.sq_off), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_params>(nameof(IOUring.io_uring_params.cq_off), Header);
+
+        NativeConstantAssert.SizeMatches<IOUring.io_uring_sqe>(Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_sqe>(nameof(IOUring.io_uring_sqe.opcode), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_sqe>(nameof(IOUring.io_uring_sqe.flags), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_sqe>(nameof(IOUring.io_uring_sqe.ioprio), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_sqe>(nameof(IOUring.io_uring_sqe.fd), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_sqe>(nameof(IOUring.io_uring_sqe.off), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_sqe>(nameof(IOUring.io_uring_sqe.addr), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_sqe>(nameof(IOUring.io_uring_sqe.len), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_sqe>(nameof(IOUring.io_uring_sqe.rw_flags), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_sqe>(nameof(IOUring.io_uring_sqe.user_data), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_sqe>(nameof(IOUring.io_uring_sqe.buf_index), Header);
+
+        NativeConstantAssert.SizeMatches<IOUring.io_uring_cqe>(Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_cqe>(nameof(IOUring.io_uring_cqe.user_data), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_cqe>(nameof(IOUring.io_uring_cqe.res), Header);
+        NativeConstantAssert.OffsetMatches<IOUring.io_uring_cqe>(nameof(IOUring.io_uring_cqe.flags), Header);
+    }
+
     [TestMethod]
     public void LinuxIORingFlags_Constants_Match_Current_Platform_Headers()
     {
@@ -40,7 +140,7 @@ public class LinuxIORingTests
             (nameof(LinuxIORingFlags.CQEMixed), "IORING_SETUP_CQE_MIXED"),
             (nameof(LinuxIORingFlags.SQEMixed), "IORING_SETUP_SQE_MIXED"),
             (nameof(LinuxIORingFlags.SQRewind), "IORING_SETUP_SQ_REWIND")
-        ], "linux/io_uring.h");
+        ], Header);
     }
 
     [TestMethod]
@@ -68,7 +168,7 @@ public class LinuxIORingTests
             (nameof(LinuxIORingFeatures.MinTimeout), "IORING_FEAT_MIN_TIMEOUT"),
             (nameof(LinuxIORingFeatures.ReadWriteAttributes), "IORING_FEAT_RW_ATTR"),
             (nameof(LinuxIORingFeatures.NoIOWait), "IORING_FEAT_NO_IOWAIT")
-        ], "linux/io_uring.h");
+        ], Header);
     }
 
     [TestMethod]
