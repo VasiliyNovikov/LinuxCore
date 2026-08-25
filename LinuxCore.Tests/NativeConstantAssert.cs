@@ -55,6 +55,19 @@ internal static class NativeConstantAssert
             Assert.AreEqual(constants[i].Managed, nativeValues[i], constants[i].Name);
     }
 
+    public static void OptionalValuesMatch((string Name, long Managed)[] constants, params string[] headers)
+    {
+        OptionalValuesMatch([.. constants.Select(static constant => (constant.Name, constant.Managed, constant.Name))], headers);
+    }
+
+    public static void OptionalValuesMatch((string Name, long Managed, string Native)[] constants, params string[] headers)
+    {
+        var nativeValues = CScript.EvaluateDefinedInt64s([.. constants.Select(static constant => constant.Native)], headers);
+        for (var i = 0; i < constants.Length; ++i)
+            if (nativeValues[i] is { } value)
+                Assert.AreEqual(constants[i].Managed, value, constants[i].Name);
+    }
+
     public static void SizeMatches<T>(params string[] headers) where T : unmanaged
     {
         Assert.AreEqual(CScript.EvaluateInt32($"sizeof(struct {typeof(T).Name})", headers), Unsafe.SizeOf<T>());
