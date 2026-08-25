@@ -174,7 +174,68 @@ public unsafe class LinuxIORingTests
     }
 
     [TestMethod]
-    public void LinuxIORing_IsSupported() => Assert.AreNotEqual(NativeAbi.IsLikelyQemuLinuxUser, LinuxIORing.IsSupported);
+    public void IOUring_EnterFlags_Match_Current_Platform_Headers()
+    {
+        NativeConstantAssert.ValuesMatch(
+        [
+            (nameof(IOUring.IORING_ENTER_GETEVENTS), IOUring.IORING_ENTER_GETEVENTS),
+            (nameof(IOUring.IORING_ENTER_SQ_WAKEUP), IOUring.IORING_ENTER_SQ_WAKEUP)
+        ], Header);
+        NativeConstantAssert.OptionalValuesMatch(
+        [
+            (nameof(IOUring.IORING_ENTER_SQ_WAIT), IOUring.IORING_ENTER_SQ_WAIT),
+            (nameof(IOUring.IORING_ENTER_EXT_ARG), IOUring.IORING_ENTER_EXT_ARG),
+            (nameof(IOUring.IORING_ENTER_REGISTERED_RING), IOUring.IORING_ENTER_REGISTERED_RING),
+            (nameof(IOUring.IORING_ENTER_ABS_TIMER), IOUring.IORING_ENTER_ABS_TIMER),
+            (nameof(IOUring.IORING_ENTER_EXT_ARG_REG), IOUring.IORING_ENTER_EXT_ARG_REG),
+            (nameof(IOUring.IORING_ENTER_NO_IOWAIT), IOUring.IORING_ENTER_NO_IOWAIT)
+        ], Header);
+    }
+
+    [TestMethod]
+    public void IOUring_Operations_Match_Current_Platform_Headers()
+    {
+        var names = Enum.GetNames<IOUring.io_uring_op>();
+        int[] nativeValues;
+        if (CScript.TryEvaluateInt32("IORING_OP_LAST", out var nativeLast, Header))
+        {
+            Assert.IsTrue(nativeLast <= names.Length, $"Native headers define {nativeLast} operations but only {names.Length} are mapped.");
+            nativeValues = CScript.EvaluateInt32s(names[..nativeLast], Header);
+        }
+        else
+        {
+            var definedValues = CScript.EvaluateDefinedInt32s(names, Header);
+            var nativeOperationCount = definedValues.IndexOf((int?)null);
+            if (nativeOperationCount < 0)
+                nativeOperationCount = definedValues.Length;
+            Assert.DoesNotContain(value => value is not null, definedValues[nativeOperationCount..], "Native opcode macros must form a contiguous prefix.");
+            nativeValues = [.. definedValues[..nativeOperationCount].Select(value => value!.Value)];
+        }
+
+        for (var i = 0; i < nativeValues.Length; ++i)
+            Assert.AreEqual((int)Enum.Parse<IOUring.io_uring_op>(names[i]), nativeValues[i], names[i]);
+    }
+
+    [TestMethod]
+    public void LinuxIORing_IsSupported_MatchesCIAssumptions() => Assert.AreNotEqual(NativeAbi.IsLikelyQemuLinuxUser, LinuxIORing.IsSupported);
+
+    [TestMethod]
+    public void LinuxIORing_IsSupported_FalseMeansKernelDoesNotSupportSetup()
+    {
+        if (LinuxIORing.IsSupported)
+            return;
+
+        Assert.ThrowsExactly<PlatformNotSupportedException>(() => new LinuxIORing(1));
+    }
+
+    [TestMethod]
+    public void LinuxIORing_IsSupported_IsKernelCapabilityField()
+    {
+        var field = typeof(LinuxIORing).GetField(nameof(LinuxIORing.IsSupported), BindingFlags.Public | BindingFlags.Static);
+        Assert.IsNotNull(field);
+        Assert.IsTrue(field.IsInitOnly);
+        Assert.AreEqual(typeof(bool), field.FieldType);
+    }
 
     [TestMethod]
     public void LinuxIORing_Create()
