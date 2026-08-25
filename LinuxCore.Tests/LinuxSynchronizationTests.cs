@@ -26,9 +26,9 @@ public class LinuxSynchronizationTests
 
         NativeConstantAssert.ValuesMatch(
         [
-            (nameof(EventFd.EFD_SEMAPHORE), EventFd.EFD_SEMAPHORE, "EFD_SEMAPHORE"),
-            (nameof(EventFd.EFD_NONBLOCK), EventFd.EFD_NONBLOCK, "EFD_NONBLOCK"),
-            (nameof(EventFd.EFD_CLOEXEC), EventFd.EFD_CLOEXEC, "EFD_CLOEXEC")
+            (nameof(EventFd.EFD_SEMAPHORE), EventFd.EFD_SEMAPHORE),
+            (nameof(EventFd.EFD_NONBLOCK), EventFd.EFD_NONBLOCK),
+            (nameof(EventFd.EFD_CLOEXEC), EventFd.EFD_CLOEXEC)
         ], "sys/eventfd.h");
     }
 

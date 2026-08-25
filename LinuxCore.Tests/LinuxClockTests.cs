@@ -16,11 +16,11 @@ public class LinuxClockTests
     {
         NativeConstantAssert.ValuesMatch(
         [
-            (nameof(NativeTime.CLOCK_REALTIME), NativeTime.CLOCK_REALTIME, "CLOCK_REALTIME"),
-            (nameof(NativeTime.CLOCK_MONOTONIC), NativeTime.CLOCK_MONOTONIC, "CLOCK_MONOTONIC"),
-            (nameof(NativeTime.CLOCK_PROCESS_CPUTIME_ID), NativeTime.CLOCK_PROCESS_CPUTIME_ID, "CLOCK_PROCESS_CPUTIME_ID"),
-            (nameof(NativeTime.CLOCK_THREAD_CPUTIME_ID), NativeTime.CLOCK_THREAD_CPUTIME_ID, "CLOCK_THREAD_CPUTIME_ID"),
-            (nameof(NativeTime.CLOCK_BOOTTIME), NativeTime.CLOCK_BOOTTIME, "CLOCK_BOOTTIME")
+            (nameof(NativeTime.CLOCK_REALTIME), NativeTime.CLOCK_REALTIME),
+            (nameof(NativeTime.CLOCK_MONOTONIC), NativeTime.CLOCK_MONOTONIC),
+            (nameof(NativeTime.CLOCK_PROCESS_CPUTIME_ID), NativeTime.CLOCK_PROCESS_CPUTIME_ID),
+            (nameof(NativeTime.CLOCK_THREAD_CPUTIME_ID), NativeTime.CLOCK_THREAD_CPUTIME_ID),
+            (nameof(NativeTime.CLOCK_BOOTTIME), NativeTime.CLOCK_BOOTTIME)
         ], "time.h");
     }
 

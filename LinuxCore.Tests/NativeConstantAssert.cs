@@ -43,6 +43,11 @@ internal static class NativeConstantAssert
         }
     }
 
+    public static void ValuesMatch((string Name, long Managed)[] constants, params string[] headers)
+    {
+        ValuesMatch([.. constants.Select(static constant => (constant.Name, constant.Managed, constant.Name))], headers);
+    }
+
     public static void ValuesMatch((string Name, long Managed, string Native)[] constants, params string[] headers)
     {
         var nativeValues = CScript.EvaluateInt64s([.. constants.Select(static constant => constant.Native)], headers);

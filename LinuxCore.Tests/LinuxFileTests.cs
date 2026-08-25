@@ -314,24 +314,24 @@ public class LinuxFileTests
     {
         NativeConstantAssert.ValuesMatch(
         [
-            (nameof(NativeFile.F_GETFD), NativeFile.F_GETFD, "F_GETFD"),
-            (nameof(NativeFile.F_SETFD), NativeFile.F_SETFD, "F_SETFD"),
-            (nameof(NativeFile.F_GETFL), NativeFile.F_GETFL, "F_GETFL"),
-            (nameof(NativeFile.F_DUPFD_CLOEXEC), NativeFile.F_DUPFD_CLOEXEC, "F_DUPFD_CLOEXEC"),
-            (nameof(NativeFile.F_ADD_SEALS), NativeFile.F_ADD_SEALS, "F_ADD_SEALS"),
-            (nameof(NativeFile.F_GET_SEALS), NativeFile.F_GET_SEALS, "F_GET_SEALS"),
-            (nameof(NativeFile.FD_CLOEXEC), NativeFile.FD_CLOEXEC, "FD_CLOEXEC"),
-            (nameof(NativeFile.F_SEAL_SEAL), NativeFile.F_SEAL_SEAL, "F_SEAL_SEAL"),
-            (nameof(NativeFile.F_SEAL_SHRINK), NativeFile.F_SEAL_SHRINK, "F_SEAL_SHRINK"),
-            (nameof(NativeFile.F_SEAL_GROW), NativeFile.F_SEAL_GROW, "F_SEAL_GROW"),
-            (nameof(NativeFile.F_SEAL_WRITE), NativeFile.F_SEAL_WRITE, "F_SEAL_WRITE"),
-            (nameof(NativeFile.F_SEAL_FUTURE_WRITE), NativeFile.F_SEAL_FUTURE_WRITE, "F_SEAL_FUTURE_WRITE")
+            (nameof(NativeFile.F_GETFD), NativeFile.F_GETFD),
+            (nameof(NativeFile.F_SETFD), NativeFile.F_SETFD),
+            (nameof(NativeFile.F_GETFL), NativeFile.F_GETFL),
+            (nameof(NativeFile.F_DUPFD_CLOEXEC), NativeFile.F_DUPFD_CLOEXEC),
+            (nameof(NativeFile.F_ADD_SEALS), NativeFile.F_ADD_SEALS),
+            (nameof(NativeFile.F_GET_SEALS), NativeFile.F_GET_SEALS),
+            (nameof(NativeFile.FD_CLOEXEC), NativeFile.FD_CLOEXEC),
+            (nameof(NativeFile.F_SEAL_SEAL), NativeFile.F_SEAL_SEAL),
+            (nameof(NativeFile.F_SEAL_SHRINK), NativeFile.F_SEAL_SHRINK),
+            (nameof(NativeFile.F_SEAL_GROW), NativeFile.F_SEAL_GROW),
+            (nameof(NativeFile.F_SEAL_WRITE), NativeFile.F_SEAL_WRITE),
+            (nameof(NativeFile.F_SEAL_FUTURE_WRITE), NativeFile.F_SEAL_FUTURE_WRITE)
         ], "fcntl.h");
 
         NativeConstantAssert.ValuesMatch(
         [
-            (nameof(NativeFile.AT_FDCWD), NativeFile.AT_FDCWD, "AT_FDCWD"),
-            (nameof(NativeFile.AT_EMPTY_PATH), NativeFile.AT_EMPTY_PATH, "AT_EMPTY_PATH")
+            (nameof(NativeFile.AT_FDCWD), NativeFile.AT_FDCWD),
+            (nameof(NativeFile.AT_EMPTY_PATH), NativeFile.AT_EMPTY_PATH)
         ], "fcntl.h");
 
         Assert.AreEqual(NativeFile.STATX_BASIC_STATS, CScript.EvaluateInt64("STATX_BASIC_STATS", "linux/stat.h"));

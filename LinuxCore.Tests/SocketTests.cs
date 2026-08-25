@@ -63,25 +63,25 @@ public class SocketTests
 
         NativeConstantAssert.ValuesMatch(
         [
-            (nameof(NativeSocket.MSG_OOB), NativeSocket.MSG_OOB, "MSG_OOB"),
-            (nameof(NativeSocket.MSG_PEEK), NativeSocket.MSG_PEEK, "MSG_PEEK"),
-            (nameof(NativeSocket.MSG_DONTROUTE), NativeSocket.MSG_DONTROUTE, "MSG_DONTROUTE"),
-            (nameof(NativeSocket.MSG_CTRUNC), NativeSocket.MSG_CTRUNC, "MSG_CTRUNC"),
-            (nameof(NativeSocket.MSG_PROXY), NativeSocket.MSG_PROXY, "MSG_PROXY"),
-            (nameof(NativeSocket.MSG_TRUNC), NativeSocket.MSG_TRUNC, "MSG_TRUNC"),
-            (nameof(NativeSocket.MSG_DONTWAIT), NativeSocket.MSG_DONTWAIT, "MSG_DONTWAIT"),
-            (nameof(NativeSocket.MSG_EOR), NativeSocket.MSG_EOR, "MSG_EOR"),
-            (nameof(NativeSocket.MSG_WAITALL), NativeSocket.MSG_WAITALL, "MSG_WAITALL"),
-            (nameof(NativeSocket.MSG_FIN), NativeSocket.MSG_FIN, "MSG_FIN"),
-            (nameof(NativeSocket.MSG_SYN), NativeSocket.MSG_SYN, "MSG_SYN"),
-            (nameof(NativeSocket.MSG_CONFIRM), NativeSocket.MSG_CONFIRM, "MSG_CONFIRM"),
-            (nameof(NativeSocket.MSG_RST), NativeSocket.MSG_RST, "MSG_RST"),
-            (nameof(NativeSocket.MSG_ERRQUEUE), NativeSocket.MSG_ERRQUEUE, "MSG_ERRQUEUE"),
-            (nameof(NativeSocket.MSG_NOSIGNAL), NativeSocket.MSG_NOSIGNAL, "MSG_NOSIGNAL"),
-            (nameof(NativeSocket.MSG_MORE), NativeSocket.MSG_MORE, "MSG_MORE"),
-            (nameof(NativeSocket.MSG_CMSG_CLOEXEC), NativeSocket.MSG_CMSG_CLOEXEC, "MSG_CMSG_CLOEXEC"),
-            (nameof(NativeSocket.SCM_RIGHTS), NativeSocket.SCM_RIGHTS, "SCM_RIGHTS"),
-            (nameof(NativeSocket.SCM_CREDENTIALS), NativeSocket.SCM_CREDENTIALS, "SCM_CREDENTIALS")
+            (nameof(NativeSocket.MSG_OOB), NativeSocket.MSG_OOB),
+            (nameof(NativeSocket.MSG_PEEK), NativeSocket.MSG_PEEK),
+            (nameof(NativeSocket.MSG_DONTROUTE), NativeSocket.MSG_DONTROUTE),
+            (nameof(NativeSocket.MSG_CTRUNC), NativeSocket.MSG_CTRUNC),
+            (nameof(NativeSocket.MSG_PROXY), NativeSocket.MSG_PROXY),
+            (nameof(NativeSocket.MSG_TRUNC), NativeSocket.MSG_TRUNC),
+            (nameof(NativeSocket.MSG_DONTWAIT), NativeSocket.MSG_DONTWAIT),
+            (nameof(NativeSocket.MSG_EOR), NativeSocket.MSG_EOR),
+            (nameof(NativeSocket.MSG_WAITALL), NativeSocket.MSG_WAITALL),
+            (nameof(NativeSocket.MSG_FIN), NativeSocket.MSG_FIN),
+            (nameof(NativeSocket.MSG_SYN), NativeSocket.MSG_SYN),
+            (nameof(NativeSocket.MSG_CONFIRM), NativeSocket.MSG_CONFIRM),
+            (nameof(NativeSocket.MSG_RST), NativeSocket.MSG_RST),
+            (nameof(NativeSocket.MSG_ERRQUEUE), NativeSocket.MSG_ERRQUEUE),
+            (nameof(NativeSocket.MSG_NOSIGNAL), NativeSocket.MSG_NOSIGNAL),
+            (nameof(NativeSocket.MSG_MORE), NativeSocket.MSG_MORE),
+            (nameof(NativeSocket.MSG_CMSG_CLOEXEC), NativeSocket.MSG_CMSG_CLOEXEC),
+            (nameof(NativeSocket.SCM_RIGHTS), NativeSocket.SCM_RIGHTS),
+            (nameof(NativeSocket.SCM_CREDENTIALS), NativeSocket.SCM_CREDENTIALS)
         ], "sys/socket.h");
     }
 }
