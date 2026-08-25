@@ -62,7 +62,12 @@ internal static class NativeConstantAssert
 
     public static void OffsetMatches<T>(string fieldName, params string[] headers) where T : unmanaged
     {
-        Assert.AreEqual(CScript.EvaluateNInt($"offsetof(struct {typeof(T).Name}, {fieldName})", headers), Marshal.OffsetOf<T>(fieldName));
+        OffsetExpressionMatches<T>(fieldName, $"offsetof(struct {typeof(T).Name}, {fieldName})", headers);
+    }
+
+    public static void OffsetExpressionMatches<T>(string fieldName, string expression, params string[] headers) where T : unmanaged
+    {
+        Assert.AreEqual(CScript.EvaluateNInt(expression, headers), Marshal.OffsetOf<T>(fieldName));
     }
 
     private static void EnumValueMatches<TEnum>(string name, long nativeValue)
