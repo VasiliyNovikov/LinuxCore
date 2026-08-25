@@ -5,6 +5,13 @@ using static LinuxCore.Interop.IOUring;
 
 namespace LinuxCore;
 
+/// <summary>
+/// Specifies Linux <c>io_uring_setup(2)</c> flags.
+/// </summary>
+/// <remarks>
+/// These values mirror the Linux UAPI. <see cref="LinuxIORing"/> currently accepts only
+/// <see cref="None"/>, <see cref="Clamp"/>, and <see cref="SubmitAll"/>.
+/// </remarks>
 [SuppressMessage("Microsoft.Formatting", "IDE0055: Fix formatting", Justification = "Intentional enum value alignment")]
 [Flags]
 public enum LinuxIORingFlags : uint

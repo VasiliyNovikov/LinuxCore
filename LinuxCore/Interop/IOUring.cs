@@ -140,7 +140,7 @@ internal static unsafe class IOUring
         public io_sqring_offsets sq_off;
         public io_cqring_offsets cq_off;
     }
-    
+
     public enum io_uring_op : byte
     {
         IORING_OP_NOP,
@@ -208,9 +208,6 @@ internal static unsafe class IOUring
         IORING_OP_PIPE,
         IORING_OP_NOP128,
         IORING_OP_URING_CMD128,
-
-        /* this goes last, obviously */
-        IORING_OP_LAST,
     }
 
     // struct io_uring_sqe {
@@ -537,8 +534,8 @@ internal static unsafe class IOUring
     // 	   __u64	user_data;	/* sqe->user_data value passed back */
     // 	   __s32	res;		/* result code for this event */
     // 	   __u32	flags;
-    // 
-     //    /*
+    //
+    //    /*
     // 	    * If the ring is initialized with IORING_SETUP_CQE32, then this field
     // 	    * contains 16-bytes of padding, doubling the size of the CQE.
     // 	    */
@@ -569,8 +566,8 @@ internal static unsafe class IOUring
     //     return syscall(__NR_io_uring_enter, fd, to_submit, min_complete, flags, sig, _NSIG / 8);
     // }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static LinuxResult io_uring_enter(FileDescriptor fd, uint to_submit, uint min_complete, uint flags, void* sig = null)
+    public static LinuxResult<int> io_uring_enter(FileDescriptor fd, uint to_submit, uint min_complete, uint flags, void* sig = null)
     {
-        return SystemCall.Invoke(SystemCallTable.IOUringEnter, fd, to_submit, min_complete, flags, (nint)sig, _NSIG / 8);
+        return SystemCall.Invoke<FileDescriptor, uint, uint, uint, nint, int, int>(SystemCallTable.IOUringEnter, fd, to_submit, min_complete, flags, (nint)sig, _NSIG / 8);
     }
 }

@@ -5,9 +5,48 @@ using static LinuxCore.Interop.IOUring;
 
 namespace LinuxCore;
 
+/// <summary>
+/// Owns an <c>io_uring</c> instance and its kernel-shared queue mappings.
+/// </summary>
+/// <remarks>
+/// The constructor currently supports only <see cref="LinuxIORingFlags.None"/>,
+/// <see cref="LinuxIORingFlags.Clamp"/>, and <see cref="LinuxIORingFlags.SubmitAll"/>.
+/// The descriptor returned by <see cref="Descriptor"/> is non-owning. Keep this instance strongly
+/// reachable and prevent concurrent disposal while the descriptor or queue mappings are in use.
+/// </remarks>
 public sealed unsafe class LinuxIORing : NativeObject, IFileObject
 {
-    public static readonly bool IsSupported = GetIsSupported();  
+    private const LinuxIORingFlags SupportedFlags = LinuxIORingFlags.Clamp | LinuxIORingFlags.SubmitAll;
+    private const LinuxIORingFlags KnownFlags = LinuxIORingFlags.IOPoll
+                                              | LinuxIORingFlags.SQPoll
+                                              | LinuxIORingFlags.SQAffinity
+                                              | LinuxIORingFlags.CQSize
+                                              | LinuxIORingFlags.Clamp
+                                              | LinuxIORingFlags.AttachWQ
+                                              | LinuxIORingFlags.Disabled
+                                              | LinuxIORingFlags.SubmitAll
+                                              | LinuxIORingFlags.CoopTaskRun
+                                              | LinuxIORingFlags.TaskRunFlag
+                                              | LinuxIORingFlags.SQE128
+                                              | LinuxIORingFlags.CQE32
+                                              | LinuxIORingFlags.SingleIssuer
+                                              | LinuxIORingFlags.DeferTaskRun
+                                              | LinuxIORingFlags.NoMmap
+                                              | LinuxIORingFlags.RegisteredFdOnly
+                                              | LinuxIORingFlags.NoSQArray
+                                              | LinuxIORingFlags.HybridIOPoll
+                                              | LinuxIORingFlags.CQEMixed
+                                              | LinuxIORingFlags.SQEMixed
+                                              | LinuxIORingFlags.SQRewind;
+
+    /// <summary>
+    /// Indicates whether the running kernel implements <c>io_uring_setup(2)</c>.
+    /// </summary>
+    /// <remarks>
+    /// A value of <see langword="true"/> does not guarantee that ring creation is permitted by the
+    /// current environment. Policy and permission errors are reported by the constructor.
+    /// </remarks>
+    public static readonly bool IsSupported = GetIsSupported();
 
     private readonly LinuxMemoryMap? _submissionQueueMap;
     private readonly LinuxMemoryMap? _submissionQueueEntryMap;
@@ -25,7 +64,6 @@ public sealed unsafe class LinuxIORing : NativeObject, IFileObject
     private readonly uint* _completionQueueTail;
     private readonly uint* _completionQueueRingMask;
     private readonly uint* _completionQueueRingEntries;
-    private readonly uint* _completionQueueFlags;
     private readonly io_uring_cqe* _completionQueueEntries;
 
     public FileDescriptor Descriptor { get; } = new(-1);
@@ -39,24 +77,33 @@ public sealed unsafe class LinuxIORing : NativeObject, IFileObject
         if (!IsSupported)
             throw new PlatformNotSupportedException("io_uring is not supported on this platform");
 
-        ArgumentOutOfRangeException.ThrowIfNegative(size);
+        ArgumentOutOfRangeException.ThrowIfLessThan(size, 1);
+        if ((flags & ~KnownFlags) != 0)
+            throw new ArgumentOutOfRangeException(nameof(flags), flags, "Unknown io_uring setup flags were specified");
+        var unsupportedFlags = flags & ~SupportedFlags;
+        if (unsupportedFlags != 0)
+            throw new NotSupportedException($"The requested io_uring setup flags are not supported yet: {unsupportedFlags}");
         try
         {
             var @params = new io_uring_params { flags = (uint)flags };
             Descriptor = io_uring_setup((uint)size, ref @params).ThrowIfError();
             Flags = (LinuxIORingFlags)@params.flags;
             Features = (LinuxIORingFeatures)@params.features;
-            SubmissionQueueSize = (int)@params.sq_entries;
-            CompletionQueueSize = (int)@params.cq_entries;
+            SubmissionQueueSize = checked((int)@params.sq_entries);
+            CompletionQueueSize = checked((int)@params.cq_entries);
 
-            var submissionRingSize = (int)(@params.sq_off.array + SubmissionQueueSize * sizeof(uint));
-            var completionRingSize = (int)(@params.cq_off.cqes + CompletionQueueSize * sizeof(io_uring_cqe));
+            var singleMemoryMap = Features.HasFlag(LinuxIORingFeatures.SingleMemoryMap);
+            var submissionRingSize = checked((int)((ulong)@params.sq_off.array + (ulong)@params.sq_entries * sizeof(uint)));
+            var completionRingSize = checked((int)((ulong)@params.cq_off.cqes + (ulong)@params.cq_entries * (ulong)sizeof(io_uring_cqe)));
+            if (singleMemoryMap)
+                submissionRingSize = completionRingSize = Math.Max(submissionRingSize, completionRingSize);
+            var submissionQueueEntrySize = checked((int)((ulong)@params.sq_entries * (ulong)sizeof(io_uring_sqe)));
 
             _submissionQueueMap = new LinuxMemoryMap(Descriptor, submissionRingSize, LinuxMemoryMapFlags.Shared | LinuxMemoryMapFlags.Populate, (long)IORING_OFF_SQ_RING);
-            _completionQueueMap = Features.HasFlag(LinuxIORingFeatures.SingleMemoryMap)
+            _completionQueueMap = singleMemoryMap
                 ? _submissionQueueMap
                 : new LinuxMemoryMap(Descriptor, completionRingSize, LinuxMemoryMapFlags.Shared | LinuxMemoryMapFlags.Populate, (long)IORING_OFF_CQ_RING);
-            _submissionQueueEntryMap = new LinuxMemoryMap(Descriptor, SubmissionQueueSize * sizeof(io_uring_sqe), LinuxMemoryMapFlags.Shared | LinuxMemoryMapFlags.Populate, (long)IORING_OFF_SQES);
+            _submissionQueueEntryMap = new LinuxMemoryMap(Descriptor, submissionQueueEntrySize, LinuxMemoryMapFlags.Shared | LinuxMemoryMapFlags.Populate, (long)IORING_OFF_SQES);
 
             var submissionQueuePtr = (byte*)Unsafe.AsPointer(ref _submissionQueueMap.Span[0]);
             _submissionQueueHead = (uint*)(submissionQueuePtr + @params.sq_off.head);
@@ -67,12 +114,12 @@ public sealed unsafe class LinuxIORing : NativeObject, IFileObject
             _submissionQueueArray = (uint*)(submissionQueuePtr + @params.sq_off.array);
             _submissionQueueEntries = (io_uring_sqe*)(Unsafe.AsPointer(ref _submissionQueueEntryMap.Span[0]));
 
-            _completionQueueHead = (uint*)(submissionQueuePtr + @params.cq_off.head);
-            _completionQueueTail = (uint*)(submissionQueuePtr + @params.cq_off.tail);
-            _completionQueueRingMask = (uint*)(submissionQueuePtr + @params.cq_off.ring_mask);
-            _completionQueueRingEntries = (uint*)(submissionQueuePtr + @params.cq_off.ring_entries);
-            _completionQueueFlags = (uint*)(submissionQueuePtr + @params.cq_off.flags);
-            _completionQueueEntries = (io_uring_cqe*)(submissionQueuePtr + @params.cq_off.cqes);
+            var completionQueuePtr = (byte*)Unsafe.AsPointer(ref _completionQueueMap.Span[0]);
+            _completionQueueHead = (uint*)(completionQueuePtr + @params.cq_off.head);
+            _completionQueueTail = (uint*)(completionQueuePtr + @params.cq_off.tail);
+            _completionQueueRingMask = (uint*)(completionQueuePtr + @params.cq_off.ring_mask);
+            _completionQueueRingEntries = (uint*)(completionQueuePtr + @params.cq_off.ring_entries);
+            _completionQueueEntries = (io_uring_cqe*)(completionQueuePtr + @params.cq_off.cqes);
         }
         catch
         {
@@ -93,15 +140,11 @@ public sealed unsafe class LinuxIORing : NativeObject, IFileObject
     private static bool GetIsSupported()
     {
         var @params = new io_uring_params();
-        io_uring_setup(uint.MaxValue, ref @params);
-        if (io_uring_setup(uint.MaxValue, ref @params).IsError)
-            switch (LinuxErrorNumber.Last)
-            {
-                case LinuxErrorNumber.InvalidArgument:
-                    return true;
-                case LinuxErrorNumber.InvalidSystemCall:
-                    return false;
-            }
-        throw new InvalidOperationException("io_uring_setup should have failed with ENOSYS or EINVAL");
+        var result = io_uring_setup(uint.MaxValue, ref @params);
+        if (result.IsError)
+            return LinuxErrorNumber.Last != LinuxErrorNumber.InvalidSystemCall;
+
+        result.ThrowIfError().Close();
+        return true;
     }
 }

@@ -1,6 +1,8 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -46,6 +48,16 @@ internal static class NativeConstantAssert
         var nativeValues = CScript.EvaluateInt64s([.. constants.Select(static constant => constant.Native)], headers);
         for (var i = 0; i < constants.Length; ++i)
             Assert.AreEqual(constants[i].Managed, nativeValues[i], constants[i].Name);
+    }
+
+    public static void SizeMatches<T>(params string[] headers) where T : unmanaged
+    {
+        Assert.AreEqual(CScript.EvaluateInt32($"sizeof(struct {typeof(T).Name})", headers), Unsafe.SizeOf<T>());
+    }
+
+    public static void OffsetMatches<T>(string fieldName, params string[] headers) where T : unmanaged
+    {
+        Assert.AreEqual(CScript.EvaluateNInt($"offsetof(struct {typeof(T).Name}, {fieldName})", headers), Marshal.OffsetOf<T>(fieldName));
     }
 
     private static void EnumValueMatches<TEnum>(string name, long nativeValue)

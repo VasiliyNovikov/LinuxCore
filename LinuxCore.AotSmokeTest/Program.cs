@@ -5,6 +5,11 @@ using LinuxCore;
 
 var payload = "aot-smoke"u8;
 
+if (LinuxIORing.IsSupported)
+    using (new LinuxIORing(1))
+    {
+    }
+
 var filePath = System.IO.Path.GetTempFileName();
 try
 {
