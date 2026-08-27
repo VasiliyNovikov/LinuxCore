@@ -15,7 +15,12 @@ public class SystemCallTableTests
         AssertSysCall("__NR_sched_getscheduler", SystemCallTable.Current.SchedGetScheduler);
         AssertSysCall("__NR_sched_setscheduler", SystemCallTable.Current.SchedSetScheduler);
         AssertSysCall("__NR_sched_getparam", SystemCallTable.Current.SchedGetParam);
+
         AssertSysCall("__NR_pidfd_open", SystemCallTable.PidFdOpen);
+
+        AssertSysCall("__NR_io_uring_setup", SystemCallTable.IOUringSetup);
+        AssertSysCall("__NR_io_uring_enter", SystemCallTable.IOUringEnter);
+        AssertSysCall("__NR_io_uring_register", SystemCallTable.IOUringRegister);
 
         AssertSysCall("__NR_openat", SystemCallTable.Current.OpenAt);
         AssertSysCall("__NR_close", SystemCallTable.Current.Close);

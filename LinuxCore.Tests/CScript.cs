@@ -22,6 +22,20 @@ internal static class CScript
         return results;
     }
 
+    public static bool TryEvaluateInt32(string expression, out int value, params string[] headers)
+    {
+        try
+        {
+            value = EvaluateInt32(expression, headers);
+            return true;
+        }
+        catch (ScriptException)
+        {
+            value = default;
+            return false;
+        }
+    }
+
     public static long[] EvaluateInt64s(IReadOnlyList<string> expressions, params string[] headers)
     {
         var constants = new (string? Symbol, string Expression)[expressions.Count];
@@ -41,6 +55,16 @@ internal static class CScript
         for (var i = 0; i < names.Count; ++i)
             constants[i] = (names[i], names[i]);
         return EvaluateDefinedInt32s(constants, headers);
+    }
+
+    public static bool IsDefined(string name, params string[] headers) => EvaluateDefinedInt32s([(name, "0")], headers)[0].HasValue;
+
+    public static long?[] EvaluateDefinedInt64s(IReadOnlyList<string> names, params string[] headers)
+    {
+        var constants = new (string? Symbol, string Expression)[names.Count];
+        for (var i = 0; i < names.Count; ++i)
+            constants[i] = (names[i], names[i]);
+        return EvaluateInt64s(constants, headers);
     }
 
     public static int?[] EvaluateDefinedInt32s(IReadOnlyList<(string Symbol, string Expression)> constants, params string[] headers)

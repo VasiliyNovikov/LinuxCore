@@ -30,6 +30,10 @@ public abstract class SystemCallTable
 
     public static SystemCallNumber PidFdOpen => new(434); // __NR_pidfd_open
 
+    public static SystemCallNumber IOUringSetup            => new(425); // __NR_io_uring_setup
+    public static SystemCallNumber IOUringEnter            => new(426); // __NR_io_uring_enter
+    public static SystemCallNumber IOUringRegister         => new(427); // __NR_io_uring_register
+
     public abstract SystemCallNumber SchedGetScheduler { get; } // __NR_sched_getscheduler
     public abstract SystemCallNumber SchedSetScheduler { get; } // __NR_sched_setscheduler
     public abstract SystemCallNumber SchedGetParam     { get; } // __NR_sched_getparam
