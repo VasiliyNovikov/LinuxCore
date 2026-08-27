@@ -64,6 +64,10 @@ internal static unsafe class IOUring
     public const uint IORING_ENTER_EXT_ARG_REG     = 1U << 6;
     public const uint IORING_ENTER_NO_IOWAIT       = 1U << 7;
 
+    public const uint IORING_REGISTER_PROBE = 8;
+
+    public const ushort IO_URING_OP_SUPPORTED = 1 << 0;
+
     // struct io_sqring_offsets {
     //     __u32 head;
     //     __u32 tail;
@@ -139,6 +143,37 @@ internal static unsafe class IOUring
         public InlineArray3<uint> resv;
         public io_sqring_offsets sq_off;
         public io_cqring_offsets cq_off;
+    }
+
+    // struct io_uring_probe {
+    //     __u8 last_op;
+    //     __u8 ops_len;
+    //     __u16 resv;
+    //     __u32 resv2[3];
+    //     struct io_uring_probe_op ops[];
+    // };
+    [StructLayout(LayoutKind.Sequential)]
+    public struct io_uring_probe
+    {
+        public byte last_op;
+        public byte ops_len;
+        public ushort resv;
+        public InlineArray3<uint> resv2;
+    }
+
+    // struct io_uring_probe_op {
+    //     __u8 op;
+    //     __u8 resv;
+    //     __u16 flags;
+    //     __u32 resv2;
+    // };
+    [StructLayout(LayoutKind.Sequential)]
+    public struct io_uring_probe_op
+    {
+        public byte op;
+        public byte resv;
+        public ushort flags;
+        public uint resv2;
     }
 
     public enum io_uring_op : byte
@@ -569,5 +604,14 @@ internal static unsafe class IOUring
     public static LinuxResult<int> io_uring_enter(FileDescriptor fd, uint to_submit, uint min_complete, uint flags, void* sig = null)
     {
         return SystemCall.Invoke<FileDescriptor, uint, uint, uint, nint, int, int>(SystemCallTable.IOUringEnter, fd, to_submit, min_complete, flags, (nint)sig, _NSIG / 8);
+    }
+
+    // static inline int io_uring_register(unsigned int fd, unsigned int opcode, const void *arg, unsigned int nr_args) {
+    //     return syscall(__NR_io_uring_register, fd, opcode, arg, nr_args);
+    // }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinuxResult<int> io_uring_register(FileDescriptor fd, uint opcode, void* arg, uint nr_args)
+    {
+        return SystemCall.Invoke<FileDescriptor, uint, nint, uint, int>(SystemCallTable.IOUringRegister, fd, opcode, (nint)arg, nr_args);
     }
 }
