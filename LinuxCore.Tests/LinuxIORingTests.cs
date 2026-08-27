@@ -240,7 +240,7 @@ public unsafe class LinuxIORingTests
     [TestMethod]
     public void LinuxIORing_Create()
     {
-        if (NativeAbi.IsLikelyQemuLinuxUser)
+        if (!LinuxIORing.IsSupported)
             return;
 
         using var ring = new LinuxIORing(32);
@@ -249,33 +249,112 @@ public unsafe class LinuxIORingTests
         Assert.IsTrue(ring.Features.HasFlag(LinuxIORingFeatures.NoDrop));
         Assert.IsGreaterThanOrEqualTo(32, ring.SubmissionQueueSize);
         Assert.IsGreaterThanOrEqualTo(32, ring.CompletionQueueSize);
+        Assert.AreNotEqual(0, fcntl(ring.Descriptor, F_GETFD).ThrowIfError() & FD_CLOEXEC);
+        Assert.AreEqual(0, IOUring.io_uring_enter(ring.Descriptor, 0, 0, 0).ThrowIfError());
+    }
+
+    [TestMethod]
+    public void LinuxIORing_Create_AcceptsSupportedFlags()
+    {
+        if (!LinuxIORing.IsSupported)
+            return;
+
+        foreach (var flag in new[] { LinuxIORingFlags.Clamp, LinuxIORingFlags.SubmitAll })
+        {
+            try
+            {
+                using var ring = new LinuxIORing(1, flag);
+                Assert.AreEqual(flag, ring.Flags & flag, flag.ToString());
+            }
+            catch (LinuxException e)
+            {
+                Assert.AreEqual(LinuxErrorNumber.InvalidArgument, e.ErrorNumber, flag.ToString());
+            }
+        }
     }
 
     [TestMethod]
     public void LinuxIORing_Create_FailsOnInvalidSize()
     {
-        if (NativeAbi.IsLikelyQemuLinuxUser)
+        if (!LinuxIORing.IsSupported)
             return;
 
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new LinuxIORing(-1));
-        var e = Assert.ThrowsExactly<LinuxException>(() => new LinuxIORing(0));
-        Assert.AreEqual(LinuxErrorNumber.InvalidArgument, e.ErrorNumber);
-        e = Assert.ThrowsExactly<LinuxException>(() => new LinuxIORing(int.MaxValue));
-        Assert.AreEqual(LinuxErrorNumber.InvalidArgument, e.ErrorNumber);
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new LinuxIORing(0));
+        Assert.AreEqual(LinuxErrorNumber.InvalidArgument, Assert.ThrowsExactly<LinuxException>(() => new LinuxIORing(int.MaxValue)).ErrorNumber);
+    }
+
+    [TestMethod]
+    public void LinuxIORing_Create_RejectsUnsupportedFlagsBeforeSetup()
+    {
+        if (!LinuxIORing.IsSupported)
+            return;
+
+        LinuxIORingFlags[] unsupportedFlags =
+        [
+            LinuxIORingFlags.IOPoll,
+            LinuxIORingFlags.SQPoll,
+            LinuxIORingFlags.SQAffinity,
+            LinuxIORingFlags.CQSize,
+            LinuxIORingFlags.AttachWQ,
+            LinuxIORingFlags.Disabled,
+            LinuxIORingFlags.CoopTaskRun,
+            LinuxIORingFlags.TaskRunFlag,
+            LinuxIORingFlags.SQE128,
+            LinuxIORingFlags.CQE32,
+            LinuxIORingFlags.SingleIssuer,
+            LinuxIORingFlags.DeferTaskRun,
+            LinuxIORingFlags.NoMmap,
+            LinuxIORingFlags.RegisteredFdOnly,
+            LinuxIORingFlags.NoSQArray,
+            LinuxIORingFlags.HybridIOPoll,
+            LinuxIORingFlags.CQEMixed,
+            LinuxIORingFlags.SQEMixed,
+            LinuxIORingFlags.SQRewind
+        ];
+        foreach (var flag in unsupportedFlags)
+            Assert.ThrowsExactly<NotSupportedException>(() => new LinuxIORing(1, flag), flag.ToString());
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new LinuxIORing(1, (LinuxIORingFlags)(1U << 31)));
+    }
+
+    [TestMethod]
+    public void LinuxIORing_Create_ReportsKernelQueueSizes()
+    {
+        if (!LinuxIORing.IsSupported)
+            return;
+
+        using var ring = new LinuxIORing(100);
+        Assert.AreEqual(128, ring.SubmissionQueueSize);
+        Assert.IsGreaterThanOrEqualTo(ring.SubmissionQueueSize, ring.CompletionQueueSize);
     }
 
     [TestMethod]
     public void LinuxIORing_FailedConstruction_DoesNotCloseStandardInput()
     {
-        if (NativeAbi.IsLikelyQemuLinuxUser)
-            return;
-
         fcntl(FileDescriptor.StandardInput, F_GETFD).ThrowIfError();
-        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new LinuxIORing(-1));
+        if (LinuxIORing.IsSupported)
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new LinuxIORing(-1));
+        else
+            Assert.ThrowsExactly<PlatformNotSupportedException>(() => new LinuxIORing(-1));
 
         GC.Collect();
         GC.WaitForPendingFinalizers();
 
         fcntl(FileDescriptor.StandardInput, F_GETFD).ThrowIfError();
     }
+
+    [TestMethod]
+    public void LinuxIORing_Dispose_ClosesDescriptor()
+    {
+        if (!LinuxIORing.IsSupported)
+            return;
+
+        var ring = new LinuxIORing(1);
+        var descriptor = ring.Descriptor;
+        ring.Dispose();
+
+        Assert.IsTrue(fcntl(descriptor, F_GETFD).IsError);
+        Assert.AreEqual(LinuxErrorNumber.BadFileNumber, LinuxErrorNumber.Last);
+    }
+
 }
